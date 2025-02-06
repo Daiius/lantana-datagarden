@@ -1,8 +1,14 @@
 import React from 'react';
-import clsx from 'clsx';
+
+
+import Project from '@/components/project/Project';
 
 export default async function Page() {
+  
   return (
-    <div>Hello, Next.js!</div>
+    <>
+      <Project />
+    </>
   );
 }
+
