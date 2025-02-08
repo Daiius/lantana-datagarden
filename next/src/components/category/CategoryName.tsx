@@ -23,7 +23,7 @@ const CateogryName: React.FC<
     </div>
     <Input
       value={category.name}
-      onUpdate={async (newName: string) => updateCateogryName(
+      onUpdate={async (newName: string) => updateCategoryName(
         category.id, newName
       )}
     />

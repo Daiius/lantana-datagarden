@@ -1,8 +1,8 @@
 'use server'
 
-import { db } from '@/db';
+import { db } from 'database/db';
 import { eq } from 'drizzle-orm';
-import { projects } from '@/db/schema';
+import { projects } from 'database/db/schema';
 
 export const updateProjectName = async (
   projectId: string,

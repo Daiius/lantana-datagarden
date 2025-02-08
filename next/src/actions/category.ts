@@ -1,8 +1,12 @@
 'use server'
 
-import { db } from '@/db';
-import { categories } from '@/db/schema';
+import { db } from 'database/db';
+import { categories } from 'database/db/schema';
 
-const updateCategoryName = async (newName: string) => {
+export const updateCategoryName = async (
+  categoryId: string, 
+  newName: string,
+) => {
 
 };
+

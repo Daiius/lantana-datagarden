@@ -1,0 +1,8 @@
+FROM node:20
+
+WORKDIR /app/database-preparation
+
+RUN npm install -g pnpm
+
+CMD ["pnpm", "start"]
+
