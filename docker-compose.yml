@@ -1,8 +1,10 @@
 services:
-  lantana-datagarden-nextjs:
+  nextjs:
     build:
-      dockerfile: ./Dockerfile.nextjs
+      dockerfile: ./next/Dockerfile.nextjs
     container_name: lantana-datagarden-nextjs
+    env_file:
+      - .env.development
     environment:
       TZ: 'Asia/Tokyo'
     volumes:
@@ -13,7 +15,7 @@ services:
 
   database:
     build:
-      dockerfile: ./Dockerfile.mysql
+      dockerfile: ./database/Dockerfile.mysql
     container_name: database
     env_file:
       - .env.development
@@ -33,32 +35,32 @@ services:
       start_period: 5s
 
   database-preparation:
-    image: node:20
-    #build:
-    #  dockerfile: ./Dockerfile.database-preparation
+    #image: node:20
+    build:
+      dockerfile: ./database-preparation/Dockerfile.database-preparation
     container_name: database-preparation
     env_file:
       - .env.development
     environment:
       NODE_ENV: 'development'
     volumes:
-      - ./:/app:ro
-    working_dir: /app
-    command: >
-      bash -c '
-        npm install -g pnpm \
-        && pnpm drizzle-kit push \
-          --dialect=mysql \
-          --schema=./src/db/schema.ts \
-          --host=$$DB_HOST \
-          --user=$$MYSQL_USER \
-          --password=$$MYSQL_PASSWORD \
-          --database=$$MYSQL_DATABASE; \
-        pnpm tsx addTestData.ts
-      '
+      - ./:/app
+        #- ./database:/app/database
+        #- ./database-preparation:/app/database-preparation
     depends_on:
       database:
         condition: service_healthy
+
+  server:
+    build:
+      dockerfile: ./server/Dockerfile.server
+    container_name: lantana-datagarden-server
+    env_file:
+      - .env.development
+    volumes:
+      - ./:/app
+    ports:
+      - "3001:3001/tcp"
     
   webserver:
     image: nginx

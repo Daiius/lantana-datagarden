@@ -1,6 +1,4 @@
 
-
-
 import { drizzle } from 'drizzle-orm/mysql2';
 import { createConnection } from 'mysql2/promise';
 import {
@@ -8,7 +6,7 @@ import {
   //templates,
   categories,
   columnDefinitions,
-} from './src/db/schema';
+} from 'database/db/schema';
 import { 
   v7 as uuidv7,
   v4 as uuidv4,

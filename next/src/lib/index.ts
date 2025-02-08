@@ -1,8 +1,8 @@
-import { db } from '@/db';
+import { db } from 'database/db';
 import { eq } from 'drizzle-orm';
 import {
   projects,
-} from '@/db/schema';
+} from 'database/db/schema';
 
 /**
  * Project, Category, ColumnDefinitions をネストしたオブジェクトで

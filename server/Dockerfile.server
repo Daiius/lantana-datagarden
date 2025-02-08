@@ -1,0 +1,8 @@
+FROM node:20
+
+WORKDIR /app/server
+
+RUN npm -g install pnpm
+
+CMD ["pnpm", "start"]
+
