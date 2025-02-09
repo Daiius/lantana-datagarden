@@ -3,51 +3,46 @@
 import React from 'react';
 import type { AppRouter } from 'server/router';
 import { 
-  createTRPCProxyClient,
   createWSClient,
   wsLink
 } from '@trpc/client';
+import { 
+  QueryClient,
+  QueryClientProvider 
+} from '@tanstack/react-query';
+import { createTRPCReact } from '@trpc/react-query';
 
-
-const TrpcProviderContext = React.createContext<
-  ReturnType<typeof createTRPCProxyClient<AppRouter>>
-  | undefined
->(undefined);
-
-
+export const trpc = createTRPCReact<AppRouter>();
 
 const TrpcProvider: React.FC<
   React.PropsWithChildren
 > = ({
   children,
 }) => {
-  // NOTE : 再生成は防ぐべきらしい
-  const wsClient = createWSClient({
-    url: 'ws://localhost:3001',
-  });
-  const trpc = createTRPCProxyClient<AppRouter>({
-    links: [
-      wsLink({
-        client: wsClient
-      }),
-    ],
-  });
+
+  console.log('TrpcProvider rendered');
+
+  const [queryClient] = React.useState(() => new QueryClient());
+  const [trpcClient] = React.useState(() =>
+    trpc.createClient({
+      links: [
+        wsLink({
+          client: createWSClient({
+            url: `ws://${process.env.NEXT_PUBLIC_SERVER_IP}:3001`,
+          }),
+        }),
+      ],
+    })
+  );
 
   return (
-    <TrpcProviderContext.Provider value={trpc}>
-      {children}
-    </TrpcProviderContext.Provider>
+    <QueryClientProvider client={queryClient}>
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        {children}
+      </trpc.Provider>
+    </QueryClientProvider>
   );
 };
-
-export const useTrpcClient = () => {
-  const client = React.useContext(TrpcProviderContext);
-  if (!client) {
-    throw new Error("useTrpcClient must be called within a TrpcProvider");
-  }
-  return client;
-};
-
  
 export default TrpcProvider;
 
