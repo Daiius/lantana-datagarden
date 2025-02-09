@@ -7,11 +7,15 @@ import { useDebouncedCallback } from 'use-debounce';
 
 const Input: React.FC<
   React.ComponentProps<'input'>
-   & { onUpdate: (newValue: string) => Promise<void> }
+   & { 
+     onUpdate: (newValue: string) => Promise<void>,
+     setValue: (newValue: string) => void,
+   }
 > = ({
   className,
   onUpdate,
   value,
+  setValue,
   ...props
 }) => {
 

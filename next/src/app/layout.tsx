@@ -20,9 +20,7 @@ export default function RootLayout({
           'bg-slate-200',
         )}
       >
-        <TrpcProvider>
-          {children}
-        </TrpcProvider>
+        <TrpcProvider>{children}</TrpcProvider>
       </body>
     </html>
   )
