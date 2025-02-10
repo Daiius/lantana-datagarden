@@ -18,21 +18,18 @@ const Project: React.FC<
   className,
   ...props
 }) => { 
-  const { data: projectName } = trpc.projectTitle.useQuery({ 
-    projectId: zeroId 
+  const { data: project } = trpc.project.get.useQuery({ 
+    id: zeroId 
   });
-  console.log('projectName: ', projectName);
 
   const [valuePrivate, setValuePrivate] = 
-    React.useState<string>(projectName);
-  console.log('valuePrivate: ', valuePrivate);
+    React.useState<string>(project?.name ?? '');
 
-  const mutation = trpc.updateProjectTitle.useMutation();
-  trpc.onUpdateProjectTitle.useSubscription(
+  const mutation = trpc.project.update.useMutation();
+  trpc.project.onUpdate.useSubscription(
     undefined, {
       onData: (data) => {
-        console.log(data);
-        setValuePrivate(data.newTitle);
+        setValuePrivate(data.name ?? '');
       },
       onError: err => console.log(err),
     }
@@ -40,7 +37,7 @@ const Project: React.FC<
   const debouncedOnChange = useDebouncedCallback(
     async (newValue: string) => {
       await mutation.mutateAsync({ 
-        projectId: zeroId, newTitle: newValue 
+        id: zeroId, name: newValue 
       });
     },
     1_000
@@ -48,10 +45,10 @@ const Project: React.FC<
 
   // 他の人の更新が有った場合にはその内容を反映する
   React.useEffect(() => {
-    if (valuePrivate != projectName) {
-      setValuePrivate(projectName);
+    if (valuePrivate != project?.name) {
+      setValuePrivate(project?.name ?? '');
     }
-  }, [projectName]);
+  }, [project]);
 
   return (
     <div 
