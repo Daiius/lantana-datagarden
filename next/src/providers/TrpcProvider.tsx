@@ -2,10 +2,8 @@
 
 import React from 'react';
 import type { AppRouter } from 'server/router';
-import { 
-  createWSClient,
-  wsLink
-} from '@trpc/client';
+import { wsLink } from '@trpc/client';
+import { wsClient } from '@/lib/wsClient';
 import { 
   QueryClient,
   QueryClientProvider 
@@ -26,11 +24,7 @@ const TrpcProvider: React.FC<
   const [trpcClient] = React.useState(() =>
     trpc.createClient({
       links: [
-        wsLink({
-          client: createWSClient({
-            url: `ws://${process.env.NEXT_PUBLIC_SERVER_IP}:3001`,
-          }),
-        }),
+        wsLink({ client: wsClient }),
       ],
     })
   );
