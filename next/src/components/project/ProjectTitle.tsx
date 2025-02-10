@@ -29,7 +29,7 @@ const Project: React.FC<
 
   const mutation = trpc.updateProjectTitle.useMutation();
   trpc.onUpdateProjectTitle.useSubscription(
-    { projectId: zeroId }, {
+    undefined, {
       onData: (data) => {
         console.log(data);
         setValuePrivate(data.newTitle);

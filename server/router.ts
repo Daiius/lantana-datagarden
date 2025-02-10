@@ -2,25 +2,21 @@
 import { db } from 'database/db';
 import { projects } from 'database/db/schema';
 import { eq } from 'drizzle-orm';
-//import { on } from 'node:events';
+import { on } from 'node:events';
 
 import { z } from  'zod';
 
 import { publicProcedure, router } from './trpc';
 import { observable, } from '@trpc/server/observable';
 
-// 型指定できない、残念
-import { EventEmitter } from 'events';
-declare module 'events' {
-  class EventEmitter {
-    emit(
-      eventName: 'onUpdateProjectTitle', 
-      args: { projectId: string, newTitle: string },
-    ): void
-  }
+import mitt from 'mitt';
+import { EventEmitter } from 'node:events';
+type ProjectEvents = {
+  onUpdateProjectTitle: { projectId: string, newTitle: string },
 }
 
-export const projectEventEmitter = new EventEmitter();
+//export const projectEventEmitter = mitt<ProjectEvents>();
+const projectEventEmitter = new EventEmitter();
 
 export const appRouter = router({ 
   greeting: publicProcedure
@@ -43,24 +39,24 @@ export const appRouter = router({
         .set({ name: input.newTitle })
         .where(eq(projects.id, input.projectId));
       projectEventEmitter.emit('onUpdateProjectTitle', {
-        //...input
-
+        ...input
       });
     }),
   onUpdateProjectTitle: publicProcedure
-    //.input(z.object({ projectId: z.string() }))
-    //.output(z.object({ projectId: z.string(), newTitle: z.string() }))
-    .subscription(({ input }) => {
-      return observable<{ projectId: string, newTitle: string }>(emit => {
-        const onUpdate = ({projectId, newTitle}: { projectId: string, newTitle: string }) => {
-          emit.next({ projectId, newTitle });
+    //.input(z.object({ randomNumber: z.number() }))
+    //.output(z.object({ randomNumber: z.number() }))
+    .subscription(() => 
+      observable<{ randomNumber: number }>(emit => {
+        const handler = () => {
+          emit.next({ randomNumber: Math.random() });
         };
+        projectEventEmitter.on('onUpdateProjectTitle', handler);
 
-        projectEventEmitter.on('onUpdateProjectTitle', onUpdate);
-
-        return () => projectEventEmitter.off('onUpdateProjectTitle', onUpdate);
-      });
-    }),
+        return () =>  {
+          projectEventEmitter.off('onUpdateProjectTitle', handler)
+        };
+      })
+    ),
 
 });
 
