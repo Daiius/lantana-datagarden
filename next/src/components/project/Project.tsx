@@ -8,6 +8,8 @@ import {
 } from '@/lib';
 
 import ProjectTitle from '@/components/project/ProjectTitle';
+import RealtimeProject from '@/components/project/RealtimeProject';
+
 import Category from '@/components/category/Category';
 import DebugJson from '@/components/common/DebugJson';
 
@@ -31,7 +33,7 @@ const Project: React.FC<
       className='text-lg w-full'
       {...props}
     >
-      <ProjectTitle project={project} />
+      <RealtimeProject initialProject={project} />
       {project.categories.map(c =>
         <Category key={c.id} category={c} />
       )}

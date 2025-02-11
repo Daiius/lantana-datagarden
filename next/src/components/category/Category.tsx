@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import type {
   Category
 } from '@/types';
+import RealtimeCategory from '@/components/category/RealtimeCategory';
 
 const Category: React.FC<
   React.ComponentProps<'div'>
@@ -20,10 +21,9 @@ const Category: React.FC<
     )}
     {...props}
   >
-    <div className='flex flex-row'>
-      <div>カテゴリ名：</div>
-      <div>{category.name}</div>
-    </div>
+    <RealtimeCategory
+      initialCategory={category}
+    />
   </div>
 );
 

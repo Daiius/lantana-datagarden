@@ -27,7 +27,7 @@ const Project: React.FC<
 
   const mutation = trpc.project.update.useMutation();
   trpc.project.onUpdate.useSubscription(
-    undefined, {
+    { id: zeroId }, {
       onData: (data) => {
         setValuePrivate(data.name ?? '');
       },
