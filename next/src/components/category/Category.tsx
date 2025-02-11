@@ -16,9 +16,7 @@ const Category: React.FC<
   ...props
 }) => (
   <div 
-    className={clsx(
-      className,
-    )}
+    className={clsx(className)}
     {...props}
   >
     <RealtimeCategory

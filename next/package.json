@@ -10,6 +10,7 @@
 	},
 	"dependencies": {
 		"@tanstack/react-query": "^4.36.1",
+		"@tanstack/react-table": "^8.20.6",
 		"@trpc/client": "10.45.2",
 		"@trpc/react-query": "^10.45.2",
 		"@trpc/server": "10.45.2",
