@@ -3,6 +3,7 @@ import {
   //primaryKey,
   varchar,
   int,
+  json,
 } from 'drizzle-orm/mysql-core';
 
 import { relations } from 'drizzle-orm';
@@ -141,6 +142,12 @@ export const columnDefinitions = mysqlTable('ColumnDefinitions', {
       .references(() => categories.id, {
         onDelete: 'cascade', onUpdate: 'cascade',
       }),
+  projectId:
+    varchar('project_id', { length: PROJECT_ID_LENGTH })
+      .notNull()
+      .references(() => projects.id, { 
+        onDelete: 'restrict', onUpdate: 'cascade',
+      }),
   name:
     varchar('name', { length: COLUMN_DEFINITION_NAME_LENGTH })
       .notNull()
@@ -157,6 +164,33 @@ export const columnDefinitions = mysqlTable('ColumnDefinitions', {
     int('sort', { unsigned: true })
 });
 
+export type JsonDataType = Record<string, string | number>;
+const DATA_ID_LENGTH = UUID_LENGTH;
+
+/**
+ * columnDefinitionsで定義された列をJSONで保持しています
+ *
+ */
+export const data = mysqlTable('Data', {
+  id:
+    varchar('id', { length: DATA_ID_LENGTH })
+      .notNull()
+      .primaryKey(),
+  categoryId:
+    varchar('category_id', { length: CATEGORY_ID_LENGTH })
+      .notNull()
+      .references(() => categories.id, {
+        onDelete: 'cascade', onUpdate: 'cascade',
+      }),
+  projectId:
+    varchar('project_id', { length: PROJECT_ID_LENGTH })
+      .notNull()
+      .references(() => projects.id, { 
+        onDelete: 'restrict', onUpdate: 'cascade',
+      }),
+  data:
+    json('data').$type<JsonDataType>().notNull(),
+});
 
 export const projectToCategoriesRelations = 
   relations(projects, ({ many }) => ({ 
