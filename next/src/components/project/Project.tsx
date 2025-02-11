@@ -7,10 +7,10 @@ import {
   getProjectData,
 } from '@/lib';
 
-import ProjectTitle from '@/components/project/ProjectTitle';
 import RealtimeProject from '@/components/project/RealtimeProject';
 
 import Category from '@/components/category/Category';
+import Column from '@/components/column/Column';
 import DebugJson from '@/components/common/DebugJson';
 
 export const zeroId = '00000000-0000-0000-0000-000000000000' as const;
@@ -35,7 +35,12 @@ const Project: React.FC<
     >
       <RealtimeProject initialProject={project} />
       {project.categories.map(c =>
-        <Category key={c.id} category={c} />
+        <div key={c.id}>
+          <Category category={c} />
+          {c.columns.map(c =>
+            <Column key={c.id} column={c} />
+          )}
+        </div>
       )}
       <DebugJson data={project} />
     </div>

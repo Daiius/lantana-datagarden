@@ -7,8 +7,6 @@ import { trpc } from '@/providers/TrpcProvider';
 import type { Project } from '@/types';
 import DebouncedInput from '@/components/common/DebouncedInput';
 
-const zeroId = "00000000-0000-0000-0000-000000000000";
-
 const RealtimeProject: React.FC<
   React.ComponentProps<'div'>
   & { initialProject: Project }
@@ -22,7 +20,7 @@ const RealtimeProject: React.FC<
 
   const mutation = trpc.project.update.useMutation();
   trpc.project.onUpdate.useSubscription(
-    { id: zeroId }, 
+    project, 
     {
       onData: data => setProject(data),
       onError: err => console.log(err),

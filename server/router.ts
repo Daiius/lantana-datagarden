@@ -6,6 +6,7 @@ import { publicProcedure, router } from './trpc';
 
 import { projectRouter } from './project';
 import { categoryRouter } from './category';
+import { columnRouter } from './column';
 
 
 export const appRouter = router({ 
@@ -14,6 +15,7 @@ export const appRouter = router({
     .query(() => 'hello, tPRC!'),
   project: projectRouter,
   category: categoryRouter,
+  column: columnRouter,
 });
 
 export type AppRouter = typeof appRouter;
