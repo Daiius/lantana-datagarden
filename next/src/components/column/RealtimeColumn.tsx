@@ -7,7 +7,6 @@ import { trpc } from '@/providers/TrpcProvider';
 import type { Column } from '@/types';
 import DebouncedInput from '@/components/common/DebouncedInput';
 
-const zeroId = "00000000-0000-0000-0000-000000000000";
 
 const RealtimeColumn: React.FC<
   React.ComponentProps<'div'>
@@ -20,7 +19,7 @@ const RealtimeColumn: React.FC<
   const [column, setColumn] = 
     React.useState<Column>(initialColumn);
 
-  const mutation = trpc.column.update.useMutation();
+  const mutation = trpc.column.updateName.useMutation();
   trpc.column.onUpdate.useSubscription(
     column, 
     {
