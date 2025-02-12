@@ -18,6 +18,7 @@ import { observable, } from '@trpc/server/observable';
 import mitt from 'mitt';
 type ColumnEvents = {
   onUpdate: z.infer<typeof selectSchema>,
+  onUpdateList: z.infer<typeof selectSchema>[],
 }
 
 export const ee = mitt<ColumnEvents>();
@@ -33,10 +34,12 @@ export const columnRouter = router({
          where: eq(columnDefinitions.id, input.id)
        })
     ),
-  /** TODO ユーザが属するプロジェクトだけ返却する様に！ */
   list: publicProcedure
-    .query(async () =>
-      await db.query.columnDefinitions.findMany()
+    .input(z.object({ categoryId: z.string() }))
+    .query(async ({ input }) =>
+      await db.query.columnDefinitions.findMany({
+        where: eq(columnDefinitions.categoryId, input.categoryId)
+      })
     ),
   updateName: publicProcedure
     .input(selectSchema)
@@ -126,6 +129,19 @@ export const columnRouter = router({
         ee.on('onUpdate', handler);
         return () => ee.off('onUpdate', handler);
       })
-    )
+    ),
+  onUpdateList: publicProcedure
+    .input(z.object({ categoryId: z.string() }))
+    .subscription(({ input }) =>
+      observable<ColumnEvents['onUpdateList']>(emit => {
+        const handler = (data: ColumnEvents['onUpdateList']) => {
+          if (data[0]?.categoryId === input.categoryId) {
+            emit.next(data);
+          }
+        };
+        ee.on('onUpdateList', handler);
+        return () => ee.off('onUpdateList', handler);
+      })
+    ),
 });
 

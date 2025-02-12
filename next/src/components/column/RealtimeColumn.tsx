@@ -6,6 +6,7 @@ import { trpc } from '@/providers/TrpcProvider';
 
 import type { Column } from '@/types';
 import DebouncedInput from '@/components/common/DebouncedInput';
+import Skeleton from '../common/Skeleton';
 
 
 const RealtimeColumn: React.FC<
@@ -16,17 +17,27 @@ const RealtimeColumn: React.FC<
   className,
   ...props
 }) => { 
-  const [column, setColumn] = 
-    React.useState<Column>(initialColumn);
 
+  const utils = trpc.useUtils();
   const mutation = trpc.column.updateName.useMutation();
   trpc.column.onUpdate.useSubscription(
-    column, 
+    initialColumn, 
     {
-      onData: data => setColumn(data),
+      onData: data =>
+        utils.column.get.setData(initialColumn, data),
       onError: err => console.log(err),
     },
   );
+  const { data: column, isLoading } =trpc.column.get.useQuery(
+    initialColumn,
+    { initialData: initialColumn }
+  );
+
+  if (column == null) {
+    return isLoading
+      ? <Skeleton />
+      : <div>columnをロードできません</div>
+  }
 
   return (
     <div 
