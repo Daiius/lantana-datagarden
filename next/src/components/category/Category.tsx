@@ -3,13 +3,13 @@ import React from 'react';
 import clsx from 'clsx';
 
 import type {
-  Category
+  CategoryColumns
 } from '@/types';
 import RealtimeCategory from '@/components/category/RealtimeCategory';
 
 const Category: React.FC<
   React.ComponentProps<'div'>
-  & { category: Category }
+  & { category: CategoryColumns }
 > = async ({
   category,
   className,
