@@ -7,6 +7,7 @@ import { publicProcedure, router } from './trpc';
 import { projectRouter } from './project';
 import { categoryRouter } from './category';
 import { columnRouter } from './column';
+import { dataRouter } from './data';
 
 
 export const appRouter = router({ 
@@ -16,6 +17,7 @@ export const appRouter = router({
   project: projectRouter,
   category: categoryRouter,
   column: columnRouter,
+  data: dataRouter,
 });
 
 export type AppRouter = typeof appRouter;
