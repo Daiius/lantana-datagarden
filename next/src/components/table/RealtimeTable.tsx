@@ -16,6 +16,32 @@ import {
   JsonDataType,
 } from '@/types';
 
+/**
+ * ユーザの変更を部分的にリアルタイム反映するテーブル
+ *
+ * TODO
+ * 恐らくinitialCategoryを渡されるのが正解
+ * なのだが、categoryにはcolumnsが含まれないため
+ * どうしたものだろうか...
+ *
+ * カテゴリ編集画面は <Project /> 内でdb.queryで取得した
+ * ネストされたデータを、直接<Category />や<Columns />に渡せた
+ * 
+ * <Project /> 内に直接 <Category /> や <Columns /> が書いてあり
+ * データの受け渡しが簡単に出来てしまったからだが、
+ * これはデータの包含関係を壊している気がする
+ *
+ * これはデザインが良くない気がする
+ * ネストされたデータはSSR時特有の型としてどこかに定義して
+ * 子コンポーネントで具体的な処理を出来る様にするべき
+ *
+ * 恐らく、Project, Category, ColumnDefinitions までは
+ * 全取得してもそこまで痛くない...はず
+ *
+ *
+ * 個別のデータについては数が多くなると思われるので、
+ * 更新があったことの通知のみとする
+ */
 const RealtimeTable: React.FC<
   React.ComponentProps<'table'>
   & {
@@ -39,6 +65,7 @@ const RealtimeTable: React.FC<
     columns.map(c =>
       columnHelper.accessor(c.name, {
         cell: (info): any => info.getValue(),
+        header: (): any => `${c.name} : ${c.type}`,
       })
     ), 
     [columns]
@@ -55,10 +82,15 @@ const RealtimeTable: React.FC<
   });
 
   return (
+    <div
+      className={clsx(
+        'border border-gray-400 overflow-hidden rounded-lg',
+      )}
+    >
     <table
       className={clsx(
         'w-full',
-        'table-auto border-collapse border border-gray-400',
+        'table-auto border-collapse ',
         className,
       )}
       {...props}
@@ -105,6 +137,7 @@ const RealtimeTable: React.FC<
         )}
       </tbody>
     </table>
+    </div>
   );
 };
 

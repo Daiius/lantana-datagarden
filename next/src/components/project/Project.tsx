@@ -36,7 +36,6 @@ const Project: React.FC<
       className='text-lg w-full'
       {...props}
     >
-      
       <RealtimeProject initialProject={project} />
       <div className='bg-green-200 rounded-lg shadow m-2'>
         {project.categories.map(c =>
