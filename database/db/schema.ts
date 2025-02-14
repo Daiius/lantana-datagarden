@@ -1,8 +1,9 @@
 import { 
   mysqlTable, 
-  //primaryKey,
+  unique,
   varchar,
   int,
+  json,
 } from 'drizzle-orm/mysql-core';
 
 import { relations } from 'drizzle-orm';
@@ -69,7 +70,7 @@ export const projects = mysqlTable('Projects', {
 
 const CATEGORY_ID_LENGTH = UUID_LENGTH;
 const CATEGORY_NAME_LENGTH = 1024 as const;
-const CATEGORY_TYPES = [
+export const CATEGORY_TYPES = [
   'sequence', 
   'option', 
   'measurement',
@@ -121,7 +122,7 @@ export const categories = mysqlTable('Categories', {
 //}));
 
 const COLUMN_DEFINITION_ID_LENGTH = UUID_LENGTH;
-const COLUMN_DEFINITION_NAME_LENGTH = 1024 as const;
+const COLUMN_DEFINITION_NAME_LENGTH = 64 as const;
 export const COLUMN_DEFINITION_DATA_TYPES = [
   'string',
   'float',
@@ -141,11 +142,16 @@ export const columnDefinitions = mysqlTable('ColumnDefinitions', {
       .references(() => categories.id, {
         onDelete: 'cascade', onUpdate: 'cascade',
       }),
+  projectId:
+    varchar('project_id', { length: PROJECT_ID_LENGTH })
+      .notNull()
+      .references(() => projects.id, { 
+        onDelete: 'restrict', onUpdate: 'cascade',
+      }),
   name:
     varchar('name', { length: COLUMN_DEFINITION_NAME_LENGTH })
       .notNull()
-      .default('新しい列名'), 
-      //.unique(), // 長すぎらしい
+      .default('新しい列名'),
   type:
     varchar( 'type', { 
       length: 32,
@@ -155,8 +161,38 @@ export const columnDefinitions = mysqlTable('ColumnDefinitions', {
     .default('string'),
   sort:
     int('sort', { unsigned: true })
-});
+}, (table) => ({
+  uniqueKey: 
+    unique().on(table.categoryId, table.name),
+}));
 
+export type JsonDataType = Record<string, string | number>;
+const DATA_ID_LENGTH = UUID_LENGTH;
+
+/**
+ * columnDefinitionsで定義された列をJSONで保持しています
+ *
+ */
+export const data = mysqlTable('Data', {
+  id:
+    varchar('id', { length: DATA_ID_LENGTH })
+      .notNull()
+      .primaryKey(),
+  categoryId:
+    varchar('category_id', { length: CATEGORY_ID_LENGTH })
+      .notNull()
+      .references(() => categories.id, {
+        onDelete: 'cascade', onUpdate: 'cascade',
+      }),
+  projectId:
+    varchar('project_id', { length: PROJECT_ID_LENGTH })
+      .notNull()
+      .references(() => projects.id, { 
+        onDelete: 'restrict', onUpdate: 'cascade',
+      }),
+  data:
+    json('data').$type<JsonDataType>().notNull(),
+});
 
 export const projectToCategoriesRelations = 
   relations(projects, ({ many }) => ({ 
