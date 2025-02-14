@@ -31,6 +31,7 @@ export type CategoryColumns = ArrayElement<
 
 export { 
   COLUMN_DEFINITION_DATA_TYPES as DataTypes,
+  CATEGORY_TYPES as CategoryTypes,
 } from 'database/db/schema';
 export type { 
   JsonDataType,

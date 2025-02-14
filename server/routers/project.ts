@@ -9,7 +9,7 @@ import {
 
 import { z } from 'zod';
 
-import { router, publicProcedure } from './trpc';
+import { router, publicProcedure } from '../trpc';
 import { observable, } from '@trpc/server/observable';
 
 import mitt from 'mitt';

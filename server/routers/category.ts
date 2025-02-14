@@ -10,7 +10,7 @@ import {
 
 import { z } from 'zod';
 
-import { router, publicProcedure } from './trpc';
+import { router, publicProcedure } from '../trpc';
 import { observable, } from '@trpc/server/observable';
 
 import mitt from 'mitt';
@@ -53,6 +53,7 @@ export const categoryRouter = router({
   update: publicProcedure
     .input(selectSchema)
     .mutation(async ({ input }) => {
+      console.log('input: %o', input);
       await db.update(categories)
         .set({ ...input })
         .where(
@@ -60,7 +61,7 @@ export const categoryRouter = router({
             eq(categories.id, input.id),
             eq(categories.projectId, input.projectId)
           )
-        );
+        ) ;
       ee.emit('onUpdate', { ...input });
     }),
   /**

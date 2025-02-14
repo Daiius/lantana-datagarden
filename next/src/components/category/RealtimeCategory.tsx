@@ -8,8 +8,11 @@ import { trpc } from '@/providers/TrpcProvider';
 import type { 
   Category,
 } from '@/types';
+import { CategoryTypes } from '@/types';
 
 import DebouncedInput from '@/components/common/DebouncedInput';
+import DebouncedSelect from '@/components/common/DebouncedSelect';
+
 import Skeleton from '../common/Skeleton';
 import RealtimeColumns from '@/components/column/RealtimeColumns';
 
@@ -28,8 +31,10 @@ const RealtimeCategory: React.FC<
   const { mutateAsync } = trpc.category.update.useMutation();
   trpc.category.onUpdate.useSubscription(
       initialCategory, {
-      onData: data =>
+      onData: data => { 
         utils.category.get.setData(initialCategory, data),
+        console.log('onData: ', data);
+      },
       onError: err => console.log(err),
     },
   );
@@ -79,11 +84,13 @@ const RealtimeCategory: React.FC<
         {...props}
       >
         <div>カテゴリ種類：</div>
-        <DebouncedInput
+        <DebouncedSelect
           value={category.type}
-          debouncedOnChange={async (newValue: string) =>
+          options={CategoryTypes}
+          debouncedOnChange={async newValue => {
             await mutateAsync({ ...category, type: newValue })
-          }
+            console.log('newValue: ', newValue); 
+          }}
         />
       </div>
       <div className='ml-4 rounded-md border border-sky-500 px-2 pb-2 m-2'>

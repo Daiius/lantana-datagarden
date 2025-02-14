@@ -1,14 +1,12 @@
 
-
 import { z } from  'zod';
 
 import { publicProcedure, router } from './trpc';
 
-import { projectRouter } from './project';
-import { categoryRouter } from './category';
-import { columnRouter } from './column';
-import { dataRouter } from './data';
-
+import { projectRouter } from './routers/project';
+import { categoryRouter } from './routers/category';
+import { columnRouter } from './routers/column';
+import { dataRouter } from './routers/data';
 
 export const appRouter = router({ 
   greeting: publicProcedure
