@@ -51,39 +51,35 @@ const RealtimeCategory: React.FC<
 
   return (
     <div
-        className={clsx(
-          'bg-sky-300/50 rounded-lg shadow',
-          'border border-sky-500',
-          'px-2 pb-2', 
-        )}
+      className={clsx(
+        'px-2 pb-2', 
+        'border-l-base border-l-2',
+      )}
     >
       <div className='flex flex-row items-center'>
         <div
-          className='text-2xl text-sky-800 font-bold'
+          className='text-2xl font-bold'
         >
           Category
         </div>
-        <div className='ml-8 text-sky-800/50'>
+        <div className='ml-8'>
           id: {category.id}
         </div>
       </div>
-      <div 
-        className='text-lg flex flex-row'
-        {...props}
+      <fieldset 
+        className={clsx(
+          'fieldset bg-base-200', 
+          'border border-base-300 p-4 rounded-box',
+        )}
       >
-        <div>カテゴリ名：</div>
+        <label className='fieldset-label'>カテゴリ名：</label>
         <DebouncedInput
           value={category.name}
           debouncedOnChange={async (newValue: string) =>
             await mutateAsync({ ...category, name: newValue })
           }
         />
-      </div>
-      <div 
-        className='text-lg flex flex-row'
-        {...props}
-      >
-        <div>カテゴリ種類：</div>
+        <label className='fieldset-label'>カテゴリ種類：</label>
         <DebouncedSelect
           value={category.type}
           options={CategoryTypes}
@@ -92,13 +88,10 @@ const RealtimeCategory: React.FC<
             console.log('newValue: ', newValue); 
           }}
         />
-      </div>
-      <div className='ml-4 rounded-md border border-sky-500 px-2 pb-2 m-2'>
-        <div className='text-sky-800 text-xl font-bold'>Columns</div>
-        <div className='ml-2'>
-          <RealtimeColumns categoryId={category.id}/>
-        </div>
-      </div>
+        
+      </fieldset>
+      <div className='divider'></div>
+      <RealtimeColumns categoryId={category.id}/>
       <RealtimeTable 
         projectId={category.projectId}
         categoryId={category.id}

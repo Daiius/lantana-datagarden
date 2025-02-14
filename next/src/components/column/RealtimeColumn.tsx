@@ -43,24 +43,28 @@ const RealtimeColumn: React.FC<
 
   return (
     <div 
-      className='text-lg flex flex-row'
+      className='text-lg flex flex-row items-center'
       {...props}
     >
-      <div>列名：</div>
-      <DebouncedInput
-        value={column.name}
-        debouncedOnChange={async (newValue: string) =>
-          await mutateAsync({ ...column, name: newValue })
-        }
-      />
-      <div>型：</div>
-      <DebouncedSelect
-        value={column.type}
-        options={DataTypes}
-        debouncedOnChange={async (newValue) =>
-          await mutateAsync({ ...column, type: newValue })
-        }
-      />
+      <fieldset className='fieldset'>
+        <label className='fieldset-label'>列名：</label>
+        <DebouncedInput
+          value={column.name}
+          debouncedOnChange={async (newValue: string) =>
+            await mutateAsync({ ...column, name: newValue })
+          }
+        />
+      </fieldset>
+      <fieldset className='fieldset'>
+        <label className='fieldset-label'>型：</label>
+        <DebouncedSelect
+          value={column.type}
+          options={DataTypes}
+          debouncedOnChange={async (newValue) =>
+            await mutateAsync({ ...column, type: newValue })
+          }
+        />
+      </fieldset>
     </div>
   );
 };
