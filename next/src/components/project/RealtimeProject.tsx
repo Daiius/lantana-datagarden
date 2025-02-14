@@ -47,40 +47,35 @@ const RealtimeProject: React.FC<
   return (
     <div
       className={clsx(
-        'bg-sky-200/50 rounded-lg shadow',
-        'border border-sky-500',
         'px-2 pb-2',
+        'border-l-base border-l-2',
+        className,
       )}
+      {...props}
     >
       <div className='flex flex-row items-center'>
         <div 
           className={clsx(
-            'text-2xl text-sky-800 font-bold',
+            'text-2xl font-bold',
           )}
         >
           Project
         </div>
-        <div className='ml-8 text-sky-800/50'>
+        <div className='ml-8'>
           id: {project.id}
         </div>
       </div>
-      <div 
-        className='text-lg flex flex-row'
-        {...props}
-      > 
-        <div>プロジェクト名：</div>
+      <fieldset className='fieldset'>
+        <label className='fieldset-label'>プロジェクト名：</label>
         <DebouncedInput
           value={project.name}
           debouncedOnChange={async (newValue: string) =>
             await mutation.mutateAsync({ ...project, name: newValue })
           }
         />
-      </div>
-      <div
-        className='ml-4'
-      >
-        <RealtimeCategories projectId={project.id} />
-      </div>
+      </fieldset>
+      <div className='divider'></div>
+      <RealtimeCategories projectId={project.id} />
     </div>
   );
 };

@@ -47,7 +47,10 @@ const DebouncedSelect = <T extends readonly string[],>({
 
   return (
     <Select 
-      className={clsx(className)}
+      className={clsx(
+        'select',
+        className,
+      )}
       value={valuePrivate}
       onChange={async e => {
         await debouncedUpdate(e.currentTarget?.value);

@@ -38,6 +38,7 @@ const DebouncedInput: React.FC<
   return (
     <input 
       className={clsx(
+        'input',
         className,
       )}
       onChange={async e => {
