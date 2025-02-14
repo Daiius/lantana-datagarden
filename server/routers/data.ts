@@ -11,7 +11,7 @@ import {
 
 import { z } from 'zod';
 
-import { router, publicProcedure } from './trpc';
+import { router, publicProcedure } from '../trpc';
 import { observable, } from '@trpc/server/observable';
 
 import mitt from 'mitt';
@@ -50,7 +50,8 @@ export const dataRouter = router({
         where: and(
           eq(data.projectId, input.projectId),
           eq(data.categoryId, input.categoryId),
-        )
+        ),
+        orderBy: data.id,
       })
     ),
   onUpdate: publicProcedure

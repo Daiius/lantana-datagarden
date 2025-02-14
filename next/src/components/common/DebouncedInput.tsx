@@ -10,10 +10,10 @@ import { useDebouncedCallback } from 'use-debounce';
  */
 const DebouncedInput: React.FC<
   React.ComponentProps<'input'>
-   & { 
-     debouncedOnChange: (newValue: string) => Promise<void>,
-     wait?: number,
-   }
+  & { 
+    debouncedOnChange: (newValue: string) => Promise<void>,
+    wait?: number,
+  }
 > = ({
   className,
   debouncedOnChange,

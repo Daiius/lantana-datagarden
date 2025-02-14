@@ -1,6 +1,6 @@
 import { 
   mysqlTable, 
-  //primaryKey,
+  unique,
   varchar,
   int,
   json,
@@ -70,7 +70,7 @@ export const projects = mysqlTable('Projects', {
 
 const CATEGORY_ID_LENGTH = UUID_LENGTH;
 const CATEGORY_NAME_LENGTH = 1024 as const;
-const CATEGORY_TYPES = [
+export const CATEGORY_TYPES = [
   'sequence', 
   'option', 
   'measurement',
@@ -122,7 +122,7 @@ export const categories = mysqlTable('Categories', {
 //}));
 
 const COLUMN_DEFINITION_ID_LENGTH = UUID_LENGTH;
-const COLUMN_DEFINITION_NAME_LENGTH = 1024 as const;
+const COLUMN_DEFINITION_NAME_LENGTH = 64 as const;
 export const COLUMN_DEFINITION_DATA_TYPES = [
   'string',
   'float',
@@ -151,8 +151,7 @@ export const columnDefinitions = mysqlTable('ColumnDefinitions', {
   name:
     varchar('name', { length: COLUMN_DEFINITION_NAME_LENGTH })
       .notNull()
-      .default('新しい列名'), 
-      //.unique(), // 長すぎらしい
+      .default('新しい列名'),
   type:
     varchar( 'type', { 
       length: 32,
@@ -162,7 +161,10 @@ export const columnDefinitions = mysqlTable('ColumnDefinitions', {
     .default('string'),
   sort:
     int('sort', { unsigned: true })
-});
+}, (table) => ({
+  uniqueKey: 
+    unique().on(table.categoryId, table.name),
+}));
 
 export type JsonDataType = Record<string, string | number>;
 const DATA_ID_LENGTH = UUID_LENGTH;

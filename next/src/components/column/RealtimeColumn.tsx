@@ -5,7 +5,9 @@ import React from 'react';
 import { trpc } from '@/providers/TrpcProvider';
 
 import type { Column } from '@/types';
+import { DataTypes } from '@/types';
 import DebouncedInput from '@/components/common/DebouncedInput';
+import DebouncedSelect from '@/components/common/DebouncedSelect';
 import Skeleton from '../common/Skeleton';
 
 
@@ -19,7 +21,7 @@ const RealtimeColumn: React.FC<
 }) => { 
 
   const utils = trpc.useUtils();
-  const mutation = trpc.column.updateName.useMutation();
+  const { mutateAsync } = trpc.column.update.useMutation();
   trpc.column.onUpdate.useSubscription(
     initialColumn, 
     {
@@ -28,7 +30,7 @@ const RealtimeColumn: React.FC<
       onError: err => console.log(err),
     },
   );
-  const { data: column, isLoading } =trpc.column.get.useQuery(
+  const { data: column, isLoading } = trpc.column.get.useQuery(
     initialColumn,
     { initialData: initialColumn }
   );
@@ -48,11 +50,17 @@ const RealtimeColumn: React.FC<
       <DebouncedInput
         value={column.name}
         debouncedOnChange={async (newValue: string) =>
-          await mutation.mutateAsync({ ...column, name: newValue })
+          await mutateAsync({ ...column, name: newValue })
         }
       />
       <div>型：</div>
-      <div>{column.type}</div>
+      <DebouncedSelect
+        value={column.type}
+        options={DataTypes}
+        debouncedOnChange={async (newValue) =>
+          await mutateAsync({ ...column, type: newValue })
+        }
+      />
     </div>
   );
 };
