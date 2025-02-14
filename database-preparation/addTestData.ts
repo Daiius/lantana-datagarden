@@ -6,6 +6,7 @@ import {
   //templates,
   categories,
   columnDefinitions,
+  data,
 } from 'database/db/schema';
 import { 
   v7 as uuidv7,
@@ -13,8 +14,8 @@ import {
 } from 'uuid';
 
 const connection = await createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.MYSQL_USER,
+  host:     process.env.DB_HOST,
+  user:     process.env.MYSQL_USER,
   password: process.env.MYSQL_PASSWORD,
   database: process.env.MYSQL_DATABASE,
 });
@@ -48,12 +49,35 @@ await db.insert(categories).values({
 await db.insert(columnDefinitions).values([{
   id: uuidv7(),
   categoryId: testCategoryId,
-  name: 'テスト列1'
+  projectId: testProjectId,
+  name: 'テスト列1',
+  type: 'string',
 }, {
   id: uuidv7(),
   categoryId: testCategoryId,
+  projectId: testProjectId,
   name: '2列目',
+  type: 'number',
 }]);
+
+await db.insert(data).values([{
+  id: uuidv7(),
+  categoryId: testCategoryId,
+  projectId: testProjectId,
+  data: { 
+    'テスト列1': 'テストデータ',
+    '2列目': 123,
+  } 
+}, {
+  id: uuidv7(),
+  categoryId: testCategoryId,
+  projectId: testProjectId,
+  data: { 
+    'テスト列1': 'テストデータ2',
+    '2列目': 456,
+  } 
+}]);
+
 
 await connection.end();
 
