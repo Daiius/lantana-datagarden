@@ -26,7 +26,7 @@ const RealtimeProject: React.FC<
 }) => { 
   
   const utils = trpc.useUtils();
-  const mutation = trpc.project.update.useMutation();
+  const { mutateAsync } = trpc.project.update.useMutation();
   trpc.project.onUpdate.useSubscription(
     { id: projectId }, {
       onData: data => 
@@ -48,7 +48,6 @@ const RealtimeProject: React.FC<
     <div
       className={clsx(
         'px-2 pb-2',
-        'border-l-base border-l-2',
         className,
       )}
       {...props}
@@ -70,7 +69,7 @@ const RealtimeProject: React.FC<
         <DebouncedInput
           value={project.name}
           debouncedOnChange={async (newValue: string) =>
-            await mutation.mutateAsync({ ...project, name: newValue })
+            await mutateAsync({ ...project, name: newValue })
           }
         />
       </fieldset>
