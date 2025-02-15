@@ -17,7 +17,6 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={clsx(
-          'bg-slate-200',
         )}
       >
         <TrpcProvider>{children}</TrpcProvider>

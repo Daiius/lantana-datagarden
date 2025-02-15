@@ -10,6 +10,7 @@ import {
 
 import { trpc } from '@/providers/TrpcProvider';
 import Skeleton from '@/components/common/Skeleton';
+import Button from '@/components/common/Button';
 import RealtimeCategory from '@/components/category/RealtimeCategory';
 
 const RealtimeCategories: React.FC<{
@@ -45,6 +46,9 @@ const RealtimeCategories: React.FC<{
           initialCategory={c}
         />
       )}
+      <Button>
+        カテゴリ追加
+      </Button>
     </>
   );
 };
