@@ -34,10 +34,7 @@ const RealtimeColumns: React.FC<
 
   return (
     <div 
-      className={clsx(
-        'px-2 pb-2 m-2',
-        'border-l-base border-l',
-      )}
+      className={clsx('px-2 pb-2 m-2')}
     >
       <div className='text-xl font-bold'>
         Columns

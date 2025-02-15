@@ -1,6 +1,6 @@
 
 import { db } from 'database/db';
-import { categories } from 'database/db/schema';
+import { CATEGORY_TYPES, COLUMN_DEFINITION_DATA_TYPES, categories } from 'database/db/schema';
 import { eq, and } from 'drizzle-orm';
 
 import {
@@ -24,6 +24,16 @@ export const ee = mitt<CategoryEvents>();
 const selectSchema = createSelectSchema(categories);
 const insertSchema = createInsertSchema(categories);
 
+const literalUnionFromArray = 
+  <T extends readonly string[]>(values: T) =>
+    z.union(
+      values.map(v => z.literal(v)) as [
+        z.ZodLiteral<T[number]>,
+        z.ZodLiteral<T[number]>,
+        ...Array<z.ZodLiteral<T[number]>>
+      ]
+    );
+
 export const categoryRouter = router({
   /**
    * 指定したidのカテゴリを取得します
@@ -40,10 +50,16 @@ export const categoryRouter = router({
    * 指定したprojectIdを持つカテゴリを取得します
    */
   list: publicProcedure
-    .input(z.object({ projectId: z.string() }))
+    .input(z.object({ 
+      projectId: z.string(), 
+      type: literalUnionFromArray(CATEGORY_TYPES).optional(),
+    }))
     .query(async ({ input }) =>
       await db.query.categories.findMany({
-        where: eq(categories.projectId, input.projectId)
+        where: and(
+          eq(categories.projectId, input.projectId),
+          input.type ? eq(categories.type, input.type) : undefined,
+        )
       })
     ),
   /**

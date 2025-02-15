@@ -13,6 +13,8 @@ import {
   v4 as uuidv4,
 } from 'uuid';
 
+import { z } from 'zod';
+
 const UUID_LENGTH = 36 as const;
 const PROJECT_ID_LENGTH = UUID_LENGTH;
 const PROJECT_NAME_LENGTH = 1024 as const;
@@ -168,6 +170,31 @@ export const columnDefinitions = mysqlTable('ColumnDefinitions', {
 
 export type JsonDataType = Record<string, string | number>;
 const DATA_ID_LENGTH = UUID_LENGTH;
+
+
+export const validate = ({
+  type,
+  v,
+}: {
+  type: typeof COLUMN_DEFINITION_DATA_TYPES[number],
+  v: string | number,
+}): boolean => {
+
+  console.log('v: ', v, typeof v);
+
+  switch (type) {
+    case "string":
+      return true;
+    case "number":
+    case "float":
+      return z.coerce.number().safeParse(v).success;
+    case "int":
+      return z.coerce.number().int().safeParse(v).success;
+  }
+
+  return false;
+};
+
 
 /**
  * columnDefinitionsで定義された列をJSONで保持しています
