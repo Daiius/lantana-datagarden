@@ -2,6 +2,8 @@
 import { db } from 'database/db';
 import { 
   data,
+  columnDefinitions,
+  validate,
 } from 'database/db/schema';
 import { eq, and } from 'drizzle-orm';
 
@@ -54,6 +56,42 @@ export const dataRouter = router({
         orderBy: data.id,
       })
     ),
+  update: publicProcedure
+    .input(selectSchema)
+    .mutation(async ({ input }) => {
+      // 列名や型データの取得
+      const relatedColumns = await db.select()
+        .from(columnDefinitions)
+        .where(
+          and(
+            eq(columnDefinitions.projectId, input.projectId),
+            eq(columnDefinitions.categoryId, input.categoryId),
+          )
+        );
+
+      // 入力データのバリデーション
+      Object.entries(input.data).forEach(([k, v]) => {
+        const column = relatedColumns.find(c => c.name === k);
+        if (column == null) throw Error(`column ${k} does not exist`);
+        if (!validate({ type: column.type, v })) {
+          throw Error(`value ${v} is not valid for ${column.type}`); 
+        }
+      });
+
+      // 入力データの書き込み
+      await db.update(data)
+        .set(input)
+        .where(
+          and(
+            eq(data.projectId, input.projectId),
+            eq(data.categoryId, input.categoryId),
+            eq(data.id, input.id),
+          )
+        );
+
+      // 変更通知
+      ee.emit('onUpdate', input);
+    }),
   onUpdate: publicProcedure
     .input(z.object({ 
       id: z.string(), 
