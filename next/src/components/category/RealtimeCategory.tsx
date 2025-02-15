@@ -16,7 +16,6 @@ import DebouncedSelect from '@/components/common/DebouncedSelect';
 import Skeleton from '../common/Skeleton';
 import RealtimeColumns from '@/components/column/RealtimeColumns';
 
-import RealtimeTable from '@/components/table/RealtimeTable';
 
 const RealtimeCategory: React.FC<
   React.ComponentProps<'div'>
@@ -53,8 +52,8 @@ const RealtimeCategory: React.FC<
     <div
       className={clsx(
         'px-2 pb-2', 
-        'border-l-base border-l-2',
       )}
+      {...props}
     >
       <div className='flex flex-row items-center'>
         <div
@@ -68,6 +67,7 @@ const RealtimeCategory: React.FC<
       </div>
       <fieldset 
         className={clsx(
+          'flex flex-col md:flex-row',
           'fieldset bg-base-200', 
           'border border-base-300 p-4 rounded-box',
         )}
@@ -90,12 +90,7 @@ const RealtimeCategory: React.FC<
         />
         
       </fieldset>
-      <div className='divider'></div>
       <RealtimeColumns categoryId={category.id}/>
-      <RealtimeTable 
-        projectId={category.projectId}
-        categoryId={category.id}
-      />
     </div>
   );
 };

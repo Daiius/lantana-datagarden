@@ -16,8 +16,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={clsx(
-        )}
+        suppressHydrationWarning
+        className={clsx('bg-base-300')}
       >
         <TrpcProvider>{children}</TrpcProvider>
       </body>

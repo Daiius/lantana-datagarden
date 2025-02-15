@@ -9,14 +9,24 @@ import {
   createColumnHelper,
   useReactTable,
   getCoreRowModel,
+  TableMeta,
+  RowData,
   flexRender,
 } from '@tanstack/react-table';
+
+declare module '@tanstack/react-table' {
+  interface TableMeta<TData extends RowData> {
+    updateData: (data: Data) => void;
+  }
+}
 
 import { 
   Column,
   Data,
   JsonDataType,
 } from '@/types';
+
+import DebouncedInput from '@/components/common/DebouncedInput';
 
 /**
  * ユーザの変更を部分的にリアルタイム反映するテーブル
@@ -37,16 +47,32 @@ const RealtimeTable: React.FC<
   ...props
 }) => {
 
-  const columnHelper = createColumnHelper<JsonDataType>();
+  const columnHelper = createColumnHelper<Data>();
 
   const { data: columns } = trpc.column.list.useQuery({ categoryId });
 
   const tableColumns = React.useMemo(() => 
     columns?.map(c =>
-      columnHelper.accessor(c.name, {
-        cell: (info): any => info.getValue(),
-        header: (): any => `${c.name} : ${c.type}`,
-      })
+      columnHelper.accessor(d => d.data[c.name], {
+        id: c.name,
+        cell: ({ getValue, row, column, table }): any => {
+          return (
+            <DebouncedInput
+              value={getValue()}
+              validation={c.type !== 'string' ? 'number' : undefined}
+              debouncedOnChange={async newValue =>
+                table.options.meta?.updateData({ 
+                  ...row.original,
+                  data: {
+                    ...row.original.data,
+                    [column.id]: newValue
+                  }
+                })
+              }
+            />
+          );
+        }
+      }),
     ) ?? [],
     [columns]
   ); 
@@ -54,16 +80,20 @@ const RealtimeTable: React.FC<
   const { data } = trpc.data.list.useQuery(
     { projectId, categoryId }
   );
+  const { mutateAsync } = trpc.data.update.useMutation();
 
-  const tableData = React.useMemo(() =>
-    data?.map(d => d.data) ?? [],
-    [data]
-  );
+  const tableData = data ?? []; 
 
-  const table = useReactTable({
+  const table = useReactTable<Data>({
     data: tableData,
     columns: tableColumns,
     getCoreRowModel: getCoreRowModel(),
+    meta: {
+      updateData: async (newData) => {
+        console.log('newData %o', newData);
+        await mutateAsync(newData);
+      },
+    }
   });
 
   return (
@@ -75,7 +105,7 @@ const RealtimeTable: React.FC<
     <table
       className={clsx(
         'w-full',
-        'table-auto border-collapse ',
+        'table border-collapse',
         className,
       )}
       {...props}
