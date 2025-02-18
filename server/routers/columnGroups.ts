@@ -58,6 +58,13 @@ export const columnGroupsRouter = router({
     .query(async ({ input }) =>
       await db.query.columnGroups.findMany({
         where: eq(columnGroups.projectId, input.projectId),
+        with: {
+          innerColumns: {
+            with: {
+              columns: true
+            }
+          }
+        }
       })
     ),
   /**
