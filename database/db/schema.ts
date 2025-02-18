@@ -70,21 +70,23 @@ export const projects = mysqlTable('Projects', {
 //      .$type<{ name: string, type: string }[]>(),
 //});
 
-const CATEGORY_ID_LENGTH = UUID_LENGTH;
-const CATEGORY_NAME_LENGTH = 1024 as const;
-export const CATEGORY_TYPES = [
+const COLUMN_GROUP_ID_LENGTH = UUID_LENGTH;
+const COLUMN_GROUP_NAME_LENGTH = 1024 as const;
+export const COLUMN_GROUP_TYPES = [
   'sequence', 
   'option', 
   'measurement',
 ] as const;
 
 /**
- * カテゴリはデータの項目・型情報を持ちます
- * テンプレートの集合です
+ * ユーザが自由に設定できる列グループです
+ *
+ * 1対1と1対多対応のデータを分割するinnterColumnGroupsとは
+ * 役割が異なります
  */
-export const categories = mysqlTable('Categories', {
+export const columnGroups = mysqlTable('ColumnGroups', {
   id:
-    varchar('id', { length: CATEGORY_ID_LENGTH })
+    varchar('id', { length: COLUMN_GROUP_ID_LENGTH })
       .notNull()
       .$default(() => uuidv7())
       .primaryKey(),
@@ -95,14 +97,14 @@ export const categories = mysqlTable('Categories', {
         onDelete: 'restrict', onUpdate: 'cascade',
       }),
   name:
-    varchar('name', { length: CATEGORY_NAME_LENGTH })
+    varchar('name', { length: COLUMN_GROUP_NAME_LENGTH })
       .notNull()
       .default('新しいカテゴリ'),
       //.unique(), //これはインデックスサイズが制限を超えてしまうらしい
   type:
     varchar('type', { 
       length: 24, 
-      enum: CATEGORY_TYPES,
+      enum: COLUMN_GROUP_TYPES,
     })
     .notNull(),
   sort:
@@ -123,25 +125,51 @@ export const categories = mysqlTable('Categories', {
 //  }),
 //}));
 
-const COLUMN_DEFINITION_ID_LENGTH = UUID_LENGTH;
-const COLUMN_DEFINITION_NAME_LENGTH = 64 as const;
-export const COLUMN_DEFINITION_DATA_TYPES = [
+const INNER_COLUMN_GROUP_ID_LENGTH = UUID_LENGTH;
+
+/**
+ * 1対1対応する項目とそうでない項目を分ける
+ * 内部で管理する列のグループ
+ */
+export const innerColumnGroups = mysqlTable('InnerColumnGroups', {
+  id:
+    varchar('id', { length: INNER_COLUMN_GROUP_ID_LENGTH })
+      .notNull()
+      .primaryKey(),
+  columnGroupId:
+    varchar('id', { length: COLUMN_GROUP_ID_LENGTH })
+      .notNull()
+      .references(() => columnGroups.id, {
+        onDelete: 'restrict', onUpdate: 'cascade',
+      }),
+});
+
+const COLUMNS_ID_LENGTH = UUID_LENGTH;
+const COLUMNS_NAME_LENGTH = 64 as const;
+export const COLUMNS_DATA_TYPES = [
   'string',
   'float',
   'int',
   'number',
 ] as const;
 
-export const columnDefinitions = mysqlTable('ColumnDefinitions', {
+
+export const columns = mysqlTable('Columns', {
   id:
-    varchar('id', { length: COLUMN_DEFINITION_ID_LENGTH })
+    varchar('id', { length: COLUMNS_ID_LENGTH })
       .notNull()
       .$default(() => uuidv7())
       .primaryKey(),
-  categoryId:
-    varchar('category_id', { length: CATEGORY_ID_LENGTH })
+  columnGroupId:
+    varchar('column_group_id', { length: COLUMN_GROUP_ID_LENGTH })
       .notNull()
-      .references(() => categories.id, {
+      .references(() => columnGroups.id, {
+        onDelete: 'restrict', onUpdate: 'cascade' 
+      }),
+  innerColumnGroupId:
+    varchar('inner_column_group_id', { length: INNER_COLUMN_GROUP_ID_LENGTH })
+      .notNull()
+      .references(() => columnGroups.id, {
         onDelete: 'cascade', onUpdate: 'cascade',
       }),
   projectId:
@@ -151,22 +179,21 @@ export const columnDefinitions = mysqlTable('ColumnDefinitions', {
         onDelete: 'restrict', onUpdate: 'cascade',
       }),
   name:
-    varchar('name', { length: COLUMN_DEFINITION_NAME_LENGTH })
+    varchar('name', { length: COLUMNS_NAME_LENGTH })
       .notNull()
       .default('新しい列名'),
   type:
     varchar( 'type', { 
       length: 32,
-      enum: COLUMN_DEFINITION_DATA_TYPES,
+      enum: COLUMNS_DATA_TYPES,
     })
     .notNull()
     .default('string'),
   sort:
     int('sort', { unsigned: true })
-}, (table) => ({
-  uniqueKey: 
-    unique().on(table.categoryId, table.name),
-}));
+}, (table) => [
+    unique().on(table.columnGroupId, table.name),
+]);
 
 export type JsonDataType = Record<string, string | number>;
 const DATA_ID_LENGTH = UUID_LENGTH;
@@ -176,7 +203,7 @@ export const validate = ({
   type,
   v,
 }: {
-  type: typeof COLUMN_DEFINITION_DATA_TYPES[number],
+  type: typeof COLUMNS_DATA_TYPES[number],
   v: string | number,
 }): boolean => {
 
@@ -191,8 +218,6 @@ export const validate = ({
     case "int":
       return z.coerce.number().int().safeParse(v).success;
   }
-
-  return false;
 };
 
 
@@ -205,10 +230,10 @@ export const data = mysqlTable('Data', {
     varchar('id', { length: DATA_ID_LENGTH })
       .notNull()
       .primaryKey(),
-  categoryId:
-    varchar('category_id', { length: CATEGORY_ID_LENGTH })
+  innerColumnGroupId:
+    varchar('inner_column_group_id', { length: INNER_COLUMN_GROUP_ID_LENGTH })
       .notNull()
-      .references(() => categories.id, {
+      .references(() => innerColumnGroups.id, {
         onDelete: 'cascade', onUpdate: 'cascade',
       }),
   projectId:
@@ -221,25 +246,34 @@ export const data = mysqlTable('Data', {
     json('data').$type<JsonDataType>().notNull(),
 });
 
-export const projectToCategoriesRelations = 
+export const projectRelations = 
   relations(projects, ({ many }) => ({ 
-    categories: many(categories),
+    categories: many(columnGroups),
   }));
 
-export const categoryRelations =
-  relations(categories, ({ one, many }) => ({
+export const columnGroupRelations =
+  relations(columnGroups, ({ one, many }) => ({
     project: one(projects, {
-      fields: [categories.projectId],
+      fields: [columnGroups.projectId],
       references: [projects.id],
     }),
-    columns: many(columnDefinitions),
+    columns: many(innerColumnGroups),
   }));
 
-export const columnDefinitionRelations =
-  relations(columnDefinitions, ({ one }) => ({
-    category: one(categories, {
-      fields: [columnDefinitions.categoryId],
-      references: [categories.id],
+export const innerColumnGroupRelations =
+  relations(innerColumnGroups, ({ one, many }) => ({
+    columnGroup: one(columnGroups, {
+      fields: [innerColumnGroups.columnGroupId],
+      references: [columnGroups.id],
+    }),
+    columns: many(columns),
+  }));
+
+export const columnRelations =
+  relations(columns, ({ one }) => ({
+    category: one(innerColumnGroups, {
+      fields: [columns.innerColumnGroupId],
+      references: [innerColumnGroups.id],
     })
   }));
 
