@@ -52,10 +52,10 @@ export const columnRouter = router({
     ),
   /** 指定した列グループに属する列データを取得します */
   list: publicProcedure
-    .input(z.object({ categoryId: z.string() }))
+    .input(z.object({ columnGroupId: z.string() }))
     .query(async ({ input }) =>
       await db.query.columns.findMany({
-        where: eq(columns.columnGroupId, input.categoryId),
+        where: eq(columns.columnGroupId, input.columnGroupId),
         orderBy: columns.id,
       })
     ),

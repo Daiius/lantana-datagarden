@@ -1,7 +1,7 @@
 import { 
   projects,
-  categories,
-  columnDefinitions,
+  columnGroups,
+  columns,
   data,
 } from 'database/db/schema';
 
@@ -10,8 +10,8 @@ import type {
 } from '@/lib';
 
 export type Project  = typeof projects.$inferSelect;
-export type Category = typeof categories.$inferSelect;
-export type Column   = typeof columnDefinitions.$inferSelect;
+export type ColumnGroup = typeof columnGroups.$inferSelect;
+export type Column   = typeof columns.$inferSelect;
 export type Data     = typeof data.$inferSelect;
 
 export type ProjectCategoriesColumns = NonNullable<
@@ -20,18 +20,10 @@ export type ProjectCategoriesColumns = NonNullable<
 
 export type ArrayElement<T> = T extends (infer U)[] ? U : never;
 
-export type CategoryColumns = ArrayElement<
-  ProjectCategoriesColumns['categories']
->;
-
-// duplicated with Column
-//export type _Column = ArrayElement<
-//  CategoryColumns['columns']
-//>;
 
 export { 
-  COLUMN_DEFINITION_DATA_TYPES as DataTypes,
-  CATEGORY_TYPES as CategoryTypes,
+  COLUMNS_DATA_TYPES as DataTypes,
+  COLUMN_GROUP_TYPES as CategoryTypes,
   validate,
 } from 'database/db/schema';
 

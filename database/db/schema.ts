@@ -264,7 +264,7 @@ export const columnGroupRelations =
       fields: [columnGroups.projectId],
       references: [projects.id],
     }),
-    columns: many(innerColumnGroups),
+    innerColumns: many(innerColumnGroups),
   }));
 
 export const innerColumnGroupRelations =
