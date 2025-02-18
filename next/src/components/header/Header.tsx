@@ -11,7 +11,7 @@ const Header: React.FC<
 }) => (
   <div
     className={clsx(
-      'navbar w-full',
+      'navbar w-full z-40',
       'flex flex-row items-center sticky top-0',
       'bg-base-100',
       className,
