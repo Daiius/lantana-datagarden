@@ -1,9 +1,8 @@
 
 import { db } from 'database/db';
 import { 
-  CATEGORY_TYPES,
-  columnDefinitions,
-  data,
+  columns,
+//  data,
 } from 'database/db/schema';
 import { eq, and } from 'drizzle-orm';
 
@@ -29,17 +28,17 @@ type ColumnEvents = {
 
 export const ee = mitt<ColumnEvents>();
 
-const selectSchema = createSelectSchema(columnDefinitions);
+const selectSchema = createSelectSchema(columns);
 
-const literalUnionFromArray = 
-  <T extends readonly string[]>(values: T) =>
-    z.union(
-      values.map(v => z.literal(v)) as [
-        z.ZodLiteral<T[number]>,
-        z.ZodLiteral<T[number]>,
-        ...Array<z.ZodLiteral<T[number]>>
-      ]
-    );
+//const literalUnionFromArray = 
+//  <T extends readonly string[]>(values: T) =>
+//    z.union(
+//      values.map(v => z.literal(v)) as [
+//        z.ZodLiteral<T[number]>,
+//        z.ZodLiteral<T[number]>,
+//        ...Array<z.ZodLiteral<T[number]>>
+//      ]
+//    );
 
 export const columnRouter = router({
   /** 単一の列データを取得します */
@@ -47,28 +46,28 @@ export const columnRouter = router({
     .input(z.object({ id: z.string() }))
     //.output(selectSchema.optional())
     .query(async ({ input }) => 
-       await db.query.columnDefinitions.findFirst({
-         where: eq(columnDefinitions.id, input.id)
+       await db.query.columns.findFirst({
+         where: eq(columns.id, input.id)
        })
     ),
-  /** 指定したカテゴリに属する列データを取得します */
+  /** 指定した列グループに属する列データを取得します */
   list: publicProcedure
     .input(z.object({ categoryId: z.string() }))
     .query(async ({ input }) =>
-      await db.query.columnDefinitions.findMany({
-        where: eq(columnDefinitions.categoryId, input.categoryId),
-        orderBy: columnDefinitions.id,
+      await db.query.columns.findMany({
+        where: eq(columns.columnGroupId, input.categoryId),
+        orderBy: columns.id,
       })
     ),
   update: publicProcedure
     .input(selectSchema)
     .mutation(async ({ input }) => {
 
-      const lastData = await db.query.columnDefinitions.findFirst({
+      const lastData = await db.query.columns.findFirst({
         where: and(
-          eq(columnDefinitions.id, input.id),
-          eq(columnDefinitions.categoryId, input.categoryId),
-          eq(columnDefinitions.projectId, input.projectId),
+          eq(columns.id, input.id),
+          eq(columns.columnGroupId, input.columnGroupId),
+          eq(columns.projectId, input.projectId),
         )
       });
 
@@ -81,7 +80,7 @@ export const columnRouter = router({
         await updateName({
           id: input.id, 
           projectId: input.projectId, 
-          categoryId: input.categoryId,
+          columnGroupId: input.columnGroupId,
           oldName,
           newName,
         });
@@ -93,7 +92,7 @@ export const columnRouter = router({
         await updateType({
           id: input.id,
           projectId: input.projectId,
-          categoryId: input.categoryId,
+          columnGroupId: input.columnGroupId,
           columnName: input.name,
           oldType,
           newType,
@@ -105,13 +104,13 @@ export const columnRouter = router({
   onUpdate: publicProcedure
     .input(z.object({ 
       id: z.string(), 
-      categoryId: z.string(),
+      columnGroupId: z.string(),
     }))
     .subscription(({ input }) =>
       observable<ColumnEvents['onUpdate']>(emit => {
         const handler = (data: ColumnEvents['onUpdate']) => {
           if ( data.id         === input.id
-            && data.categoryId === input.categoryId
+            && data.columnGroupId === input.columnGroupId
           ) {
             emit.next({ ...data });
           }
@@ -121,11 +120,11 @@ export const columnRouter = router({
       })
     ),
   onUpdateList: publicProcedure
-    .input(z.object({ categoryId: z.string() }))
+    .input(z.object({ columnGroupId: z.string() }))
     .subscription(({ input }) =>
       observable<ColumnEvents['onUpdateList']>(emit => {
         const handler = (data: ColumnEvents['onUpdateList']) => {
-          if (data[0]?.categoryId === input.categoryId) {
+          if (data[0]?.columnGroupId === input.columnGroupId) {
             emit.next(data);
           }
         };
