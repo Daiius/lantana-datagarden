@@ -2,75 +2,97 @@ import React from 'react';
 import clsx from 'clsx';
 
 import Tooltip from '@/components/common/Tooltip';
+import SplitAddDataButton from './SplitAddDataButton';
+
+type Data = {
+  data: Record<string, string | number>,
+  children?: Data[],
+}
+
+
+const AddDataButton: React.FC<
+  React.ComponentProps<'div'>
+  & { columns: string[] }
+> = ({
+  columns,
+  className,
+  ...props
+}) => (
+  columns.length > 1
+  ? <SplitAddDataButton columns={columns} />
+  : <button className='btn btn-success btn-sm join-item'>
+      +
+    </button>
+);
+
+const RelationsCell: React.FC<
+  React.ComponentProps<'div'>
+  & { value: string | number; }
+> = ({
+  value,
+  children,
+  ...props
+}) => (
+  // 表のセルに当たる要素
+  <div 
+    className={clsx(
+      'bg-info/40 w-32 h-auto min-h-8 p-4',
+      'border border-info-content border-collapse',
+      'rounded-none',
+      'flex flex-col',
+    )}
+    {...props}
+  >
+    {/* セル内の入力欄部分 */}
+    <input 
+      type='text'
+      className='input'
+      defaultValue={value}
+    />
+  </div>
+);
+
 
 const RelationsRow: React.FC<
- { data: any }
-> = ({ data }) => {
-
-  const contents = 
-    typeof data === 'object' && !Array.isArray(data)
-      ? Object.keys(data)
-      : data as string[];
-
-  const isArray = Array.isArray(data);
-
-  //console.log('data: %o', data);
-  //console.log('contents: %o', contents);
+  React.ComponentProps<'div'>
+  & { data: Data[] }
+> = ({ 
+  data,
+  className,
+  ...props
+}) => {
 
   return (
-    // 基本的に要素は縦に並べるが...
+    // data配列要素を縦に並べる部分
     <div
       className={clsx(
-        'flex flex-col',
+        'flex flex-col w-fit',
+        className,
       )}
+      {...props}
     >
-      {contents.map((c, ic) =>
-        <div className={clsx(
-          'flex flex-row',
-        )}>
+      {data.map((d, index) =>
+        // 最後のデータの後に"追加"ボタンを
+        // 適切なサイズで設置するためのdiv要素
+        <div className='flex flex-col w-fit'>
+          {/* 
+            * 複数列を持つデータを横に並べる部分 
+            * 兼、children要素を更に横に表示する部分
+            */}
           <div 
-            className={clsx(
-              'bg-info/40 w-32 h-auto min-h-8 p-4',
-              //'border-r-2 border-r-sky-200',
-              'border border-info-content border-collapse',
-              'rounded-none',
-              'flex flex-col',
-            )}
+            className={clsx('flex flex-row w-fit')}
           >
-            <div
-              className={clsx('flex flex-row')}
-            >
-              <input 
-                type='text'
-                className='input'
-                defaultValue={c}
-              />
-              {isArray &&
-                <button className={clsx(
-                  'btn btn-xs btn-success', 
-                  'mt-2'
-                )}>
-                  +
-                </button>
-              }
+            {Object.values(d.data).map((v, iv) =>
+              <RelationsCell value={v} /> 
+            )}
+            {/* 上記で表示された列の右側、子要素表示部分 */}
+            <div className='flex flex-col'>
+              {d.children && <RelationsRow data={d.children} /> }
             </div>
-            {ic === contents.length - 1 &&
-              <Tooltip 
-                className='mt-auto'
-                tip='add data' 
-                direction='bottom'
-              >
-                <button className={clsx(
-                  'btn btn-xs btn-success w-full', 
-                  'mt-2'
-                )}>
-                  +
-                </button>
-              </Tooltip>
-            }
           </div>
-          {!isArray && data[c] != null &&
-            <RelationsRow data={data[c]} />
+          {/* 追加ボタンを表示する */}
+          {index === data.length - 1 &&
+            <AddDataButton columns={Object.values(d.data)}/>
           }
         </div>
       )}
@@ -79,32 +101,62 @@ const RelationsRow: React.FC<
 };
 
 
-const RelationsTable: React.FC = () => {
-  const data = {
-    A1: { 
-      B1: ['C1', 'C2', 'C3', 'C4'],
-      B2: [],
-      B3: ['C20', 'C21', 'C22'],
+const RelationsTableTest: React.FC<
+  React.ComponentProps<'div'>
+> = ({
+  className,
+  ...props
+}) => {
+
+
+  const data: Data[] = [{
+    data: {
+      "列名です": "テストです",
+      "俺が列名だ": "はい",
     },
-    A2: [],
-    A3: [],
-  };
-  const columnNames = [
-    '列名です', '俺が列名だ', 'YOU COLUMNED'
+    children: [{ 
+      data: { 
+        "YOU COLUMNED": "C1", 
+        //"TEST": "TEST",
+      }, 
+      //children: [{ data: { "TEST": "TEST" }}],
+    }, { 
+      data: { "YOU COLUMNED": "C2", },
+    }],
+  }, {
+    data: {
+      "列名です": "2つめのデータです",
+      "俺が列名だ": "そうですね",
+    }
+  }];
+  const columnGroups = [
+    ['列名です', '俺が列名だ'],
+    ['YOU COLUMNED'],
   ];
   return (
-    <div className='m-4'>
+    <div 
+      className={clsx(
+        'm-4',
+        'overflow-auto',
+        className,
+      )}
+      {...props}
+    >
       <div className='flex flex-row'>
-        {columnNames.map(cn =>
-          <input 
-            key={cn} 
-            className={clsx(
-              'input input-ghost input-sm',
-              'rounded-none text-center',
-              'bg-info/50 w-32 border border-white/50',
+        {columnGroups.map(cg =>
+          <div>
+            {cg.map(cn =>
+              <input 
+                key={cn} 
+                className={clsx(
+                  'input input-ghost input-sm',
+                  'rounded-none text-center',
+                  'bg-info/50 w-32 border border-white/50',
+                )}
+                defaultValue={cn}
+              />
             )}
-            defaultValue={cn}
-          />
+          </div>
         )}
         <Tooltip tip='add column' direction='right'>
           <button 
@@ -122,5 +174,5 @@ const RelationsTable: React.FC = () => {
   );
 };
 
-export default RelationsTable;
+export default RelationsTableTest;
 
