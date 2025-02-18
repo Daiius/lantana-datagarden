@@ -3,14 +3,14 @@ import { drizzle } from 'drizzle-orm/mysql2';
 import { createConnection } from 'mysql2/promise';
 import {
   projects,
-  //templates,
-  categories,
-  columnDefinitions,
+  columnGroups,
+  innerColumnGroups,
+  columns,
   data,
 } from 'database/db/schema';
 import { 
   v7 as uuidv7,
-  v4 as uuidv4,
+//  v4 as uuidv4,
 } from 'uuid';
 
 const connection = await createConnection({
@@ -36,25 +36,34 @@ await db.insert(projects).values({ id: testProjectId });
 //  definitions: [{ name: '列名1', type: 'number' }],
 //});
 
-const testCategoryId = uuidv7();
+const testColumnGroupId = uuidv7();
 
-await db.insert(categories).values({
-  id: testCategoryId,
+await db.insert(columnGroups).values({
+  id: testColumnGroupId,
   projectId: testProjectId,
   type: 'sequence',
 });
 
-//const testColumnDefinitionId = uuidv7();
+const testInnerColumnGroupId = uuidv7();
 
-await db.insert(columnDefinitions).values([{
+await db.insert(innerColumnGroups).values({
+  id: testInnerColumnGroupId,
+  columnGroupId: testColumnGroupId,
+});
+
+//const testColumnId = uuidv7();
+
+await db.insert(columns).values([{
   id: uuidv7(),
-  categoryId: testCategoryId,
+  columnGroupId: testColumnGroupId,
+  innerColumnGroupId: testInnerColumnGroupId,
   projectId: testProjectId,
   name: 'テスト列1',
   type: 'string',
 }, {
   id: uuidv7(),
-  categoryId: testCategoryId,
+  columnGroupId: testColumnGroupId,
+  innerColumnGroupId: testInnerColumnGroupId,
   projectId: testProjectId,
   name: '2列目',
   type: 'number',
@@ -62,7 +71,8 @@ await db.insert(columnDefinitions).values([{
 
 await db.insert(data).values([{
   id: uuidv7(),
-  categoryId: testCategoryId,
+  columnGroupId: testColumnGroupId,
+  innerColumnGroupId: testInnerColumnGroupId,
   projectId: testProjectId,
   data: { 
     'テスト列1': 'テストデータ',
@@ -70,7 +80,8 @@ await db.insert(data).values([{
   } 
 }, {
   id: uuidv7(),
-  categoryId: testCategoryId,
+  columnGroupId: testColumnGroupId,
+  innerColumnGroupId: testInnerColumnGroupId,
   projectId: testProjectId,
   data: { 
     'テスト列1': 'テストデータ2',

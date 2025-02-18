@@ -135,9 +135,10 @@ export const innerColumnGroups = mysqlTable('InnerColumnGroups', {
   id:
     varchar('id', { length: INNER_COLUMN_GROUP_ID_LENGTH })
       .notNull()
+      .$default(() => uuidv7())
       .primaryKey(),
   columnGroupId:
-    varchar('id', { length: COLUMN_GROUP_ID_LENGTH })
+    varchar('column_group_id', { length: COLUMN_GROUP_ID_LENGTH })
       .notNull()
       .references(() => columnGroups.id, {
         onDelete: 'restrict', onUpdate: 'cascade',
@@ -169,7 +170,7 @@ export const columns = mysqlTable('Columns', {
   innerColumnGroupId:
     varchar('inner_column_group_id', { length: INNER_COLUMN_GROUP_ID_LENGTH })
       .notNull()
-      .references(() => columnGroups.id, {
+      .references(() => innerColumnGroups.id, {
         onDelete: 'cascade', onUpdate: 'cascade',
       }),
   projectId:
@@ -230,6 +231,12 @@ export const data = mysqlTable('Data', {
     varchar('id', { length: DATA_ID_LENGTH })
       .notNull()
       .primaryKey(),
+  columnGroupId:
+    varchar('column_group_id', { length: COLUMN_GROUP_ID_LENGTH })
+      .notNull()
+      .references(() => columnGroups.id, {
+        onDelete: 'cascade', onUpdate: 'cascade',
+      }),
   innerColumnGroupId:
     varchar('inner_column_group_id', { length: INNER_COLUMN_GROUP_ID_LENGTH })
       .notNull()
