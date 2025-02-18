@@ -2,7 +2,7 @@
 import { db } from 'database/db';
 import { 
   data,
-  columnDefinitions,
+  columns,
   validate,
 } from 'database/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -30,14 +30,14 @@ export const dataRouter = router({
   get: publicProcedure
     .input(z.object({ 
       projectId: z.string(),
-      categoryId: z.string(),
+      columnGroupId: z.string(),
       id: z.string(),
     }))
     .query(async ({ input }) => 
        await db.query.data.findFirst({
          where: and(
            eq(data.projectId, input.projectId),
-           eq(data.categoryId, input.categoryId),
+           eq(data.columnGroupId, input.columnGroupId),
            eq(data.id, input.id),
          )
        })
@@ -45,13 +45,13 @@ export const dataRouter = router({
   list: publicProcedure
     .input(z.object({ 
       projectId: z.string(),
-      categoryId: z.string(),
+      columnGroupId: z.string(),
     }))
     .query(async ({ input }) =>
       await db.query.data.findMany({
         where: and(
           eq(data.projectId, input.projectId),
-          eq(data.categoryId, input.categoryId),
+          eq(data.columnGroupId, input.columnGroupId),
         ),
         orderBy: data.id,
       })
@@ -61,11 +61,11 @@ export const dataRouter = router({
     .mutation(async ({ input }) => {
       // 列名や型データの取得
       const relatedColumns = await db.select()
-        .from(columnDefinitions)
+        .from(columns)
         .where(
           and(
-            eq(columnDefinitions.projectId, input.projectId),
-            eq(columnDefinitions.categoryId, input.categoryId),
+            eq(columns.projectId, input.projectId),
+            eq(columns.columnGroupId, input.columnGroupId),
           )
         );
 
@@ -84,7 +84,7 @@ export const dataRouter = router({
         .where(
           and(
             eq(data.projectId, input.projectId),
-            eq(data.categoryId, input.categoryId),
+            eq(data.columnGroupId, input.columnGroupId),
             eq(data.id, input.id),
           )
         );
@@ -95,14 +95,14 @@ export const dataRouter = router({
   onUpdate: publicProcedure
     .input(z.object({ 
       id: z.string(), 
-      categoryId: z.string(),
+      columnGroupId: z.string(),
       projectId: z.string(),
     }))
     .subscription(({ input }) =>
       observable<DataEvents['onUpdate']>(emit => {
         const handler = (data: DataEvents['onUpdate']) => {
           if ( data.id         === input.id
-            && data.categoryId === input.categoryId
+            && data.columnGroupId === input.columnGroupId
             && data.projectId  === input.projectId
           ) {
             emit.next({ ...data });
@@ -114,13 +114,13 @@ export const dataRouter = router({
     ),
   onUpdateList: publicProcedure
     .input(z.object({ 
-      categoryId: z.string(),
+      columnGroupId: z.string(),
       projectId: z.string(),
     }))
     .subscription(({ input }) =>
       observable<DataEvents['onUpdateList']>(emit => {
         const handler = (data: DataEvents['onUpdateList']) => {
-          if ( data[0]?.categoryId === input.categoryId
+          if ( data[0]?.columnGroupId === input.columnGroupId
             && data[0]?.projectId  === input.projectId
           ) {
             emit.next(data);
