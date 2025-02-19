@@ -20,7 +20,7 @@ const AddDataButton: React.FC<
 }) => (
   columns.length > 1
   ? <SplitAddDataButton columns={columns} />
-  : <button className='btn btn-success btn-sm join-item'>
+  : <button className='btn btn-success btn-sm !font-bold !text-2xl'>
       +
     </button>
 );
@@ -92,7 +92,7 @@ const RelationsRow: React.FC<
           </div>
           {/* 追加ボタンを表示する */}
           {index === data.length - 1 &&
-            <AddDataButton columns={Object.values(d.data)}/>
+            <AddDataButton columns={Object.values(d.data) as string[]}/>
           }
         </div>
       )}
