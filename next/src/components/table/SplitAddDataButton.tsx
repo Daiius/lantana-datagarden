@@ -3,51 +3,103 @@
 import React from 'react';
 import clsx from 'clsx';
 
+const Button: React.FC<
+  React.ComponentProps<'button'>
+> = ({
+  className,
+  children,
+  ...props
+}) => (
+  <button 
+    className={clsx(
+      'btn btn-success btn-sm !font-bold !text-2xl',
+      className,
+    )}
+    {...props}
+  >
+    {children}
+  </button>
+);
+
+const ShrinkedSplitAddDataButton: React.FC<
+  React.ComponentProps<'div'>
+  & {
+    columns: string[],
+    setExpanded: (expand: boolean) => void;
+  }
+> = ({
+  columns,
+  setExpanded,
+  className,
+  ...props
+}) => (
+  <div 
+    className={clsx('flex flex-row join', className)}
+    {...props}
+  >
+    <Button 
+      className='join-item w-[20%]'
+      onClick={() => setExpanded(true)}
+    >
+      ...
+    </Button>
+    <Button className='join-item w-[80%]'>
+      +
+    </Button>
+  </div>
+);
+
+const ExpandedSplitAddDataButton: React.FC<
+  React.ComponentProps<'div'>
+  & { 
+    columns: string[];
+    setExpanded: (expand: boolean) => void;
+  }
+> = ({
+  columns,
+  setExpanded,
+  className,
+  ...props
+}) => (
+  <div 
+    className={clsx('flex flex-row join', className)}
+    {...props}
+  >
+    {columns.map((c, ic) =>
+      ic === 0
+      ? <Button 
+          key={c}
+          className='bg-success/80 w-32 join-item'
+          onClick={() => setExpanded(false)}
+        >
+          <svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  className="icon icon-tabler icons-tabler-outline icon-tabler-arrow-back-up"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 14l-4 -4l4 -4" /><path d="M5 10h11a4 4 0 1 1 0 8h-1" /></svg>
+        </Button>
+      : <Button
+          key={c}
+          className='w-32 join-item'
+        >
+          +
+        </Button>
+    )}
+  </div>
+);
+
 const SplitAddDataButton: React.FC<
   React.ComponentProps<'div'>
   & { columns: string[] }
-> = ({
-  columns,
-  className,
-  ...props
-}) => {
+> = ({ ...props }) => {
   const [expanded, setExpanded] = React.useState<boolean>(false);
-  if (expanded) {
-    return (
-      <div className='flex flex-row join'>
-        {columns.map((c, ic) =>
-          ic === 0
-          ? <button 
-              key={c}
-              className='btn btn-primary btn-sm w-32 join-item'
-              onClick={() => setExpanded(false)}
-            >
-              (back)
-            </button>
-          : <button
-              key={c}
-              className='btn btn-success btn-sm w-32 join-item'
-            >
-              +
-            </button>
-        )}
-      </div>
-    );
-  } else {
-    return (
-      <div className='flex flex-row join'>
-        <button className='btn btn-success btn-sm join-item w-[80%]'>
-          +
-        </button>
-        <button 
-          className='btn btn-success btn-sm join-item w-[20%]'
-          onClick={() => setExpanded(true)}
-        >
-          ...
-        </button>
-      </div>
-    );
-  }
+  return (
+    expanded
+    ? <ExpandedSplitAddDataButton 
+        setExpanded={setExpanded}
+        {...props}
+      />
+    : <ShrinkedSplitAddDataButton
+        setExpanded={setExpanded}
+        {...props}
+      />
+  );
 };
 
 export default SplitAddDataButton;
