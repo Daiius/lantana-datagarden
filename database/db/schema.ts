@@ -197,7 +197,7 @@ export const columns = mysqlTable('Columns', {
     unique().on(table.columnGroupId, table.name),
 ]);
 
-export type JsonDataType = Record<string, string | number>;
+export type JsonData = Record<string, string | number>;
 const DATA_ID_LENGTH = UUID_LENGTH;
 
 
@@ -253,7 +253,7 @@ export const data = mysqlTable(
           onDelete: 'restrict', onUpdate: 'cascade',
         }),
     data:
-      json('data').$type<JsonDataType>().notNull(),
+      json('data').$type<JsonData>().notNull(),
 
     parentId:
       varchar('parent_id', { length: DATA_ID_LENGTH })
