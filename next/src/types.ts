@@ -28,6 +28,6 @@ export {
 } from 'database/db/schema';
 
 export type { 
-  JsonDataType,
+  JsonData,
 } from 'database/db/schema';
 
