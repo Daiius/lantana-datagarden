@@ -17,17 +17,13 @@ const RelationsTable: React.FC<
   ...props
 }) => {
 
-  const { 
-    data: columnGroups, 
-    isLoading: isLoadingColumnGroups 
-  } = trpc.columnGroups.list.useQuery({ projectId: zeroId });
+  const { data, isLoading } = trpc.table.get.useQuery({ 
+    projectId: zeroId,
+  });
 
-  const columns = columnGroups?.[0]
-    ?.innerColumns.flatMap(ic => ic.columns);
+  if (data == null) return <div>Loading...</div>;
 
-  const { data } = trpc.data.list.useQuery(
-    { projectId: zeroId, columnGroupId: columnGroups?.[0]?.id ?? "" }
-  ); 
+  const { columns } = data;
 
   return (
     <div 
@@ -64,7 +60,10 @@ const RelationsTable: React.FC<
         </Tooltip>
       </div>
       {data && 
-        <RelationsRow data={data} />
+        <RelationsRow 
+          data={data.data} 
+          columns={columns}
+        />
       }
     </div>
   );
