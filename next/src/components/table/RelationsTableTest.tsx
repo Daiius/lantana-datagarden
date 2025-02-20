@@ -5,6 +5,7 @@ import Tooltip from '@/components/common/Tooltip';
 import SplitAddDataButton from './SplitAddDataButton';
 
 type Data = {
+  id: string;
   data: Record<string, string | number>,
   children?: Data[],
 }
@@ -74,7 +75,7 @@ const RelationsRow: React.FC<
       {data.map((d, index) =>
         // 最後のデータの後に"追加"ボタンを
         // 適切なサイズで設置するためのdiv要素
-        <div className='flex flex-col w-fit'>
+        <div key={d.id} className='flex flex-col w-fit'>
           {/* 
             * 複数列を持つデータを横に並べる部分 
             * 兼、children要素を更に横に表示する部分
