@@ -1,6 +1,7 @@
 import { 
   mysqlTable, 
   unique,
+  foreignKey,
   varchar,
   int,
   json,
@@ -226,32 +227,44 @@ export const validate = ({
  * columnDefinitionsで定義された列をJSONで保持しています
  *
  */
-export const data = mysqlTable('Data', {
-  id:
-    varchar('id', { length: DATA_ID_LENGTH })
-      .notNull()
-      .primaryKey(),
-  columnGroupId:
-    varchar('column_group_id', { length: COLUMN_GROUP_ID_LENGTH })
-      .notNull()
-      .references(() => columnGroups.id, {
-        onDelete: 'cascade', onUpdate: 'cascade',
-      }),
-  innerColumnGroupId:
-    varchar('inner_column_group_id', { length: INNER_COLUMN_GROUP_ID_LENGTH })
-      .notNull()
-      .references(() => innerColumnGroups.id, {
-        onDelete: 'cascade', onUpdate: 'cascade',
-      }),
-  projectId:
-    varchar('project_id', { length: PROJECT_ID_LENGTH })
-      .notNull()
-      .references(() => projects.id, { 
-        onDelete: 'restrict', onUpdate: 'cascade',
-      }),
-  data:
-    json('data').$type<JsonDataType>().notNull(),
-});
+export const data = mysqlTable(
+  'Data', 
+  {
+    id:
+      varchar('id', { length: DATA_ID_LENGTH })
+        .notNull()
+        .primaryKey(),
+    columnGroupId:
+      varchar('column_group_id', { length: COLUMN_GROUP_ID_LENGTH })
+        .notNull()
+        .references(() => columnGroups.id, {
+          onDelete: 'cascade', onUpdate: 'cascade',
+        }),
+    innerColumnGroupId:
+      varchar('inner_column_group_id', { length: INNER_COLUMN_GROUP_ID_LENGTH })
+        .notNull()
+        .references(() => innerColumnGroups.id, {
+          onDelete: 'cascade', onUpdate: 'cascade',
+        }),
+    projectId:
+      varchar('project_id', { length: PROJECT_ID_LENGTH })
+        .notNull()
+        .references(() => projects.id, { 
+          onDelete: 'restrict', onUpdate: 'cascade',
+        }),
+    data:
+      json('data').$type<JsonDataType>().notNull(),
+
+    parentId:
+      varchar('parent_id', { length: DATA_ID_LENGTH })
+  }, 
+  (table) => [
+    foreignKey({
+      columns: [table.parentId],
+      foreignColumns: [table.id],
+    }),
+  ]
+);
 
 export const projectRelations = 
   relations(projects, ({ many }) => ({ 
@@ -284,4 +297,12 @@ export const columnRelations =
     })
   }));
 
+export const dataRelations =
+  relations(data, ({ one, many }) => ({
+    parent: one(data, {
+      fields: [data.parentId],
+      references: [data.id],
+    }),
+    children: many(data),
+  }));
 
