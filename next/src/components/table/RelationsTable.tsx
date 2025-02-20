@@ -25,6 +25,10 @@ const RelationsTable: React.FC<
 
   const { columns } = data;
 
+  const orderMap = new Map(
+    columns.map((c, icolumn) => [c.name, icolumn])
+  );
+
   return (
     <div 
       className={clsx(
@@ -63,6 +67,7 @@ const RelationsTable: React.FC<
         <RelationsRow 
           data={data.data} 
           columns={columns}
+          orderMap={orderMap}
         />
       }
     </div>
