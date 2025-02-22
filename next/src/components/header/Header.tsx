@@ -12,7 +12,7 @@ const Header: React.FC<
   <div
     className={clsx(
       'navbar w-full z-40',
-      'flex flex-row items-center sticky top-0',
+      'flex flex-row items-center',
       'bg-base-100',
       className,
     )}
@@ -25,7 +25,7 @@ const Header: React.FC<
     </Link>
 
     <div className='flex flex-row w-full gap-3 align-middle'>
-      <Link href='/sequences'>Sequences</Link>
+      <Link href='/table'>Table</Link>
       <div>Measurements</div>
       <div>Options</div>
       <Link href='/test'>Test</Link>

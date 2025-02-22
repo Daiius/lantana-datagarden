@@ -1,7 +1,7 @@
 import { db } from 'database/db';
 import { 
-  COLUMN_DEFINITION_DATA_TYPES,
-  columnDefinitions,
+  COLUMNS_DATA_TYPES,
+  columns,
   JsonDataType,
   data,
 } from 'database/db/schema';
@@ -18,25 +18,25 @@ import { eq, and } from 'drizzle-orm';
 export const updateName = async ({
   id,
   projectId,
-  categoryId,
+  columnGroupId,
   oldName,
   newName,
 }: {
   id: string,
   projectId: string,
-  categoryId: string,
+  columnGroupId: string,
   oldName: string,
   newName: string,
 }) => {
     await db.transaction(async tx => {
       // 確実に名前だけ更新する
-      await tx.update(columnDefinitions)
+      await tx.update(columns)
         .set({ name: newName })
         .where(
           and(
-            eq(columnDefinitions.id, id),
-            eq(columnDefinitions.categoryId, categoryId),
-            eq(columnDefinitions.projectId, projectId),
+            eq(columns.id, id),
+            eq(columns.columnGroupId, columnGroupId),
+            eq(columns.projectId, projectId),
           )
         );
 
@@ -51,7 +51,7 @@ export const updateName = async ({
       const dataToUpdate = await db.select().from(data)
         .where(
           and(
-            eq(data.categoryId, categoryId),
+            eq(data.columnGroupId, columnGroupId),
             eq(data.projectId, projectId),
           )
         );
@@ -75,7 +75,7 @@ export const updateName = async ({
           .where(
             and(
               eq(data.id, d.id),
-              eq(data.categoryId, d.categoryId),
+              eq(data.columnGroupId, d.columnGroupId),
               eq(data.projectId, d.projectId),
             )
           );
@@ -92,8 +92,8 @@ const convert = ({
   //newType,
   v,
 }: {
-  oldType: typeof COLUMN_DEFINITION_DATA_TYPES[number],
-  newType: typeof COLUMN_DEFINITION_DATA_TYPES[number],
+  oldType: typeof COLUMNS_DATA_TYPES[number],
+  newType: typeof COLUMNS_DATA_TYPES[number],
   v: any
 }) => {
   if (oldType === 'string') {
@@ -113,7 +113,7 @@ const convert = ({
  * 現在はJSONデータ型間での変換が可能なものだけ上手くいきます
  * 変換不能なデータがある場合、例外が発生します
  * column.nameが一致するもののデータ型を変換するので、
- * この処理は暗黙的にcolumn.nameが同一categoryId内で
+ * この処理は暗黙的にcolumn.nameが同一columnGroupId内で
  * uniqueであることを要求します
  *
  * TODO 現在は string <-> number の変換のみ実装します
@@ -122,27 +122,27 @@ const convert = ({
 export const updateType = async ({
   id,
   projectId,
-  categoryId,
+  columnGroupId,
   columnName,
   oldType,
   newType,
 }: {
   id: string,
   projectId: string,
-  categoryId: string,
+  columnGroupId: string,
   columnName: string,
-  oldType: typeof COLUMN_DEFINITION_DATA_TYPES[number],
-  newType: typeof COLUMN_DEFINITION_DATA_TYPES[number],
+  oldType: typeof COLUMNS_DATA_TYPES[number],
+  newType: typeof COLUMNS_DATA_TYPES[number],
 }) => {
   await db.transaction(async tx => {
     // 確実にtypeだけを変更
-    await tx.update(columnDefinitions)
+    await tx.update(columns)
       .set({ type: newType })
       .where(
         and(
-          eq(columnDefinitions.id, id),
-          eq(columnDefinitions.projectId, projectId),
-          eq(columnDefinitions.categoryId, categoryId),
+          eq(columns.id, id),
+          eq(columns.projectId, projectId),
+          eq(columns.columnGroupId, columnGroupId),
         )
       );
     // 注意！注意！注意！
@@ -150,7 +150,7 @@ export const updateType = async ({
     const dataToUpdate = await db.select().from(data)
       .where(
         and(
-          eq(data.categoryId, categoryId),
+          eq(data.columnGroupId, columnGroupId),
           eq(data.projectId, projectId),
         )
       );
@@ -173,7 +173,7 @@ export const updateType = async ({
         .where(
           and(
             eq(data.id, d.id),
-            eq(data.categoryId, d.categoryId),
+            eq(data.columnGroupId, d.columnGroupId),
             eq(data.projectId, d.projectId),
           )
         );

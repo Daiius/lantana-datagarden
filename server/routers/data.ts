@@ -2,19 +2,23 @@
 import { db } from 'database/db';
 import { 
   data,
-  columnDefinitions,
+  columns,
   validate,
 } from 'database/db/schema';
 import { eq, and } from 'drizzle-orm';
 
 import {
   createSelectSchema,
+  createInsertSchema,
 } from 'drizzle-zod';
 
 import { z } from 'zod';
 
 import { router, publicProcedure } from '../trpc';
 import { observable, } from '@trpc/server/observable';
+
+import { v7 as uuidv7 } from 'uuid';
+import debounce from 'lodash.debounce';
 
 import mitt from 'mitt';
 type DataEvents = {
@@ -25,19 +29,43 @@ type DataEvents = {
 export const ee = mitt<DataEvents>();
 
 const selectSchema = createSelectSchema(data);
+const insertSchema = createInsertSchema(data);
+
+const emitOnUpdateList = debounce(
+  async ({ 
+    projectId, 
+    columnGroupId,
+  }: {
+    projectId: string;
+    columnGroupId: string;
+  }) => {
+    // list からコードを持ってきただけなので
+    // 改良の余地ありかも
+    const newList = await db.query.data.findMany({
+      where: and(
+        eq(data.projectId, projectId),
+        eq(data.columnGroupId, columnGroupId),
+      ),
+      orderBy: data.id,
+    })
+    ee.emit('onUpdateList', newList);
+  },
+  1_000,
+  { maxWait: 5_000 }
+);
 
 export const dataRouter = router({
   get: publicProcedure
     .input(z.object({ 
       projectId: z.string(),
-      categoryId: z.string(),
+      columnGroupId: z.string(),
       id: z.string(),
     }))
     .query(async ({ input }) => 
        await db.query.data.findFirst({
          where: and(
            eq(data.projectId, input.projectId),
-           eq(data.categoryId, input.categoryId),
+           eq(data.columnGroupId, input.columnGroupId),
            eq(data.id, input.id),
          )
        })
@@ -45,13 +73,13 @@ export const dataRouter = router({
   list: publicProcedure
     .input(z.object({ 
       projectId: z.string(),
-      categoryId: z.string(),
+      columnGroupId: z.string(),
     }))
     .query(async ({ input }) =>
       await db.query.data.findMany({
         where: and(
           eq(data.projectId, input.projectId),
-          eq(data.categoryId, input.categoryId),
+          eq(data.columnGroupId, input.columnGroupId),
         ),
         orderBy: data.id,
       })
@@ -61,11 +89,11 @@ export const dataRouter = router({
     .mutation(async ({ input }) => {
       // 列名や型データの取得
       const relatedColumns = await db.select()
-        .from(columnDefinitions)
+        .from(columns)
         .where(
           and(
-            eq(columnDefinitions.projectId, input.projectId),
-            eq(columnDefinitions.categoryId, input.categoryId),
+            eq(columns.projectId, input.projectId),
+            eq(columns.columnGroupId, input.columnGroupId),
           )
         );
 
@@ -84,7 +112,7 @@ export const dataRouter = router({
         .where(
           and(
             eq(data.projectId, input.projectId),
-            eq(data.categoryId, input.categoryId),
+            eq(data.columnGroupId, input.columnGroupId),
             eq(data.id, input.id),
           )
         );
@@ -95,15 +123,15 @@ export const dataRouter = router({
   onUpdate: publicProcedure
     .input(z.object({ 
       id: z.string(), 
-      categoryId: z.string(),
+      columnGroupId: z.string(),
       projectId: z.string(),
     }))
     .subscription(({ input }) =>
       observable<DataEvents['onUpdate']>(emit => {
         const handler = (data: DataEvents['onUpdate']) => {
-          if ( data.id         === input.id
-            && data.categoryId === input.categoryId
-            && data.projectId  === input.projectId
+          if ( data.id            === input.id
+            && data.columnGroupId === input.columnGroupId
+            && data.projectId     === input.projectId
           ) {
             emit.next({ ...data });
           }
@@ -112,15 +140,16 @@ export const dataRouter = router({
         return () => ee.off('onUpdate', handler);
       })
     ),
+  // データ追加、削除などlist更新のイベント
   onUpdateList: publicProcedure
     .input(z.object({ 
-      categoryId: z.string(),
+      columnGroupId: z.string(),
       projectId: z.string(),
     }))
     .subscription(({ input }) =>
       observable<DataEvents['onUpdateList']>(emit => {
         const handler = (data: DataEvents['onUpdateList']) => {
-          if ( data[0]?.categoryId === input.categoryId
+          if ( data[0]?.columnGroupId === input.columnGroupId
             && data[0]?.projectId  === input.projectId
           ) {
             emit.next(data);
@@ -130,5 +159,15 @@ export const dataRouter = router({
         return () => ee.off('onUpdateList', handler);
       })
     ),
+  add: publicProcedure
+    .input(selectSchema.partial({ id: true }))
+    .output(z.object({ id: z.string() }))
+    .mutation(async ({ input }) => {
+      const newId = uuidv7();
+      const newData = { ...input, id: newId };
+      await db.insert(data).values(newData);
+      emitOnUpdateList({ ...input });
+      return { id: newId };
+    }),
 });
 

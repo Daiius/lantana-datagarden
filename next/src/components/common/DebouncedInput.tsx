@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import { useDebouncedCallback } from 'use-debounce';
 
 import { validate } from '@/types';
+import type { Column } from '@/types';
 
 /**
  * debouncedOnChangeを提供するinputです
@@ -15,7 +16,7 @@ const DebouncedInput: React.FC<
   & { 
     debouncedOnChange: (newValue: string | number) => Promise<void>,
     wait?: number,
-    validation?: 'number' | undefined
+    validation?: Column['type'],
   }
 > = ({
   className,
