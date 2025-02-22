@@ -3,6 +3,11 @@
 import React from 'react';
 import clsx from 'clsx';
 
+
+import type { Column } from '@/types';
+
+import { trpc } from '@/providers/TrpcProvider';
+
 const Button: React.FC<
   React.ComponentProps<'button'>
 > = ({
@@ -24,7 +29,7 @@ const Button: React.FC<
 const ShrinkedSplitAddDataButton: React.FC<
   React.ComponentProps<'div'>
   & {
-    columns: string[],
+    columns: Column[],
     setExpanded: (expand: boolean) => void;
   }
 > = ({
@@ -32,27 +37,62 @@ const ShrinkedSplitAddDataButton: React.FC<
   setExpanded,
   className,
   ...props
-}) => (
-  <div 
-    className={clsx('flex flex-row join', className)}
-    {...props}
-  >
-    <Button 
-      className='join-item w-[20%]'
-      onClick={() => setExpanded(true)}
+}) => {
+  const projectId = columns[0]?.projectId ?? '';
+  const columnGroupId = columns[0]?.columnGroupId ?? '';
+  const innerColumnGroupId = columns[0]?.innerColumnGroupId ?? '';
+
+  const { mutateAsync } = trpc.data.add.useMutation();
+  const utils = trpc.useUtils();
+
+  return (
+    <div 
+      className={clsx('flex flex-row join', className)}
+      {...props}
     >
-      ...
-    </Button>
-    <Button className='join-item w-[80%]'>
-      +
-    </Button>
-  </div>
-);
+      {/* 1対多データ追加モードへ */}
+      <Button 
+        className='join-item w-[20%]'
+        onClick={() => setExpanded(true)}
+      >
+        ...
+      </Button>
+      {/* 1対1データ追加 */}
+      <Button 
+        className='join-item w-[80%]'
+        onClick={async () => {
+          const newData = Object.fromEntries(
+            columns.map(c => [c.name, ''])
+          );
+          const { id: newId } = await mutateAsync({
+            projectId, columnGroupId, innerColumnGroupId,
+            parentId: null,
+            data: newData,
+          });
+          utils.data.list.setData(
+            { projectId, columnGroupId, },
+            prevData => {
+              const firstData = prevData?.[0];
+              if (firstData == null) return [];
+              if (prevData == null) return [];
+              return [
+                ...prevData, 
+                { ...firstData, data: newData, id: newId },
+              ]
+            }
+          );
+        }}
+      >
+        +
+      </Button>
+    </div>
+  );
+};
 
 const ExpandedSplitAddDataButton: React.FC<
   React.ComponentProps<'div'>
   & { 
-    columns: string[];
+    columns: Column[];
     setExpanded: (expand: boolean) => void;
   }
 > = ({
@@ -68,7 +108,7 @@ const ExpandedSplitAddDataButton: React.FC<
     {columns.map((c, ic) =>
       ic === 0
       ? <Button 
-          key={c}
+          key={c.id}
           className='bg-success/80 w-32 join-item'
           onClick={() => setExpanded(false)}
         >
@@ -90,7 +130,7 @@ const ExpandedSplitAddDataButton: React.FC<
           </svg>
         </Button>
       : <Button
-          key={c}
+          key={c.id}
           className='w-32 join-item'
         >
           +
@@ -101,7 +141,7 @@ const ExpandedSplitAddDataButton: React.FC<
 
 const SplitAddDataButton: React.FC<
   React.ComponentProps<'div'>
-  & { columns: string[] }
+  & { columns: Column[] }
 > = ({ ...props }) => {
   const [expanded, setExpanded] = React.useState<boolean>(false);
   return (

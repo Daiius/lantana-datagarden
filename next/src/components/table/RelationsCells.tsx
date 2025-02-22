@@ -4,16 +4,22 @@ import clsx from 'clsx';
 import { trpc } from '@/providers/TrpcProvider';
 import type { 
   Data, 
+  Column,
 } from '@/types';
 import DebouncedInput from '@/components/common/DebouncedInput';
 
+/**
+ * 表のセルに当たる要素
+ *
+ * 枠+背景部分のみのコンポーネントで、
+ * 入力部分はchildrenとして外部から与えます
+ */
 const RelationsCell: React.FC<
   React.ComponentProps<'div'>
 > = ({
   children,
   ...props
 }) => (
-  // 表のセルに当たる要素
   <div 
     className={clsx(
       'bg-info/40 w-32 h-auto min-h-8 p-4',
@@ -26,6 +32,7 @@ const RelationsCell: React.FC<
     {children}
   </div>
 );
+
 /**
  * JsonDataを表示するセルで、
  * 含まれるキーの数だけ列幅をとります
@@ -43,15 +50,43 @@ const RelationsCells: React.FC<
   & { 
     data: Data;
     orderMap: Map<string, number>;
+    columns: Column[];
   }
 > = ({ 
-  data,
+  data: initialData,
+  columns,
   orderMap,
   className,
   children,
   ...props
 }) => {
   const { mutateAsync } = trpc.data.update.useMutation();
+  const utils = trpc.useUtils();
+  const { id, projectId, columnGroupId } = initialData;
+  const { data: queriedData } = trpc.data.get.useQuery(
+    { id, projectId, columnGroupId },
+    { enabled: false, initialData },
+  );
+
+  const data = queriedData ? queriedData : initialData;
+
+  trpc.data.onUpdate.useSubscription(
+    { id, projectId, columnGroupId },
+    {
+      onData: newData => {
+        utils.data.get.setData(
+          { id, projectId, columnGroupId }, 
+          newData
+        );
+        console.log('RelationsCells, onData: %o', newData);
+      }
+    },
+  );
+
+  console.log(
+    `RelationsCells (id:${data.id}) rendered at ${new Date()}`
+  );
+
   return (
     <div 
       className={clsx('flex flex-row w-fit')}
@@ -66,12 +101,15 @@ const RelationsCells: React.FC<
             {/* セル内の入力欄部分 */}
             <DebouncedInput
               value={v}
+              validation={
+                columns.find(c => c.name === k)?.type ?? 'string'
+              }
               debouncedOnChange={async newValue => {
                 const newData = { 
                   ...data, 
                   data: { ...data.data, [k]: newValue }
                 }; 
-                console.log(newData);
+                //console.log(newData);
                 await mutateAsync(newData);
               }}
             />

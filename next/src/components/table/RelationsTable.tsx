@@ -17,13 +17,16 @@ const RelationsTable: React.FC<
   ...props
 }) => {
 
-  const { data, isLoading } = trpc.table.get.useQuery({ 
+  const { 
+    data: tableData, 
+    //isLoading,
+  } = trpc.table.get.useQuery({ 
     projectId: zeroId,
   });
 
-  if (data == null) return <div>Loading...</div>;
+  if (tableData == null) return <div>Loading...</div>;
 
-  const { columns } = data;
+  const { columns, data } = tableData;
 
   const orderMap = new Map(
     columns.map((c, icolumn) => [c.name, icolumn])
@@ -35,6 +38,7 @@ const RelationsTable: React.FC<
         'm-4 overflow-auto',
         className,
       )}
+      {...props}
     >
       <div 
         className={clsx(
@@ -63,9 +67,9 @@ const RelationsTable: React.FC<
           </button>
         </Tooltip>
       </div>
-      {data && 
+      {tableData && 
         <RelationsRow 
-          data={data.data} 
+          data={data} 
           columns={columns}
           orderMap={orderMap}
         />
