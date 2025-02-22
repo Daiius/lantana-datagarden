@@ -1,109 +1,59 @@
+'use client'
+
 import React from 'react';
 import clsx from 'clsx';
 
+import { trpc } from '@/providers/TrpcProvider';
+
 import Tooltip from '@/components/common/Tooltip';
+import RelationsRow from '@/components/table/RelationsRow';
+  
+const zeroId = '00000000-0000-0000-0000-000000000000' as const;
 
-const RelationsRow: React.FC<
- { data: any }
-> = ({ data }) => {
+const RelationsTable: React.FC<
+  React.ComponentProps<'div'>
+> = ({
+  className,
+  ...props
+}) => {
 
-  const contents = 
-    typeof data === 'object' && !Array.isArray(data)
-      ? Object.keys(data)
-      : data as string[];
+  const { 
+    data: tableData, 
+    //isLoading,
+  } = trpc.table.get.useQuery({ 
+    projectId: zeroId,
+  });
 
-  const isArray = Array.isArray(data);
+  if (tableData == null) return <div>Loading...</div>;
 
-  //console.log('data: %o', data);
-  //console.log('contents: %o', contents);
+  const { columns, data } = tableData;
 
-  return (
-    // 基本的に要素は縦に並べるが...
-    <div
-      className={clsx(
-        'flex flex-col',
-      )}
-    >
-      {contents.map((c, ic) =>
-        <div className={clsx(
-          'flex flex-row',
-        )}>
-          <div 
-            className={clsx(
-              'bg-info/40 w-32 h-auto min-h-8 p-4',
-              //'border-r-2 border-r-sky-200',
-              'border border-info-content border-collapse',
-              'rounded-none',
-              'flex flex-col',
-            )}
-          >
-            <div
-              className={clsx('flex flex-row')}
-            >
-              <input 
-                type='text'
-                className='input'
-                defaultValue={c}
-              />
-              {isArray &&
-                <button className={clsx(
-                  'btn btn-xs btn-success', 
-                  'mt-2'
-                )}>
-                  +
-                </button>
-              }
-            </div>
-            {ic === contents.length - 1 &&
-              <Tooltip 
-                className='mt-auto'
-                tip='add data' 
-                direction='bottom'
-              >
-                <button className={clsx(
-                  'btn btn-xs btn-success w-full', 
-                  'mt-2'
-                )}>
-                  +
-                </button>
-              </Tooltip>
-            }
-          </div>
-          {!isArray && data[c] != null &&
-            <RelationsRow data={data[c]} />
-          }
-        </div>
-      )}
-    </div>
+  const orderMap = new Map(
+    columns.map((c, icolumn) => [c.name, icolumn])
   );
-};
 
-
-const RelationsTable: React.FC = () => {
-  const data = {
-    A1: { 
-      B1: ['C1', 'C2', 'C3', 'C4'],
-      B2: [],
-      B3: ['C20', 'C21', 'C22'],
-    },
-    A2: [],
-    A3: [],
-  };
-  const columnNames = [
-    '列名です', '俺が列名だ', 'YOU COLUMNED'
-  ];
   return (
-    <div className='m-4'>
-      <div className='flex flex-row'>
-        {columnNames.map(cn =>
+    <div 
+      className={clsx(
+        'm-4 overflow-auto',
+        className,
+      )}
+      {...props}
+    >
+      <div 
+        className={clsx(
+          'flex flex-row',
+          'sticky top-0 z-10'
+        )}>
+        {columns?.map(c =>
           <input 
-            key={cn} 
+            key={c.id} 
             className={clsx(
               'input input-ghost input-sm',
               'rounded-none text-center',
-              'bg-info/50 w-32 border border-white/50',
+              'bg-info w-32 border border-white/50',
             )}
-            defaultValue={cn}
+            defaultValue={c.name}
           />
         )}
         <Tooltip tip='add column' direction='right'>
@@ -117,7 +67,13 @@ const RelationsTable: React.FC = () => {
           </button>
         </Tooltip>
       </div>
-      <RelationsRow data={data} />
+      {tableData && 
+        <RelationsRow 
+          data={data} 
+          columns={columns}
+          orderMap={orderMap}
+        />
+      }
     </div>
   );
 };

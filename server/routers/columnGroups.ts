@@ -1,6 +1,8 @@
 
 import { db } from 'database/db';
-import { CATEGORY_TYPES, COLUMN_DEFINITION_DATA_TYPES, categories } from 'database/db/schema';
+import { 
+  columnGroups,
+} from 'database/db/schema';
 import { eq, and } from 'drizzle-orm';
 
 import {
@@ -21,20 +23,20 @@ type CategoryEvents = {
 
 export const ee = mitt<CategoryEvents>();
 
-const selectSchema = createSelectSchema(categories);
-const insertSchema = createInsertSchema(categories);
+const selectSchema = createSelectSchema(columnGroups);
+const insertSchema = createInsertSchema(columnGroups);
 
-const literalUnionFromArray = 
-  <T extends readonly string[]>(values: T) =>
-    z.union(
-      values.map(v => z.literal(v)) as [
-        z.ZodLiteral<T[number]>,
-        z.ZodLiteral<T[number]>,
-        ...Array<z.ZodLiteral<T[number]>>
-      ]
-    );
+//const literalUnionFromArray = 
+//  <T extends readonly string[]>(values: T) =>
+//    z.union(
+//      values.map(v => z.literal(v)) as [
+//        z.ZodLiteral<T[number]>,
+//        z.ZodLiteral<T[number]>,
+//        ...Array<z.ZodLiteral<T[number]>>
+//      ]
+//    );
 
-export const categoryRouter = router({
+export const columnGroupsRouter = router({
   /**
    * 指定したidのカテゴリを取得します
    */
@@ -42,8 +44,8 @@ export const categoryRouter = router({
     .input(z.object({ id: z.string() }))
     .output(selectSchema.optional())
     .query(async ({ input }) => 
-       await db.query.categories.findFirst({
-         where: eq(categories.id, input.id)
+       await db.query.columnGroups.findFirst({
+         where: eq(columnGroups.id, input.id)
        })
     ),
   /**
@@ -52,14 +54,17 @@ export const categoryRouter = router({
   list: publicProcedure
     .input(z.object({ 
       projectId: z.string(), 
-      type: literalUnionFromArray(CATEGORY_TYPES).optional(),
     }))
     .query(async ({ input }) =>
-      await db.query.categories.findMany({
-        where: and(
-          eq(categories.projectId, input.projectId),
-          input.type ? eq(categories.type, input.type) : undefined,
-        )
+      await db.query.columnGroups.findMany({
+        where: eq(columnGroups.projectId, input.projectId),
+        with: {
+          innerColumns: {
+            with: {
+              columns: true
+            }
+          }
+        }
       })
     ),
   /**
@@ -70,12 +75,12 @@ export const categoryRouter = router({
     .input(selectSchema)
     .mutation(async ({ input }) => {
       console.log('input: %o', input);
-      await db.update(categories)
+      await db.update(columnGroups)
         .set({ ...input })
         .where(
           and(
-            eq(categories.id, input.id),
-            eq(categories.projectId, input.projectId)
+            eq(columnGroups.id, input.id),
+            eq(columnGroups.projectId, input.projectId)
           )
         ) ;
       ee.emit('onUpdate', { ...input });
@@ -108,12 +113,12 @@ export const categoryRouter = router({
   add: publicProcedure
     .input(insertSchema)
     .mutation(async ({ input }) => {
-      await db.insert(categories).values({
+      await db.insert(columnGroups).values({
         ...input
       });
       const relatedCategories = await db.select()
-        .from(categories)
-        .where(eq(categories.projectId, input.projectId));
+        .from(columnGroups)
+        .where(eq(columnGroups.projectId, input.projectId));
       ee.emit('onUpdateList', relatedCategories);
     }),
   /**
