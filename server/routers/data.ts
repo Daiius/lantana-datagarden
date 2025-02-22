@@ -9,12 +9,16 @@ import { eq, and } from 'drizzle-orm';
 
 import {
   createSelectSchema,
+  createInsertSchema,
 } from 'drizzle-zod';
 
 import { z } from 'zod';
 
 import { router, publicProcedure } from '../trpc';
 import { observable, } from '@trpc/server/observable';
+
+import { v7 as uuidv7 } from 'uuid';
+import debounce from 'lodash.debounce';
 
 import mitt from 'mitt';
 type DataEvents = {
@@ -25,6 +29,30 @@ type DataEvents = {
 export const ee = mitt<DataEvents>();
 
 const selectSchema = createSelectSchema(data);
+const insertSchema = createInsertSchema(data);
+
+const emitOnUpdateList = debounce(
+  async ({ 
+    projectId, 
+    columnGroupId,
+  }: {
+    projectId: string;
+    columnGroupId: string;
+  }) => {
+    // list からコードを持ってきただけなので
+    // 改良の余地ありかも
+    const newList = await db.query.data.findMany({
+      where: and(
+        eq(data.projectId, projectId),
+        eq(data.columnGroupId, columnGroupId),
+      ),
+      orderBy: data.id,
+    })
+    ee.emit('onUpdateList', newList);
+  },
+  1_000,
+  { maxWait: 5_000 }
+);
 
 export const dataRouter = router({
   get: publicProcedure
@@ -101,9 +129,9 @@ export const dataRouter = router({
     .subscription(({ input }) =>
       observable<DataEvents['onUpdate']>(emit => {
         const handler = (data: DataEvents['onUpdate']) => {
-          if ( data.id         === input.id
+          if ( data.id            === input.id
             && data.columnGroupId === input.columnGroupId
-            && data.projectId  === input.projectId
+            && data.projectId     === input.projectId
           ) {
             emit.next({ ...data });
           }
@@ -112,6 +140,7 @@ export const dataRouter = router({
         return () => ee.off('onUpdate', handler);
       })
     ),
+  // データ追加、削除などlist更新のイベント
   onUpdateList: publicProcedure
     .input(z.object({ 
       columnGroupId: z.string(),
@@ -130,5 +159,15 @@ export const dataRouter = router({
         return () => ee.off('onUpdateList', handler);
       })
     ),
+  add: publicProcedure
+    .input(selectSchema.partial({ id: true }))
+    .output(z.object({ id: z.string() }))
+    .mutation(async ({ input }) => {
+      const newId = uuidv7();
+      const newData = { ...input, id: newId };
+      await db.insert(data).values(newData);
+      emitOnUpdateList({ ...input });
+      return { id: newId };
+    }),
 });
 
