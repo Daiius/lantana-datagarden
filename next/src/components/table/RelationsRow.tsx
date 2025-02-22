@@ -17,34 +17,77 @@ import RelationsCells from '@/components/table/RelationsCells';
 
 const AddDataButton: React.FC<
   React.ComponentProps<'div'>
-  & { columns: string[] }
+  & { columns: Column[] }
 > = ({
   columns,
   className,
   ...props
 }) => (
   columns.length > 1
-  ? <SplitAddDataButton columns={columns} />
-  : <button className='btn btn-success btn-sm !font-bold !text-2xl'>
+  ? <SplitAddDataButton 
+      columns={columns} 
+    />
+  : <button 
+      className='btn btn-success btn-sm !font-bold !text-2xl'
+    > 
       +
     </button>
 );
 
+type DataWithChildren = Data & { children?: DataWithChildren[] };
+
 const RelationsRow: React.FC<
   React.ComponentProps<'div'>
   & { 
-    data: Data[];
+    data: DataWithChildren[];
     columns: Column[];
     orderMap: Map<string, number>;
   }
 > = ({ 
-  data,
+  data: initialData,
   columns,
   orderMap,
   className,
   ...props
 }) => {
 
+  console.log(
+    `RelationsRow (ndata=${initialData.length}) is rendered`
+  );
+
+  const projectId = initialData[0]?.projectId ?? '';
+  const columnGroupId = initialData[0]?.columnGroupId ?? '';
+
+  const utils = trpc.useUtils();
+
+  const { data } = trpc.data.list.useQuery(
+    { projectId, columnGroupId },
+    { enabled: false, initialData }
+  );
+  trpc.data.onUpdateList.useSubscription(
+    { projectId, columnGroupId }, 
+    {
+      onData: newData => {
+        // onUpdateListはchildren要素を持たない情報なので
+        // propsのdata.childrenから補う
+        utils.data.list.setData(
+          { projectId, columnGroupId },
+          newData,
+        );
+        console.log('RelationsRow, onData: %o', newData);
+    }
+  });
+
+  const mergedData = data.map(d => {
+    const relatedInitialData = 
+      initialData.find(rid => rid.id === d.id);
+    return { 
+      ...d, 
+      children: relatedInitialData?.children ?? [] 
+    };
+  });
+
+  //console.log('mergedData: %o', mergedData);
 
   return (
     // data配列要素を縦に並べる部分
@@ -55,7 +98,7 @@ const RelationsRow: React.FC<
       )}
       {...props}
     >
-      {data.map((d, index) =>
+      {mergedData.map((d, index) =>
         // 最後のデータの後に"追加"ボタンを
         // 適切なサイズで設置するためのdiv要素
         <div key={d.id} className='flex flex-col w-fit'>
@@ -65,6 +108,7 @@ const RelationsRow: React.FC<
             */}
           <RelationsCells
             data={d}
+            columns={columns}
             orderMap={orderMap}
           >
             {/* 上記で表示された列の右側、子要素表示部分 */}
@@ -79,10 +123,8 @@ const RelationsRow: React.FC<
             }
           </RelationsCells>
           {/* 追加ボタンを表示する */}
-          {index === data.length - 1 &&
-            <AddDataButton 
-              columns={Object.values(d.data) as string[]}
-            />
+          {index === mergedData.length - 1 &&
+            <AddDataButton columns={columns} />
           }
         </div>
       )}
