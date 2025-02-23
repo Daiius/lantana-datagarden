@@ -4,7 +4,7 @@ import {
   columns,
 //  data,
 } from 'database/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, asc } from 'drizzle-orm';
 
 import {
   createSelectSchema,
@@ -19,6 +19,8 @@ import {
   updateName,
   updateType,
 } from '../lib/column';
+
+import { v7 as uuidv7 } from 'uuid';
 
 import mitt from 'mitt';
 type ColumnEvents = {
@@ -66,7 +68,7 @@ export const columnRouter = router({
           eq(columns.columnGroupId, input.columnGroupId),
           eq(columns.projectId, input.projectId),
         ),
-        orderBy: columns.id,
+        orderBy: [asc(columns.id)],
       })
     ),
   update: publicProcedure
@@ -110,6 +112,21 @@ export const columnRouter = router({
       }
 
       ee.emit('onUpdate', { ...input });
+    }),
+  add: publicProcedure
+    .input(selectSchema.partial({ id: true }))
+    .mutation(async ({ input }) => {
+      await db.insert(columns).values(
+        { ...input, id: uuidv7() }
+      );
+      const newList = await db.query.columns.findMany({
+        where: and(
+          eq(columns.projectId, input.projectId),
+          eq(columns.columnGroupId, input.columnGroupId),
+        ),
+        orderBy: [asc(columns.id)],
+      });
+      ee.emit('onUpdateList', newList); 
     }),
   onUpdate: publicProcedure
     .input(z.object({ 
