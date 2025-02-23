@@ -23,7 +23,7 @@ declare module '@tanstack/react-table' {
 import { 
   Column,
   Data,
-  JsonDataType,
+  JsonData,
 } from '@/types';
 
 import DebouncedInput from '@/components/common/DebouncedInput';
@@ -38,18 +38,20 @@ const RealtimeTable: React.FC<
   React.ComponentProps<'table'>
   & {
     projectId: string,
-    categoryId: string,
+    columnGroupId: string,
   }
 > = ({
   projectId,
-  categoryId,
+  columnGroupId,
   className,
   ...props
 }) => {
 
   const columnHelper = createColumnHelper<Data>();
 
-  const { data: columns } = trpc.column.list.useQuery({ categoryId });
+  const { data: columns } = trpc.column.list.useQuery({ 
+    columnGroupId, projectId 
+  });
 
   const tableColumns = React.useMemo(() => 
     columns?.map(c =>
@@ -78,7 +80,7 @@ const RealtimeTable: React.FC<
   ); 
 
   const { data } = trpc.data.list.useQuery(
-    { projectId, categoryId }
+    { projectId, columnGroupId }
   );
   const { mutateAsync } = trpc.data.update.useMutation();
 
@@ -97,15 +99,15 @@ const RealtimeTable: React.FC<
   });
 
   return (
-    <div
-      className={clsx(
-        'border border-gray-400 overflow-hidden rounded-lg',
-      )}
-    >
+    //<div
+    //  className={clsx(
+    //    'border border-gray-400 overflow-hidden rounded-lg',
+    //    'w-full',
+    //  )}
+    //>
     <table
       className={clsx(
-        'w-full',
-        'table border-collapse',
+        'table border-collapse w-full',
         className,
       )}
       {...props}
@@ -117,7 +119,8 @@ const RealtimeTable: React.FC<
               <th 
                 key={header.id}
                 className={clsx(
-                  'border border-gray-300 bg-gray-500/20'
+                  'border border-gray-300 bg-gray-500/20',
+                  'min-w-32 w-32',
                 )}
               >
                 {header.isPlaceholder
@@ -152,7 +155,7 @@ const RealtimeTable: React.FC<
         )}
       </tbody>
     </table>
-    </div>
+    //</div>
   );
 };
 

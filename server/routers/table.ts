@@ -6,7 +6,7 @@ import {
   columnGroups,
   validate,
 } from 'database/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, asc } from 'drizzle-orm';
 
 import {
   createSelectSchema,
@@ -33,7 +33,9 @@ export const tableRouter = router({
         await db.query.columnGroups.findMany({
           where: eq(columnGroups.projectId, input.projectId),
           with: {
-            columns: true
+            columns: {
+              orderBy: [asc(columns.id)],
+            }
           }
         });
 

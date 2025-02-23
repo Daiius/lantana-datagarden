@@ -43,7 +43,7 @@ export const getNestedColumnGroups = async ({
   with: {
     columns: {
       orderBy: [asc(columns.id)]
-    }
+    },
   }
 });
 export const getNestedColumnGroup = async ({
