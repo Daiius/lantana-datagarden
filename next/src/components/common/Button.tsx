@@ -11,8 +11,9 @@ const Button: React.FC<
   <button
     type='button'
     className={clsx(
-      'btn'
+      'btn', className
     )}
+    {...props}
   >
     {children}
   </button>

@@ -2,8 +2,9 @@
 import { db } from 'database/db';
 import { 
   columnGroups,
+  columns,
 } from 'database/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, asc } from 'drizzle-orm';
 
 import {
   createInsertSchema,
@@ -40,7 +41,9 @@ export const getNestedColumnGroups = async ({
 }) => await db.query.columnGroups.findMany({
   where: eq(columnGroups.projectId, projectId),
   with: {
-    columns: true
+    columns: {
+      orderBy: [asc(columns.id)]
+    }
   }
 });
 export const getNestedColumnGroup = async ({
@@ -55,7 +58,9 @@ export const getNestedColumnGroup = async ({
     eq(columnGroups.id, id),
   ),
   with: {
-    columns: true
+    columns: {
+      orderBy: [asc(columns.id)]
+    }
   }
 });
 
@@ -96,7 +101,9 @@ export const columnGroupRouter = router({
       await db.query.columnGroups.findMany({
         where: eq(columnGroups.projectId, input.projectId),
         with: {
-          columns: true
+          columns: {
+            orderBy: [asc(columns.id)],
+          }
         }
       })
     ),
@@ -147,7 +154,7 @@ export const columnGroupRouter = router({
    * 一連のcategoriesを取得できます
    */
   add: publicProcedure
-    .input(insertSchema)
+    .input(selectSchema.partial({ id: true }))
     .mutation(async ({ input }) => {
       await db.insert(columnGroups).values({
         ...input

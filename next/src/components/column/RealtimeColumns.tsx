@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react';
 import clsx from 'clsx';
 
@@ -8,18 +10,22 @@ import type {
 } from '@/types';
 
 import RealtimeColumn from '@/components/column/RealtimeColumn';
+import Button from '@/components/common/Button';
 
 const RealtimeColumns: React.FC<
   React.ComponentProps<'div'>
-  & { columns: Column[] }
+  & { 
+    projectId: string;
+    columnGroupId: string;
+    initialColumns: Column[]; 
+  }
 > = ({
-  columns: initialColumns,
+  columnGroupId,
+  projectId,
+  initialColumns,
   className,
   ...props
 }) => {
-
-  const columnGroupId = initialColumns[0]?.columnGroupId ?? '';
-  const projectId = initialColumns[0]?.projectId ?? '';
 
   const utils = trpc.useUtils();
   const { data: columns } = trpc.column.list.useQuery(
@@ -36,15 +42,36 @@ const RealtimeColumns: React.FC<
       onError: err => console.error(err),
     }
   );
+  const { mutateAsync } = trpc.column.add.useMutation();
 
   return (
     <div
-      className={clsx(className)}
+      className={clsx(
+        'bg-base-100 rounded-lg',
+        'p-4',
+        'flex flex-col gap-2',
+        className,
+      )}
       {...props}
     >
       {columns.map(c =>
         <RealtimeColumn key={c.id} initialColumn={c} />
       )}
+      <Button 
+        className='btn-success'
+        onClick={async () => {
+          console.log('Adding column to column group, ', columnGroupId);
+          await mutateAsync({
+            name: '',
+            projectId,
+            columnGroupId,
+            type: 'string',
+            sort: null,
+          });
+        }}
+      >
+        + 列の追加
+      </Button>
     </div>
   );
 };
