@@ -16,15 +16,12 @@ import { router, publicProcedure } from '../trpc';
 import { observable, } from '@trpc/server/observable';
 
 import mitt from 'mitt';
-type CategoryEvents = {
-  onUpdate:     z.infer<typeof selectSchema>,
-  onUpdateList: z.infer<typeof selectSchema>[],
-}
 
-export const ee = mitt<CategoryEvents>();
 
 const selectSchema = createSelectSchema(columnGroups);
 const insertSchema = createInsertSchema(columnGroups);
+
+
 
 //const literalUnionFromArray = 
 //  <T extends readonly string[]>(values: T) =>
@@ -36,12 +33,52 @@ const insertSchema = createInsertSchema(columnGroups);
 //      ]
 //    );
 
-export const columnGroupsRouter = router({
+export const getNestedColumnGroups = async ({
+  projectId
+}: {
+  projectId: string
+}) => await db.query.columnGroups.findMany({
+  where: eq(columnGroups.projectId, projectId),
+  with: {
+    columns: true
+  }
+});
+export const getNestedColumnGroup = async ({
+  projectId,
+  id,
+}: {
+  projectId: string;
+  id: string;
+}) => await db.query.columnGroups.findFirst({
+  where: and(
+    eq(columnGroups.projectId, projectId),
+    eq(columnGroups.id, id),
+  ),
+  with: {
+    columns: true
+  }
+});
+
+type Element<T> = T extends (infer U)[] ? U : never;
+type NestedColumnGroup = Element<Awaited<ReturnType<
+  typeof getNestedColumnGroups>
+>>
+
+type ColumnGroupEvents = {
+  onUpdate:     NestedColumnGroup,
+  onUpdateList: NestedColumnGroup[],
+}
+export const ee = mitt<ColumnGroupEvents>();
+
+export const columnGroupRouter = router({
   /**
    * 指定したidのカテゴリを取得します
    */
   get: publicProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ 
+      id: z.string(),
+      projectId: z.string(),
+    }))
     .output(selectSchema.optional())
     .query(async ({ input }) => 
        await db.query.columnGroups.findFirst({
@@ -59,11 +96,7 @@ export const columnGroupsRouter = router({
       await db.query.columnGroups.findMany({
         where: eq(columnGroups.projectId, input.projectId),
         with: {
-          innerColumns: {
-            with: {
-              columns: true
-            }
-          }
+          columns: true
         }
       })
     ),
@@ -82,8 +115,11 @@ export const columnGroupsRouter = router({
             eq(columnGroups.id, input.id),
             eq(columnGroups.projectId, input.projectId)
           )
-        ) ;
-      ee.emit('onUpdate', { ...input });
+        );
+      const nestedColumnGroup = await getNestedColumnGroup(input);
+      if (nestedColumnGroup == null) 
+        throw new Error('failed to get updated nested column group');
+      ee.emit('onUpdate', nestedColumnGroup);
     }),
   /**
    * 指定したidのカテゴリが更新された際に発生するイベントです
@@ -91,8 +127,8 @@ export const columnGroupsRouter = router({
   onUpdate: publicProcedure
     .input(z.object({ id: z.string(), projectId: z.string() }))
     .subscription(({ input }) =>
-      observable<CategoryEvents['onUpdate']>(emit => {
-        const handler = (data: CategoryEvents['onUpdate']) => {
+      observable<ColumnGroupEvents['onUpdate']>(emit => {
+        const handler = (data: ColumnGroupEvents['onUpdate']) => {
           if ( data.id === input.id 
             && data.projectId === input.projectId
           ) {
@@ -116,10 +152,8 @@ export const columnGroupsRouter = router({
       await db.insert(columnGroups).values({
         ...input
       });
-      const relatedCategories = await db.select()
-        .from(columnGroups)
-        .where(eq(columnGroups.projectId, input.projectId));
-      ee.emit('onUpdateList', relatedCategories);
+      const nestedColumnGroups = await getNestedColumnGroups(input);
+      ee.emit('onUpdateList', nestedColumnGroups);
     }),
   /**
    * 新しいカテゴリが追加された際、同じプロジェクトに属する
@@ -128,8 +162,8 @@ export const columnGroupsRouter = router({
   onUpdateList: publicProcedure
     .input(z.object({ projectId: z.string() }))
     .subscription(({ input }) =>
-      observable<CategoryEvents['onUpdateList']>(emit => {
-        const handler = (arg: CategoryEvents['onUpdateList']) => {
+      observable<ColumnGroupEvents['onUpdateList']>(emit => {
+        const handler = (arg: ColumnGroupEvents['onUpdateList']) => {
           if (arg[0]?.projectId === input.projectId) {
             emit.next(arg);
           }

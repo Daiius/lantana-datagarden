@@ -4,7 +4,6 @@ import { createConnection } from 'mysql2/promise';
 import {
   projects,
   columnGroups,
-  innerColumnGroups,
   columns,
   data,
 } from 'database/db/schema';
@@ -44,26 +43,16 @@ await db.insert(columnGroups).values({
   type: 'sequence',
 });
 
-const testInnerColumnGroupId = uuidv7();
-
-await db.insert(innerColumnGroups).values({
-  id: testInnerColumnGroupId,
-  columnGroupId: testColumnGroupId,
-});
-
-//const testColumnId = uuidv7();
 
 await db.insert(columns).values([{
   id: uuidv7(),
   columnGroupId: testColumnGroupId,
-  innerColumnGroupId: testInnerColumnGroupId,
   projectId: testProjectId,
   name: 'テスト列1',
   type: 'string',
 }, {
   id: uuidv7(),
   columnGroupId: testColumnGroupId,
-  innerColumnGroupId: testInnerColumnGroupId,
   projectId: testProjectId,
   name: '2列目',
   type: 'number',
@@ -72,7 +61,6 @@ await db.insert(columns).values([{
 await db.insert(data).values([{
   id: uuidv7(),
   columnGroupId: testColumnGroupId,
-  innerColumnGroupId: testInnerColumnGroupId,
   projectId: testProjectId,
   data: { 
     'テスト列1': 'テストデータ',
@@ -81,7 +69,6 @@ await db.insert(data).values([{
 }, {
   id: uuidv7(),
   columnGroupId: testColumnGroupId,
-  innerColumnGroupId: testInnerColumnGroupId,
   projectId: testProjectId,
   data: { 
     'テスト列1': 'テストデータ2',
