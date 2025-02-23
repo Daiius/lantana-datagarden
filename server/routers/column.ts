@@ -50,7 +50,6 @@ export const columnRouter = router({
       projectId: z.string(),
       columnGroupId: z.string(),
     }))
-    //.output(selectSchema.optional())
     .query(async ({ input }) => 
        await db.query.columns.findFirst({
          where: eq(columns.id, input.id)
