@@ -41,7 +41,7 @@ export const projects = mysqlTable('Projects', {
 
 
 const COLUMN_GROUP_ID_LENGTH = UUID_LENGTH;
-const COLUMN_GROUP_NAME_LENGTH = 1024 as const;
+const COLUMN_GROUP_NAME_LENGTH = 127 as const;
 export const COLUMN_GROUP_TYPES = [
   'sequence', 
   'option', 
@@ -69,8 +69,8 @@ export const columnGroups = mysqlTable('ColumnGroups', {
   name:
     varchar('name', { length: COLUMN_GROUP_NAME_LENGTH })
       .notNull()
-      .default('新しいカテゴリ'),
-      //.unique(), //これはインデックスサイズが制限を超えてしまうらしい
+      .default('新しいカテゴリ')
+      .unique(), 
   type:
     varchar('type', { 
       length: 24, 

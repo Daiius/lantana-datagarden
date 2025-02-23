@@ -52,14 +52,27 @@ const RealtimeTable: React.FC<
   const { data: columns } = trpc.column.list.useQuery({ 
     columnGroupId, projectId 
   });
+  const utils = trpc.useUtils();
+  trpc.column.onUpdateList.useSubscription(
+    { columnGroupId, projectId },
+    {
+      onData: data => utils.column.list.setData(
+        { columnGroupId, projectId },
+        data,
+      ),
+      onError: err => console.error(err),
+    }
+  );
 
   const tableColumns = React.useMemo(() => 
     columns?.map(c =>
       columnHelper.accessor(d => d.data[c.name], {
-        id: c.name,
+        id: c.id,
+        header: () => c.name,
         cell: ({ getValue, row, column, table }): any => {
           return (
             <DebouncedInput
+              className='input-ghost'
               value={getValue()}
               validation={c.type !== 'string' ? 'number' : undefined}
               debouncedOnChange={async newValue =>
@@ -67,7 +80,7 @@ const RealtimeTable: React.FC<
                   ...row.original,
                   data: {
                     ...row.original.data,
-                    [column.id]: newValue
+                    [c.name]: newValue
                   }
                 })
               }
@@ -98,6 +111,8 @@ const RealtimeTable: React.FC<
     }
   });
 
+  console.log('columns: %o', columns);
+
   return (
     //<div
     //  className={clsx(
@@ -121,6 +136,7 @@ const RealtimeTable: React.FC<
                 className={clsx(
                   'border border-gray-300 bg-gray-500/20',
                   'min-w-32 w-32',
+                  'text-center',
                 )}
               >
                 {header.isPlaceholder
