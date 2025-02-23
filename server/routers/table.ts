@@ -29,34 +29,23 @@ export const tableRouter = router({
       projectId: z.string(),
     }))
     .query(async ({ input }) => {
-      const relatedColumnGroup = 
-        await db.query.columnGroups.findFirst({
+      const relatedColumnGroups = 
+        await db.query.columnGroups.findMany({
           where: eq(columnGroups.projectId, input.projectId),
           with: {
-            innerColumns: {
-              with: { columns: true }
-            }
+            columns: true
           }
         });
-      
-      if (relatedColumnGroup == null) throw Error(
-        `cannot find columnGroups with project ${input.projectId}`
-      );
 
-      const relatedColumns = relatedColumnGroup
-        .innerColumns
-        .flatMap(ic => ic.columns);
-
-      const relatedData = await db.query.data.findMany({
-        where: eq(
-          data.innerColumnGroupId, 
-          relatedColumnGroup.innerColumns[0]?.id as string,
-        ),
-      })
-
+      const nestedData =
+        await db.query.data.findMany({
+          where: and(
+            eq(data.projectId, input.projectId),
+          ),
+        });
       return {
-        columns: relatedColumns,
-        data: relatedData,
+        data: nestedData,
+        columns: relatedColumnGroups,
       };
     }),
 });

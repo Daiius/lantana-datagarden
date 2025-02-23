@@ -1,44 +1,47 @@
-'use client'
-
 import React from 'react';
 import clsx from 'clsx';
 
 import { trpc } from '@/providers/TrpcProvider';
-import Skeleton from '../common/Skeleton';
+
+import type {
+  Column
+} from '@/types';
+
 import RealtimeColumn from '@/components/column/RealtimeColumn';
 
 const RealtimeColumns: React.FC<
   React.ComponentProps<'div'>
-  & { categoryId: string }
+  & { columns: Column[] }
 > = ({
-  categoryId,
+  columns: initialColumns,
   className,
   ...props
 }) => {
+
+  const columnGroupId = initialColumns[0]?.columnGroupId ?? '';
+  const projectId = initialColumns[0]?.projectId ?? '';
+
   const utils = trpc.useUtils();
+  const { data: columns } = trpc.column.list.useQuery(
+    { projectId, columnGroupId },
+    { enabled: false, initialData: initialColumns }
+  );
   trpc.column.onUpdateList.useSubscription(
-    { categoryId }, {
-      onData: data =>
-        utils.column.list.setData({ categoryId }, data),
+    { projectId, columnGroupId },
+    {
+      onData: data => utils.column.list.setData(
+        { projectId, columnGroupId },
+        data
+      ),
       onError: err => console.error(err),
     }
-  ); 
-  const { data: columns, isLoading } = 
-    trpc.column.list.useQuery({ categoryId });
-
-  if (columns == null) {
-    return isLoading
-      ? <Skeleton />
-      : <div>columnsをロードできません</div>
-  }
+  );
 
   return (
-    <div 
-      className={clsx('px-2 pb-2 m-2')}
+    <div
+      className={clsx(className)}
+      {...props}
     >
-      <div className='text-xl font-bold'>
-        Columns
-      </div>
       {columns.map(c =>
         <RealtimeColumn key={c.id} initialColumn={c} />
       )}
