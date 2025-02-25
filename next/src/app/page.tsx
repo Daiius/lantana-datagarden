@@ -27,8 +27,19 @@ export default async function Page() {
             Handling these relations properly is not an easy task, 
             not an easy software.
           </p>
-          <p className='font-bold text-lg'>
+          <p className='font-bold italic text-lg'>
             "How can we handle scientific & technological data for better performance?"
+          </p>
+          
+          <h2>Software Design</h2>
+          <p>
+            <span className='font-bold'>Lantana datagarden</span>
+            is designed to be as on-premise service.
+          </p>
+          <p>
+            In most cases, scientific & technological data should be
+            handled carefully, since they are valuable, 
+            so secret information....
           </p>
 
           <h2>How it works</h2>
