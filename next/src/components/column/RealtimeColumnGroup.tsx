@@ -10,6 +10,8 @@ import type {
 
 import RealtimeColumns from '@/components/column/RealtimeColumns';
 import DebouncedInput from '@/components/common/DebouncedInput';
+import Button from '@/components/common/Button';
+import { TrashIcon } from '@/components/icon/Icons';
 
 type ColumnGroupWithColumns = ColumnGroup & { columns: Column[] };
 
@@ -27,7 +29,12 @@ const RealtimeColumnGroup: React.FC<
     { id, projectId },
     { enabled: false, initialData: initialColumnGroup }
   );
-  const { mutateAsync } = trpc.columnGroup.update.useMutation();
+ 
+  const { mutateAsync: updateColumnGroup } = 
+    trpc.columnGroup.update.useMutation();
+  const { mutateAsync: deleteColumnGroup } =
+    trpc.columnGroup.remove.useMutation();
+
   trpc.columnGroup.onUpdate.useSubscription(
     { id, projectId },
     {
@@ -52,17 +59,29 @@ const RealtimeColumnGroup: React.FC<
       )} 
       {...props}
     >
-      <fieldset className='fieldset'>
-        <label className='fieldset-label'>
-          列グループ名:
-        </label>
-        <DebouncedInput
-          value={columnGroup.name}
-          debouncedOnChange={async newValue =>
-            await mutateAsync({ ...columnGroup, name: newValue as string })
-          }
-        />
-      </fieldset>
+      <div className='flex flex-row'>
+        <fieldset className='fieldset'>
+          <label className='fieldset-label'>
+            列グループ名:
+          </label>
+          <DebouncedInput
+            value={columnGroup.name}
+            debouncedOnChange={async newValue =>
+              await updateColumnGroup(
+                { ...columnGroup, name: newValue as string }
+              )
+            }
+          />
+        </fieldset>
+        <Button 
+          className='text-error ms-auto'
+          onClick={async () => await deleteColumnGroup(
+            { ...columnGroup }
+          )}
+        >
+          <TrashIcon />
+        </Button>
+      </div>
       <RealtimeColumns 
         projectId={projectId}
         columnGroupId={id}
