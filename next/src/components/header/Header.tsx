@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import Link from 'next/link';
 
 import { La_Belle_Aurore } from 'next/font/google';
-import { GithubIcon } from '@/components/icon/Icons';
+import { IconBrandGithub } from '@tabler/icons-react';
 
 import Button from '@/components/common/Button';
 
@@ -43,6 +43,7 @@ const Header: React.FC<
       'flex-grow',
     )}>
       <Link href='/table'>Table</Link>
+      <Link href='/flows'>Flows</Link>
       <Link href='/columns'>Columns</Link>
     </div>
 
@@ -52,7 +53,7 @@ const Header: React.FC<
       className='flex-none'
     >
       <Button className='btn-ghost'>
-        <GithubIcon />
+        <IconBrandGithub />
       </Button> 
     </Link>
   </div>

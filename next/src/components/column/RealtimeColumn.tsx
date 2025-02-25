@@ -10,7 +10,7 @@ import DebouncedInput from '@/components/common/DebouncedInput';
 import DebouncedSelect from '@/components/common/DebouncedSelect';
 import Skeleton from '../common/Skeleton';
 import Button from '@/components/common/Button';
-import { TrashIcon } from '@/components/icon/Icons';
+import { IconTrash } from '@tabler/icons-react';
 
 
 const RealtimeColumn: React.FC<
@@ -84,7 +84,7 @@ const RealtimeColumn: React.FC<
           { ...column }
         )}
       >
-        <TrashIcon />
+        <IconTrash />
       </Button>
     </div>
   );

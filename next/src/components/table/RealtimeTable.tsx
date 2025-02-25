@@ -24,7 +24,7 @@ import {
 
 import DebouncedInput from '@/components/common/DebouncedInput';
 import Button from '@/components/common/Button';
-import { TrashIcon } from '@/components/icon/Icons';
+import { IconTrash } from '@tabler/icons-react';
 
 
 const RealtimeTableCell: React.FC<
@@ -239,7 +239,7 @@ const RealtimeTable: React.FC<
                     ...row.original
                   })}
                 >
-                  <TrashIcon />
+                  <IconTrash />
                 </Button>
               </td>
             </tr>
