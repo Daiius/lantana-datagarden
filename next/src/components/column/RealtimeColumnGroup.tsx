@@ -11,7 +11,7 @@ import type {
 import RealtimeColumns from '@/components/column/RealtimeColumns';
 import DebouncedInput from '@/components/common/DebouncedInput';
 import Button from '@/components/common/Button';
-import { TrashIcon } from '@/components/icon/Icons';
+import { IconTrash } from '@tabler/icons-react';
 
 type ColumnGroupWithColumns = ColumnGroup & { columns: Column[] };
 
@@ -79,7 +79,7 @@ const RealtimeColumnGroup: React.FC<
             { ...columnGroup }
           )}
         >
-          <TrashIcon />
+          <IconTrash />
         </Button>
       </div>
       <RealtimeColumns 
