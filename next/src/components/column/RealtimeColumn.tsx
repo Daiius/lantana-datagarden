@@ -9,6 +9,8 @@ import { DataTypes } from '@/types';
 import DebouncedInput from '@/components/common/DebouncedInput';
 import DebouncedSelect from '@/components/common/DebouncedSelect';
 import Skeleton from '../common/Skeleton';
+import Button from '@/components/common/Button';
+import { TrashIcon } from '@/components/icon/Icons';
 
 
 const RealtimeColumn: React.FC<
@@ -21,7 +23,10 @@ const RealtimeColumn: React.FC<
 }) => { 
   const { projectId, columnGroupId, id } = initialColumn;
   const utils = trpc.useUtils();
-  const { mutateAsync } = trpc.column.update.useMutation();
+  const { mutateAsync: updateColumn } = 
+    trpc.column.update.useMutation();
+  const { mutateAsync: deleteColumn } =
+    trpc.column.remove.useMutation();
   trpc.column.onUpdate.useSubscription(
     { id, projectId, columnGroupId }, 
     {
@@ -46,28 +51,41 @@ const RealtimeColumn: React.FC<
 
   return (
     <div 
-      className='text-lg flex flex-row items-center'
+      className='text-lg flex flex-row'
       {...props}
     >
       <fieldset className='fieldset'>
-        <label className='fieldset-label'>列名：</label>
+        <label className='fieldset-label'>
+          列名：
+        </label>
         <DebouncedInput
           value={column.name}
           debouncedOnChange={async newValue =>
-            await mutateAsync({ ...column, name: newValue as string })
+            await updateColumn({ ...column, name: newValue as string })
           }
         />
       </fieldset>
       <fieldset className='fieldset'>
-        <label className='fieldset-label'>型：</label>
+        <label className='fieldset-label'>
+          型：
+        </label>
         <DebouncedSelect
           value={column.type}
           options={DataTypes}
           debouncedOnChange={async (newValue) =>
-            await mutateAsync({ ...column, type: newValue })
+            await updateColumn({ ...column, type: newValue })
           }
         />
       </fieldset>
+      {/* TODO 手動で位置を調整してしまっている...... */}
+      <Button 
+        className='text-error ml-8 mt-7'
+        onClick={async () => await deleteColumn(
+          { ...column }
+        )}
+      >
+        <TrashIcon />
+      </Button>
     </div>
   );
 };
