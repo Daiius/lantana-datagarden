@@ -11,16 +11,19 @@ export default async function Page() {
   return (
     <div>
       <Header className='min-h-[4rem]'/>
-      {/*
-      <RelationsTable className='h-[calc(100vh-8rem)]'/>
-      */}
       <div
         className={clsx(
-          'h-[calc(100vh-8rem)] overflow-auto',
-          'p-8',
+          'h-[calc(100vh-8rem)] overflow-auto scroll-m-4',
         )}
       >
-        <RealtimeTables projectId={zeroId} />
+        <div 
+          className={clsx(
+            'w-fit h-full',
+            'bg-gradient-to-r from-neutral from-20% via-base-300 to-base-300',
+          )}
+        >
+          <RealtimeTables className='p-4' projectId={zeroId} />
+        </div>
       </div>
     </div>
   );
