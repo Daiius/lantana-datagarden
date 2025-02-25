@@ -39,40 +39,9 @@ export const projects = mysqlTable('Projects', {
       .default('新しいプロジェクト'),
 });
 
-//const TEMPLATE_ID_LENGTH = UUID_LENGTH;
-//const TEMPLATE_NAME_LENGTH = 1024 as const;
-
-/**
- * テンプレートは、カテゴリ毎のデータ項目定義
- * もしくはその部分集合です
- *
- * NOTE: 実装が大変になるので後回し
- */
-//export const templates = mysqlTable('Templates', {
-//  id:
-//    varchar('id', { length: TEMPLATE_ID_LENGTH })
-//      .notNull()
-//      //.$default(() => uuidv7()) // こうやってdefault定義するとinsert時などに手動で指定できなくなる
-//      .primaryKey(),
-//  projectId:
-//    varchar('project_id', { length: PROJECT_ID_LENGTH })
-//      .notNull()
-//      .references(() => projects.id, { 
-//        onDelete: 'restrict', onUpdate: 'cascade',
-//      }),
-//  name:
-//    varchar('name', { length: TEMPLATE_NAME_LENGTH })
-//      .notNull()
-//      .default('新しいテンプレート')
-//      .unique(), // これはインデックスサイズが制限を超えてしまうらしい
-//  definitions:
-//    json('definitions')
-//      .notNull()
-//      .$type<{ name: string, type: string }[]>(),
-//});
 
 const COLUMN_GROUP_ID_LENGTH = UUID_LENGTH;
-const COLUMN_GROUP_NAME_LENGTH = 1024 as const;
+const COLUMN_GROUP_NAME_LENGTH = 127 as const;
 export const COLUMN_GROUP_TYPES = [
   'sequence', 
   'option', 
@@ -100,8 +69,8 @@ export const columnGroups = mysqlTable('ColumnGroups', {
   name:
     varchar('name', { length: COLUMN_GROUP_NAME_LENGTH })
       .notNull()
-      .default('新しいカテゴリ'),
-      //.unique(), //これはインデックスサイズが制限を超えてしまうらしい
+      .default('新しいカテゴリ')
+      .unique(), 
   type:
     varchar('type', { 
       length: 24, 
@@ -110,40 +79,6 @@ export const columnGroups = mysqlTable('ColumnGroups', {
     .notNull(),
   sort:
     int('sort', { unsigned: true })
-});
-
-//export const templatesInCategories = mysqlTable('TemplatesInCategories', {
-//  templateId:
-//    varchar('id', { length: TEMPLATE_ID_LENGTH })
-//      .notNull(),
-//  categoryId:
-//    varchar('id', { length: CATEGORY_ID_LENGTH })
-//      .notNull()
-//}, (table) => ({
-//  primaryKey: primaryKey({
-//    columns: [table.templateId, table.categoryId],
-//    name: 'templatesInCategoriesPrimaryKey'
-//  }),
-//}));
-
-const INNER_COLUMN_GROUP_ID_LENGTH = UUID_LENGTH;
-
-/**
- * 1対1対応する項目とそうでない項目を分ける
- * 内部で管理する列のグループ
- */
-export const innerColumnGroups = mysqlTable('InnerColumnGroups', {
-  id:
-    varchar('id', { length: INNER_COLUMN_GROUP_ID_LENGTH })
-      .notNull()
-      .$default(() => uuidv7())
-      .primaryKey(),
-  columnGroupId:
-    varchar('column_group_id', { length: COLUMN_GROUP_ID_LENGTH })
-      .notNull()
-      .references(() => columnGroups.id, {
-        onDelete: 'restrict', onUpdate: 'cascade',
-      }),
 });
 
 const COLUMNS_ID_LENGTH = UUID_LENGTH;
@@ -167,12 +102,6 @@ export const columns = mysqlTable('Columns', {
       .notNull()
       .references(() => columnGroups.id, {
         onDelete: 'restrict', onUpdate: 'cascade' 
-      }),
-  innerColumnGroupId:
-    varchar('inner_column_group_id', { length: INNER_COLUMN_GROUP_ID_LENGTH })
-      .notNull()
-      .references(() => innerColumnGroups.id, {
-        onDelete: 'cascade', onUpdate: 'cascade',
       }),
   projectId:
     varchar('project_id', { length: PROJECT_ID_LENGTH })
@@ -240,12 +169,6 @@ export const data = mysqlTable(
         .references(() => columnGroups.id, {
           onDelete: 'cascade', onUpdate: 'cascade',
         }),
-    innerColumnGroupId:
-      varchar('inner_column_group_id', { length: INNER_COLUMN_GROUP_ID_LENGTH })
-        .notNull()
-        .references(() => innerColumnGroups.id, {
-          onDelete: 'cascade', onUpdate: 'cascade',
-        }),
     projectId:
       varchar('project_id', { length: PROJECT_ID_LENGTH })
         .notNull()
@@ -277,23 +200,14 @@ export const columnGroupRelations =
       fields: [columnGroups.projectId],
       references: [projects.id],
     }),
-    innerColumns: many(innerColumnGroups),
-  }));
-
-export const innerColumnGroupRelations =
-  relations(innerColumnGroups, ({ one, many }) => ({
-    columnGroup: one(columnGroups, {
-      fields: [innerColumnGroups.columnGroupId],
-      references: [columnGroups.id],
-    }),
     columns: many(columns),
   }));
 
 export const columnRelations =
   relations(columns, ({ one }) => ({
-    category: one(innerColumnGroups, {
-      fields: [columns.innerColumnGroupId],
-      references: [innerColumnGroups.id],
+    category: one(columnGroups, {
+      fields: [columns.columnGroupId],
+      references: [columnGroups.id],
     })
   }));
 

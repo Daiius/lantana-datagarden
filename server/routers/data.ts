@@ -9,7 +9,7 @@ import { eq, and } from 'drizzle-orm';
 
 import {
   createSelectSchema,
-  createInsertSchema,
+  //createInsertSchema,
 } from 'drizzle-zod';
 
 import { z } from 'zod';
@@ -18,41 +18,21 @@ import { router, publicProcedure } from '../trpc';
 import { observable, } from '@trpc/server/observable';
 
 import { v7 as uuidv7 } from 'uuid';
-import debounce from 'lodash.debounce';
 
 import mitt from 'mitt';
 type DataEvents = {
   onUpdate:     z.infer<typeof selectSchema>,
-  onUpdateList: z.infer<typeof selectSchema>[],
+  onUpdateList: {
+    projectId: string;
+    columnGroupId: string;
+    newList: z.infer<typeof selectSchema>[]
+  },
 }
 
 export const ee = mitt<DataEvents>();
 
 const selectSchema = createSelectSchema(data);
-const insertSchema = createInsertSchema(data);
-
-const emitOnUpdateList = debounce(
-  async ({ 
-    projectId, 
-    columnGroupId,
-  }: {
-    projectId: string;
-    columnGroupId: string;
-  }) => {
-    // list からコードを持ってきただけなので
-    // 改良の余地ありかも
-    const newList = await db.query.data.findMany({
-      where: and(
-        eq(data.projectId, projectId),
-        eq(data.columnGroupId, columnGroupId),
-      ),
-      orderBy: data.id,
-    })
-    ee.emit('onUpdateList', newList);
-  },
-  1_000,
-  { maxWait: 5_000 }
-);
+//const insertSchema = createInsertSchema(data);
 
 export const dataRouter = router({
   get: publicProcedure
@@ -149,8 +129,8 @@ export const dataRouter = router({
     .subscription(({ input }) =>
       observable<DataEvents['onUpdateList']>(emit => {
         const handler = (data: DataEvents['onUpdateList']) => {
-          if ( data[0]?.columnGroupId === input.columnGroupId
-            && data[0]?.projectId  === input.projectId
+          if ( data.columnGroupId === input.columnGroupId
+            && data.projectId     === input.projectId
           ) {
             emit.next(data);
           }
@@ -166,8 +146,50 @@ export const dataRouter = router({
       const newId = uuidv7();
       const newData = { ...input, id: newId };
       await db.insert(data).values(newData);
-      emitOnUpdateList({ ...input });
+      // list からコードを持ってきただけなので
+      // 改良の余地ありかも
+      const newList = await db.query.data.findMany({
+        where: and(
+          eq(data.projectId, input.projectId),
+          eq(data.columnGroupId, input.columnGroupId),
+        ),
+        orderBy: data.id,
+      })
+      ee.emit('onUpdateList', { 
+        projectId: input.projectId,
+        columnGroupId: input.columnGroupId,
+        newList,
+      });
       return { id: newId };
+    }),
+  remove: publicProcedure
+    .input(z.object({ 
+      projectId: z.string(), 
+      columnGroupId: z.string(),
+      id: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      await db.delete(data).where(
+        and(
+          eq(data.projectId, input.projectId),
+          eq(data.columnGroupId, input.columnGroupId),
+          eq(data.id, input.id),
+        )
+      );  
+      // list からコードを持ってきただけなので
+      // 改良の余地ありかも
+      const newList = await db.query.data.findMany({
+        where: and(
+          eq(data.projectId, input.projectId),
+          eq(data.columnGroupId, input.columnGroupId),
+        ),
+        orderBy: data.id,
+      })
+      ee.emit('onUpdateList', {
+        projectId: input.projectId,
+        columnGroupId: input.columnGroupId,
+        newList
+      });
     }),
 });
 

@@ -19,20 +19,23 @@ const RealtimeColumn: React.FC<
   className,
   ...props
 }) => { 
-
+  const { projectId, columnGroupId, id } = initialColumn;
   const utils = trpc.useUtils();
   const { mutateAsync } = trpc.column.update.useMutation();
   trpc.column.onUpdate.useSubscription(
-    initialColumn, 
+    { id, projectId, columnGroupId }, 
     {
       onData: data =>
-        utils.column.get.setData(initialColumn, data),
+        utils.column.get.setData(
+          { id, projectId, columnGroupId },
+          data
+        ),
       onError: err => console.log(err),
     },
   );
   const { data: column, isLoading } = trpc.column.get.useQuery(
-    initialColumn,
-    { initialData: initialColumn }
+    { id, projectId, columnGroupId },
+    { enabled: false, initialData: initialColumn }
   );
 
   if (column == null) {
@@ -50,8 +53,8 @@ const RealtimeColumn: React.FC<
         <label className='fieldset-label'>列名：</label>
         <DebouncedInput
           value={column.name}
-          debouncedOnChange={async (newValue: string) =>
-            await mutateAsync({ ...column, name: newValue })
+          debouncedOnChange={async newValue =>
+            await mutateAsync({ ...column, name: newValue as string })
           }
         />
       </fieldset>

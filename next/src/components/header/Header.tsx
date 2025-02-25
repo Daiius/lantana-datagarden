@@ -26,9 +26,7 @@ const Header: React.FC<
 
     <div className='flex flex-row w-full gap-3 align-middle'>
       <Link href='/table'>Table</Link>
-      <div>Measurements</div>
-      <div>Options</div>
-      <Link href='/test'>Test</Link>
+      <Link href='/columns'>Columns</Link>
     </div>
 
     <div className='ms-auto'>
