@@ -16,6 +16,7 @@ import { router, publicProcedure } from '../trpc';
 import { observable, } from '@trpc/server/observable';
 
 import { 
+  deleteColumn,
   updateName,
   updateType,
 } from '../lib/column';
@@ -118,6 +119,30 @@ export const columnRouter = router({
       await db.insert(columns).values(
         { ...input, id: uuidv7() }
       );
+      const newList = await db.query.columns.findMany({
+        where: and(
+          eq(columns.projectId, input.projectId),
+          eq(columns.columnGroupId, input.columnGroupId),
+        ),
+        orderBy: [asc(columns.id)],
+      });
+      ee.emit('onUpdateList', newList); 
+    }),
+  /**
+   * 列を削除します
+   *
+   * DataテーブルにJSON形式で記録されているデータも削除されます
+   */
+  remove: publicProcedure
+    .input(z.object({
+      id: z.string(),
+      projectId: z.string(),
+      columnGroupId: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      // 該当する列をDataから削除します
+      await deleteColumn(input);
+
       const newList = await db.query.columns.findMany({
         where: and(
           eq(columns.projectId, input.projectId),
