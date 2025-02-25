@@ -2,7 +2,7 @@ import { db } from 'database/db';
 import { 
   COLUMNS_DATA_TYPES,
   columns,
-  JsonDataType,
+  JsonData,
   data,
 } from 'database/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -145,6 +145,7 @@ export const updateType = async ({
           eq(columns.columnGroupId, columnGroupId),
         )
       );
+    // TODO
     // 注意！注意！注意！
     // 更新対象のデータを全てメモリ中にロードして更新しなおす
     const dataToUpdate = await db.select().from(data)
@@ -164,11 +165,77 @@ export const updateType = async ({
                       : v
             })
           )
-          .reduce((acc, curr) => ({ ...acc, ...curr }), {}) as JsonDataType
+          .reduce((acc, curr) => ({ ...acc, ...curr }), {}) as JsonData
     }));
 
     for (const d of updatedData) {
       await db.update(data)
+        .set(d)
+        .where(
+          and(
+            eq(data.id, d.id),
+            eq(data.columnGroupId, d.columnGroupId),
+            eq(data.projectId, d.projectId),
+          )
+        );
+    }
+  });
+};
+
+/**
+ * 列をDataから削除します
+ */
+export const deleteColumn = async ({
+  projectId,
+  columnGroupId,
+  id,
+}: {
+  projectId: string,
+  columnGroupId: string,
+  id: string,
+}) => {
+  await db.transaction(async tx => {
+    const columnToDelete = await db.query.columns.findFirst({
+      where: and(
+        eq(columns.id, id),
+        eq(columns.projectId, projectId),
+        eq(columns.columnGroupId, columnGroupId),
+      ),
+    });
+    if (columnToDelete == null) throw new Error(
+      `cannot find column to delete, ${id}`
+    );
+
+    // Columnsテーブルから列を削除します
+    await tx.delete(columns).where(
+      and(
+        eq(columns.id, id),
+        eq(columns.projectId, projectId),
+        eq(columns.columnGroupId, columnGroupId)
+      )
+    );
+    // TODO
+    // 注意！注意！注意！
+    // 更新対象のデータを全てメモリ中にロードして更新しなおす
+    const dataToUpdate = await tx.select().from(data)
+      .where(
+        and(
+          eq(data.columnGroupId, columnGroupId),
+          eq(data.projectId, projectId),
+        )
+      );
+
+    const updatedData = dataToUpdate.map(d => ({
+      ...d,
+      data:
+        Object.entries(d.data)
+          .filter(([k, _]) => k !== columnToDelete.name)
+          .map(([k, v]) => ({ [k]: v }))
+          .reduce((acc, curr) => ({ ...acc, ...curr }), {}) as JsonData
+    }));
+
+    for (const d of updatedData) {
+      await tx.update(data)
         .set(d)
         .where(
           and(
