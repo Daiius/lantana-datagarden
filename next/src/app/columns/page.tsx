@@ -12,8 +12,12 @@ export default async function Page() {
       className={clsx(
       )}
     >
-      <Header />
-      <RealtimeColumnGroups projectId={zeroId} />
+      <Header className='h-[4rem]'/>
+      <div
+        className='h-[calc(100vh-4rem)] overflow-auto'
+      >
+        <RealtimeColumnGroups projectId={zeroId} />
+      </div>
     </div>
   );
 }
