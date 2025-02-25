@@ -234,6 +234,7 @@ const RealtimeTable: React.FC<
               <td className='border border-gray-300' >
                 {/* 削除ボタン */}
                 <Button
+                  className='text-error'
                   onClick={async () => await removeData({ 
                     ...row.original
                   })}
