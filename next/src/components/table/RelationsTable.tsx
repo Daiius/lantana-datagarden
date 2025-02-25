@@ -26,11 +26,13 @@ const RelationsTable: React.FC<
 
   if (tableData == null) return <div>Loading...</div>;
 
-  const { columns, data } = tableData;
+  const { columns: columnGroups, data } = tableData;
+  const columns = columnGroups.flatMap(cg => cg.columns);
 
   const orderMap = new Map(
     columns.map((c, icolumn) => [c.name, icolumn])
   );
+
 
   return (
     <div 

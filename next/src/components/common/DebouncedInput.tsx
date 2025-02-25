@@ -52,6 +52,9 @@ const DebouncedInput: React.FC<
       className={clsx(
         'input',
         !valid && 'input-error',
+        (validation === 'string' || validation == null) 
+          ? 'text-left' 
+          : 'text-right',
         className,
       )}
       onChange={async e => {
