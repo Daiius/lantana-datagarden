@@ -10,10 +10,10 @@ export default async function Page() {
   
   return (
     <div>
-      <Header className='min-h-[4rem]'/>
+      <Header className='h-[4rem]'/>
       <div
         className={clsx(
-          'h-[calc(100vh-8rem)] overflow-auto scroll-m-4',
+          'h-[calc(100vh-4rem)] overflow-auto scroll-m-4',
         )}
       >
         <div 
