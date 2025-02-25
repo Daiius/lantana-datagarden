@@ -4,6 +4,9 @@ import clsx from 'clsx';
 import Link from 'next/link';
 
 import { La_Belle_Aurore } from 'next/font/google';
+import { GithubIcon } from '@/components/icon/Icons';
+
+import Button from '@/components/common/Button';
 
 const laBelleAurore = La_Belle_Aurore({
   weight: '400',
@@ -43,9 +46,15 @@ const Header: React.FC<
       <Link href='/columns'>Columns</Link>
     </div>
 
-    <div className='flex-none'>
-      Link
-    </div>
+    <Link 
+      href='https://github.com/Daiius/lantana-datagarden'
+      target='_blank'
+      className='flex-none'
+    >
+      <Button className='btn-ghost'>
+        <GithubIcon />
+      </Button> 
+    </Link>
   </div>
 );
 
