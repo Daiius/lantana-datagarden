@@ -3,6 +3,7 @@ import { db } from 'database/db';
 import { 
   columnGroups,
   columns,
+  data,
 } from 'database/db/schema';
 import { eq, and, asc } from 'drizzle-orm';
 
@@ -162,6 +163,40 @@ export const columnGroupRouter = router({
       const nestedColumnGroups = await getNestedColumnGroups(input);
       ee.emit('onUpdateList', nestedColumnGroups);
     }),
+  /**
+   * 指定したColumnGroupを削除します
+   *
+   * 関連付けられたColumnsもDataも全て削除されます
+   */
+  remove: publicProcedure
+    .input(z.object({
+      id: z.string(),
+      projectId: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      await db.transaction(async tx => {
+        await tx.delete(data).where(
+          and(
+            eq(data.columnGroupId, input.id),
+            eq(data.projectId, input.projectId),
+          ),
+        );
+        await tx.delete(columns).where(
+          and(
+            eq(columns.columnGroupId, input.id),
+            eq(columns.projectId, input.projectId),
+          )
+        );
+        await tx.delete(columnGroups).where(
+          and(
+            eq(columnGroups.id, input.id),
+            eq(columnGroups.projectId, input.projectId),
+          )
+        );
+      });
+      const nestedColumnGroups = await getNestedColumnGroups(input);
+      ee.emit('onUpdateList', nestedColumnGroups);
+    }) ,
   /**
    * 新しいカテゴリが追加された際、同じプロジェクトに属する
    * 一連のcategoryの配列を返します
