@@ -4,7 +4,12 @@ import clsx from 'clsx';
 import Link from 'next/link';
 
 import { La_Belle_Aurore } from 'next/font/google';
-import { IconBrandGithub } from '@tabler/icons-react';
+import { 
+  IconBrandGithub,
+  IconTable,
+  IconSortDescending2,
+  IconColumnInsertRight,
+} from '@tabler/icons-react';
 
 import Button from '@/components/common/Button';
 
@@ -42,9 +47,18 @@ const Header: React.FC<
       'flex flex-row gap-4 align-middle justify-center',
       'flex-grow',
     )}>
-      <Link href='/table'>Table</Link>
-      <Link href='/flows'>Flows</Link>
-      <Link href='/columns'>Columns</Link>
+      <Link href='/table' className='flex flex-row items-center'>
+        <IconTable stroke={1}/>
+        Tables
+      </Link>
+      <Link href='/flows' className='flex flex-row items-center'>
+        <IconSortDescending2 stroke={1} className='-rotate-90' />
+        Flows
+      </Link>
+      <Link href='/columns' className='flex flex-row items-center'>
+        <IconColumnInsertRight stroke={1} />
+        Columns
+      </Link>
     </div>
 
     <Link 

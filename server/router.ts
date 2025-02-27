@@ -8,6 +8,7 @@ import { columnGroupRouter } from './routers/columnGroup';
 import { columnRouter } from './routers/column';
 import { dataRouter } from './routers/data';
 import { tableRouter } from './routers/table';
+import { flowRouter } from './routers/flow';
 
 export const appRouter = router({ 
   greeting: publicProcedure
@@ -18,6 +19,7 @@ export const appRouter = router({
   column: columnRouter,
   data: dataRouter,
   table: tableRouter,
+  flow: flowRouter,
 });
 
 export type AppRouter = typeof appRouter;
