@@ -53,6 +53,7 @@ export const COLUMN_GROUP_TYPES = [
  *
  * 1対1と1対多対応のデータを分割するinnterColumnGroupsとは
  * 役割が異なります
+ * TODO 名前変えた方が良いかも
  */
 export const columnGroups = mysqlTable('ColumnGroups', {
   id:
@@ -91,6 +92,11 @@ export const COLUMNS_DATA_TYPES = [
 ] as const;
 
 
+/**
+ * Dataに格納される列の名前や型を記録します
+ * ColumnGroupでまとめられたものがJSON型格納されることを表します
+ *
+ */
 export const columns = mysqlTable('Columns', {
   id:
     varchar('id', { length: COLUMNS_ID_LENGTH })
@@ -187,6 +193,36 @@ export const data = mysqlTable(
       foreignColumns: [table.id],
     }),
   ]
+);
+
+const FLOW_ID_LENGTH = UUID_LENGTH;
+const FLOW_NAME_LENGTH = 36;
+
+/**
+ * FlowはColumnGroupの繋がり・順番を規定します
+ */
+export const flows = mysqlTable(
+  'Flows',
+  {
+    id:
+      varchar('id', { length: FLOW_ID_LENGTH })
+        .notNull()
+        .primaryKey(),
+    projectId:
+      varchar('project_id', { length: PROJECT_ID_LENGTH })
+        .notNull()
+        .references(() => projects.id, {
+          onDelete: 'cascade', onUpdate: 'cascade',
+        }),
+    name:
+      varchar('name', { length: FLOW_NAME_LENGTH })
+        .notNull(),
+    columnGroupIds:
+      json('column_groups')
+        .notNull()
+        .$type<string[][]>()
+        .default([]),
+  }
 );
 
 export const projectRelations = 
