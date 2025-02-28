@@ -81,7 +81,7 @@ await db.insert(flows).values({
   id: uuidv7(),
   projectId: zeroId,
   name: 'テスト用フロー',
-  columnGroups: [[testColumnGroupId]],
+  columnGroupIds: [[testColumnGroupId]],
 });
 
 
