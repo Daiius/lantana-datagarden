@@ -38,6 +38,8 @@ const DebouncedSelect = <T extends readonly string[],>({
   );
   React.useEffect(() => {
     if (value != valuePrivate) {
+      console.log('useEffect, value: %o', value);
+      console.log('useEffect, valuePrivate: %o', valuePrivate);
       setValuePrivate(value);
     }
   }, [value]);

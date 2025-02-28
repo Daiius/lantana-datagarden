@@ -1,20 +1,17 @@
 import React from 'react';
 import clsx from 'clsx';
 
-import {
-  IconArrowRight,
-} from '@tabler/icons-react';
-
 import type { FlowColumnGroups } from '@/types';
 
 import { useRealtimeFlow } from '@/hooks/useRealtimeFlow';
 
 import DebouncedInput from '@/components/common/DebouncedInput';
-import DebouncedSelect from '@/components/common/DebouncedSelect';
 import Button from '@/components/common/Button';
 import type {
   ColumnGroup
 } from '@/types';
+
+import FlowStep from '@/components/flow/FlowStep';
 
 const Flow: React.FC<
   React.ComponentProps<'div'>
@@ -28,17 +25,58 @@ const Flow: React.FC<
   className,
   ...props
 }) => {
+  
   const {
     flow,
     updateFlow
   } = useRealtimeFlow({ initialFlow });
+
+  const handleAddFlowStep = async () => {
+    const defaultColumnGroupId = columnGroups[0]?.id ?? '';
+    const newColumnGroupIds = [
+      ...flow.columnGroupIds,
+      [defaultColumnGroupId],
+    ];
+    await updateFlow({ ...flow, columnGroupIds: newColumnGroupIds });
+  };
+
+  const handleUpdateStep = async ({ 
+    istep,
+    newColumnGroupIds,
+  }: {
+    istep: number;
+    newColumnGroupIds: string[];
+  }) => {
+    // TODO 要名前の検討
+    const newColumnGroupIds_ =
+      flow.columnGroupIds.map((group, igroup) =>
+        istep === igroup
+        ? newColumnGroupIds
+        : group
+      );
+    await updateFlow({ 
+      ...flow, columnGroupIds: newColumnGroupIds_ 
+    });
+  };
+
+  const handleDeleteStep = async ({
+    istep
+  }: { istep: number }) => {
+    const newColumnGroupIds =
+      flow.columnGroupIds.filter((_, igroup) =>
+        istep !== igroup
+      );
+    await updateFlow({
+      ...flow, columnGroupIds: newColumnGroupIds
+    });
+  };
 
   if (flow == null) return (
     <div className='skeleton h-16 w-full'/>
   );
 
   return (
-    <div>
+    <div className={clsx(className)} {...props}>
       <fieldset className='fieldset'>
         <label className='label'>
           フロー名：
@@ -59,41 +97,18 @@ const Flow: React.FC<
       {/* flowの順に横に並べる部分 */}
       <div className='flex flex-row items-center'>
         {flow.columnGroups.map((group, igroup) =>
-          // flowの要素に含まれるcolumnGroupを縦に並べて表示する部分
-          <div key={igroup} className='flex flex-col gap-2'>
-            {group.map((columnGroup, icolumnGroup) =>
-              <DebouncedSelect
-                key={columnGroup.id} 
-                className='flex flex-row w-fit'
-                debouncedOnChange={async newValue => {
-                  console.log('debouncedOnChange: ', newValue);
-                  const newColumnGroupIds = 
-                    flow.columnGroupIds.map((cgids, icgids) =>
-                      cgids.map((cgid,icgid) => 
-                        (    icgid === icolumnGroup
-                          && icgids === igroup
-                        )
-                        ? columnGroups
-                            .find(cg => cg.name === newValue)?.id ?? ''
-                        : cgid
-                      )
-                    );
-                  await updateFlow({ 
-                    ...flow, columnGroupIds: newColumnGroupIds,
-                  });
-                }}
-                value={columnGroup.name}
-                options={columnGroups.map(cg => cg.name)}
-              >
-              </DebouncedSelect> 
-            )}
-            <Button className='btn-success'>
-              カテゴリ追加
-            </Button>
-          </div>
+          <FlowStep
+            columnGroups={columnGroups}
+            columnGroupIds={group.map(g => g.id)}
+            istep={igroup}
+            updateStep={handleUpdateStep}
+            deleteStep={handleDeleteStep}
+          />
         )}
-        <IconArrowRight />
-        <Button className='btn-success'>
+        <Button 
+          className='btn-success'
+          onClick={async () => await handleAddFlowStep()}
+        >
           ステップ追加
         </Button>
       </div>

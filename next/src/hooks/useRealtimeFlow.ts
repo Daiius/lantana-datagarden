@@ -22,7 +22,11 @@ export const useRealtimeFlow = ({
     { id, projectId },
     {
       onData: data => {
-        utils.flow.get.setData({ id, projectId }, data);
+        // TODO
+        // しばらくの間ここを get にしていたせいで
+        // 更新機能が動作しないバグに悩まされた
+        // 何とかできないだろうか？ 
+        utils.flow.getNested.setData({ id, projectId }, data);
         console.log('onData, %o', data);
       },
       onError: err => console.error(err),
