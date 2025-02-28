@@ -13,6 +13,8 @@ import { z } from 'zod';
 
 import { router, publicProcedure } from '../trpc';
 import { createSelectSchema } from 'drizzle-zod';
+import { observable, } from '@trpc/server/observable';
+import { getNested } from '../lib/flow';
 
 const selectSchema = createSelectSchema(flows)
   .extend({
@@ -21,6 +23,7 @@ const selectSchema = createSelectSchema(flows)
 
 import mitt from 'mitt';
 type FlowEvents = {
+  onUpdate: Flow & { columnGroups: ColumnGroup[][] },
 }
 
 export const ee = mitt<FlowEvents>();
@@ -42,6 +45,17 @@ export const flowRouter = router({
         ),
       })
     ),
+  /**
+   * 指定されたのflowのネストされた情報を取得します
+   */
+  getNested: publicProcedure
+    .input(z.object({
+      id: z.string(),
+      projectId: z.string(),
+    }))
+    .query(async ({ input }) => {
+      return await getNested(input);
+    }),
   /**
    * プロジェクトに属するflowを列挙します
    */
@@ -90,7 +104,8 @@ export const flowRouter = router({
     }),
   update: publicProcedure
     .input(selectSchema)
-    .mutation(async ({ input }) => 
+    .mutation(async ({ input }) => {
+      console.log('input: %o', input);
       await db.update(flows)
         .set(input)
         .where(
@@ -98,7 +113,29 @@ export const flowRouter = router({
             eq(flows.id, input.id),
             eq(flows.projectId, input.projectId),
           )
-        )
+        );
+      const newFlow = await getNested({
+        id: input.id, projectId: input.projectId
+      });
+      if (newFlow == null) throw new Error(
+        `cannot find flow ${input.id}`
+      );
+      ee.emit('onUpdate', newFlow);
+    }),
+  onUpdate: publicProcedure
+    .input(z.object({ projectId: z.string(), id: z.string() }))
+    .subscription(({ input }) =>
+      observable<FlowEvents['onUpdate']>(emit => {
+        const handler = (flow: FlowEvents['onUpdate']) => {
+          if ( flow.id        === input.id
+            && flow.projectId === input.projectId
+          ) {
+            emit.next(flow);
+          }
+        };
+        ee.on('onUpdate', handler);
+        return () => ee.off('onUpdate', handler);
+      })
     ),
 });
 
