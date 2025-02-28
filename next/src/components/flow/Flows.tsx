@@ -3,9 +3,11 @@
 import React from 'react';
 import clsx from 'clsx';
 
-import { trpc } from '@/providers/TrpcProvider';
-
 import Flow from '@/components/flow/Flow';
+import Button from '@/components/common/Button';
+
+import { useRealtimeFlows } from '@/hooks/useRealtimeFlows';
+import { useRealtimeColumnGroups } from '@/hooks/useRealtimeColumnGroups';
 
 /**
  * データ表示方法を規定するflow表示用のコンポーネント
@@ -20,21 +22,29 @@ const Flows: React.FC<
   className,
   ...props
 }) => {
-  const { data: nestedFlows } = trpc.flow.listNested.useQuery({
-    projectId,
-  });
+  const { flows } = useRealtimeFlows({ projectId });
+  // TODO これはネストされたオブジェクトを返すが、そこまで要らない
+  const { columnGroups } = useRealtimeColumnGroups({ projectId });
 
-  if (nestedFlows == null) return (
+  if (flows == null || columnGroups == null) return (
     <div className='skeleton h-32 w-full'></div>
   );
 
   return (
-    <div>
-      {nestedFlows.map(flow =>
-        <Flow key={flow.id} initialFlow={flow} />
+    <div className='flex flex-col gap-4'>
+      {flows.map(flow =>
+        <Flow 
+          key={flow.id} 
+          initialFlow={flow} 
+          columnGroups={columnGroups}
+        />
       )}
+      <div className='divider'/>
+      <Button className='btn-success btn-block'>
+        フローを追加
+      </Button>
       <pre>
-        {JSON.stringify(nestedFlows, undefined, 2)}
+        {JSON.stringify(flows, undefined, 2)}
       </pre>
     </div>
   );

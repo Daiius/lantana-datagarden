@@ -4,7 +4,6 @@ import React from 'react';
 import clsx from 'clsx';
 
 import { useDebouncedCallback } from 'use-debounce';
-import { Select } from '@headlessui/react';
 
 
 type DebouncedSelectOptions<T extends readonly string[],> = 
@@ -46,7 +45,7 @@ const DebouncedSelect = <T extends readonly string[],>({
   console.log('valuePrivate: ', valuePrivate);
 
   return (
-    <Select 
+    <select
       className={clsx(
         'select',
         className,
@@ -61,7 +60,7 @@ const DebouncedSelect = <T extends readonly string[],>({
       {options.map(o =>
         <option key={o} value={o}>{o}</option>
       )}
-    </Select>
+    </select>
   );
 };
 
