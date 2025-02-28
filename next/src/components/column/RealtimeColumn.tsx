@@ -2,8 +2,6 @@
 
 import React from 'react';
 
-import { trpc } from '@/providers/TrpcProvider';
-
 import type { Column } from '@/types';
 import { DataTypes } from '@/types';
 import DebouncedInput from '@/components/common/DebouncedInput';
@@ -11,6 +9,8 @@ import DebouncedSelect from '@/components/common/DebouncedSelect';
 import Skeleton from '../common/Skeleton';
 import Button from '@/components/common/Button';
 import { IconTrash } from '@tabler/icons-react';
+
+import { useRealtimeColumn } from '@/hooks/useRealtimeColumn';
 
 
 const RealtimeColumn: React.FC<
@@ -21,33 +21,15 @@ const RealtimeColumn: React.FC<
   className,
   ...props
 }) => { 
-  const { projectId, columnGroupId, id } = initialColumn;
-  const utils = trpc.useUtils();
-  const { mutateAsync: updateColumn } = 
-    trpc.column.update.useMutation();
-  const { mutateAsync: deleteColumn } =
-    trpc.column.remove.useMutation();
-  trpc.column.onUpdate.useSubscription(
-    { id, projectId, columnGroupId }, 
-    {
-      onData: data =>
-        utils.column.get.setData(
-          { id, projectId, columnGroupId },
-          data
-        ),
-      onError: err => console.log(err),
-    },
-  );
-  const { data: column, isLoading } = trpc.column.get.useQuery(
-    { id, projectId, columnGroupId },
-    { enabled: false, initialData: initialColumn }
-  );
+  const {
+    column,
+    updateColumn,
+    deleteColumn,
+  } = useRealtimeColumn({ initialColumn });
 
-  if (column == null) {
-    return isLoading
-      ? <Skeleton />
-      : <div>columnをロードできません</div>
-  }
+  if (column == null) return (
+    <Skeleton />
+  );
 
   return (
     <div 
