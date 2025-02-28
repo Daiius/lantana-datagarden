@@ -94,18 +94,27 @@ export const columnGroupRouter = router({
   /**
    * 指定したprojectIdを持つカテゴリを取得します
    */
-  list: publicProcedure
+  listNested: publicProcedure
     .input(z.object({ 
       projectId: z.string(), 
     }))
     .query(async ({ input }) =>
       await db.query.columnGroups.findMany({
         where: eq(columnGroups.projectId, input.projectId),
+        orderBy: [asc(columnGroups.id)],
         with: {
           columns: {
             orderBy: [asc(columns.id)],
           }
         }
+      })
+    ),
+  list: publicProcedure
+    .input(z.object({ projectId: z.string() }))
+    .query(async ({ input }) =>
+      await db.query.columnGroups.findMany({
+        where: eq(columnGroups.projectId, input.projectId),
+        orderBy: [asc(columnGroups.id)],
       })
     ),
   /**
