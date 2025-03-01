@@ -44,7 +44,7 @@ const DebouncedSelect = <T extends readonly string[],>({
     }
   }, [value]);
 
-  console.log('valuePrivate: ', valuePrivate);
+  //console.log('valuePrivate: ', valuePrivate);
 
   return (
     <select

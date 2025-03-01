@@ -4,12 +4,10 @@ import clsx from 'clsx';
 import type { FlowColumnGroups } from '@/types';
 
 import { useRealtimeFlow } from '@/hooks/useRealtimeFlow';
+import { useRealtimeColumnGroups } from '@/hooks/useRealtimeColumnGroups';
 
 import DebouncedInput from '@/components/common/DebouncedInput';
 import Button from '@/components/common/Button';
-import type {
-  ColumnGroup
-} from '@/types';
 
 import FlowStep from '@/components/flow/FlowStep';
 
@@ -17,11 +15,9 @@ const Flow: React.FC<
   React.ComponentProps<'div'>
   & {
     initialFlow: FlowColumnGroups;
-    columnGroups: ColumnGroup[]; 
   }
 > = ({
   initialFlow,
-  columnGroups,
   className,
   ...props
 }) => {
@@ -30,9 +26,12 @@ const Flow: React.FC<
     flow,
     updateFlow
   } = useRealtimeFlow({ initialFlow });
+  const {
+    columnGroups
+  } = useRealtimeColumnGroups({ projectId: initialFlow.projectId });
 
   const handleAddFlowStep = async () => {
-    const defaultColumnGroupId = columnGroups[0]?.id ?? '';
+    const defaultColumnGroupId = columnGroups?.[0]?.id ?? '';
     const newColumnGroupIds = [
       ...flow.columnGroupIds,
       [defaultColumnGroupId],
@@ -47,6 +46,7 @@ const Flow: React.FC<
     istep: number;
     newColumnGroupIds: string[];
   }) => {
+    console.log('handleUpdateStep: %o', newColumnGroupIds);
     // TODO 要名前の検討
     const newColumnGroupIds_ =
       flow.columnGroupIds.map((group, igroup) =>
@@ -95,14 +95,22 @@ const Flow: React.FC<
         フローに含まれるカテゴリ：
       </label>
       {/* flowの順に横に並べる部分 */}
-      <div className='flex flex-row items-center'>
+      <div 
+        className={clsx(
+          'flex flex-row items-center overflow-x-auto',
+          'w-full',
+        )}
+      >
         {flow.columnGroups.map((group, igroup) =>
           <FlowStep
-            columnGroups={columnGroups}
+            key={igroup}
+            projectId={flow.projectId}
+            columnGroups={group}
             columnGroupIds={group.map(g => g.id)}
             istep={igroup}
             updateStep={handleUpdateStep}
             deleteStep={handleDeleteStep}
+            deletable={flow.columnGroups.length > 1}
           />
         )}
         <Button 
