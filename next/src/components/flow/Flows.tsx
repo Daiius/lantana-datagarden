@@ -23,10 +23,8 @@ const Flows: React.FC<
   ...props
 }) => {
   const { flows } = useRealtimeFlows({ projectId });
-  // TODO これはネストされたオブジェクトを返すが、そこまで要らない
-  const { columnGroups } = useRealtimeColumnGroups({ projectId });
 
-  if (flows == null || columnGroups == null) return (
+  if (flows == null) return (
     <div className='skeleton h-32 w-full'></div>
   );
 
@@ -36,7 +34,6 @@ const Flows: React.FC<
         <Flow 
           key={flow.id} 
           initialFlow={flow} 
-          columnGroups={columnGroups}
         />
       )}
       <div className='divider'/>

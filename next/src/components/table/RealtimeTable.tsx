@@ -161,7 +161,7 @@ const RealtimeTable: React.FC<
     getCoreRowModel: getCoreRowModel(),
   });
 
-  console.log('RealtimeTable rendered @ ', new Date);
+  //console.log('RealtimeTable rendered @ ', new Date);
 
   return (
     //<div
