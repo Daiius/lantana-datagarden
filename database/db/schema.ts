@@ -144,7 +144,7 @@ export const validate = ({
   v: string | number,
 }): boolean => {
 
-  console.log('v: ', v, typeof v);
+  //console.log('v: ', v, typeof v);
 
   switch (type) {
     case "string":

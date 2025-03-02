@@ -22,7 +22,10 @@ const Flows: React.FC<
   className,
   ...props
 }) => {
-  const { flows } = useRealtimeFlows({ projectId });
+  const { 
+    flows,
+    addFlow,
+  } = useRealtimeFlows({ projectId });
 
   if (flows == null) return (
     <div className='skeleton h-32 w-full'></div>
@@ -37,12 +40,23 @@ const Flows: React.FC<
         />
       )}
       <div className='divider'/>
-      <Button className='btn-success btn-block'>
+      <Button 
+        className='btn-success btn-block'
+        onClick={async () => {
+          await addFlow({ 
+            projectId,
+            columnGroupIds: [[]],
+            name: '新しいフロー',
+          })
+        }}
+      >
         フローを追加
       </Button>
+      {/*
       <pre>
         {JSON.stringify(flows, undefined, 2)}
       </pre>
+      */}
     </div>
   );
 };

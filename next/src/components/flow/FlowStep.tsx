@@ -10,6 +10,9 @@ import type {
 } from '@/types';
 import ColumnGroupSelect from '@/components/column/ColumnGroupSelect';
 import Button from '@/components/common/Button';
+import {
+  useRealtimeColumnGroups
+} from '@/hooks/useRealtimeColumnGroups';
 
 const FlowStep: React.FC<
   React.ComponentProps<'div'>
@@ -31,6 +34,8 @@ const FlowStep: React.FC<
 > = ({
   istep,
   projectId,
+  // TODO 一覧なのか、columnGroupIdsに対応するモノなのか
+  // あいまいになりがちで、バグを生じている
   columnGroups,
   columnGroupIds,
   updateStep,
@@ -39,27 +44,30 @@ const FlowStep: React.FC<
   className,
   ...props
 }) => {
+
+  const {
+    columnGroups: allColumnGroups,
+  } = useRealtimeColumnGroups({
+    projectId
+  });
+
   const handleUpdateFlowColumnGroup = async ({
     newColumnGroup, icolumnGroup,
   }: {
     newColumnGroup: { id: string; name: string };
     icolumnGroup: number;
   }) => {
-    console.log('handleUpdateFlowColumnGroup: ', newColumnGroup, icolumnGroup);
-    console.log('handleUpdateFlowColumnGroup, columnGroups: ', columnGroups);
     const newColumnGroupIds = 
         columnGroupIds.map((cgid,icgid) => 
           icgid === icolumnGroup
           ? newColumnGroup.id
           : cgid
       );
-    console.log('handleUpdateFlowColumnGroup: ', newColumnGroupIds);
     updateStep({ istep, newColumnGroupIds });
   };
   
   const handleAddFlowColumnGroup = async () => {
-    const defaultColumnGroupId = columnGroups[0]?.id ?? '';
-    console.log('handleAddFlowColumnGroup, defaultColumnGroupId: ', defaultColumnGroupId);
+    const defaultColumnGroupId = allColumnGroups?.[0]?.id ?? '';
     const newColumnGroupIds = 
       [...columnGroupIds, defaultColumnGroupId];
 
@@ -118,6 +126,9 @@ const FlowStep: React.FC<
             }
           </div>
         )}
+        {columnGroups.length === 0 &&
+          <div>カテゴリを追加して下さい...</div>
+        }
         {/* MEMO padding と margin がdividerに設定されている*/}
         <div className='divider my-0'/>
         <Button 
