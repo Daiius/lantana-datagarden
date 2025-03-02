@@ -6,6 +6,7 @@ import {
   columnGroups,
   columns,
   data,
+  flows,
 } from 'database/db/schema';
 import { 
   v7 as uuidv7,
@@ -75,6 +76,13 @@ await db.insert(data).values([{
     '2列目': 456,
   } 
 }]);
+
+await db.insert(flows).values({
+  id: uuidv7(),
+  projectId: zeroId,
+  name: 'テスト用フロー',
+  columnGroupIds: [[testColumnGroupId]],
+});
 
 
 await connection.end();

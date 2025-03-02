@@ -3,10 +3,11 @@
 import React from 'react';
 import clsx from 'clsx';
 
-import { trpc } from '@/providers/TrpcProvider';
 import Skeleton from '../common/Skeleton';
 import RealtimeColumnGroup from '@/components/column/RealtimeColumnGroup';
 import Button from '@/components/common/Button';
+
+import { useRealtimeColumnGroups } from '@/hooks/useRealtimeColumnGroups';
 
 const RealtimeColumnGroups: React.FC<
   React.ComponentProps<'div'>
@@ -16,26 +17,17 @@ const RealtimeColumnGroups: React.FC<
   className,
   ...props
 }) => {
-  // column関連のトップレベルのデータ取得
-  // まとめてネストしたcolumnGroups, columns を取得する
-  const { data: columnGroups, isLoading } = 
-    trpc.columnGroup.list.useQuery({ projectId });
-  const utils = trpc.useUtils();
-  // 数の変更や削除時に全読み込みしなおす
-  trpc.columnGroup.onUpdateList.useSubscription(
-    { projectId }, {
-      onData: data =>
-        utils.columnGroup.list.setData({ projectId }, data),
-      onError: err => console.error(err),
-    }
-  ); 
-  const { mutateAsync } = trpc.columnGroup.add.useMutation();
 
-  if (columnGroups == null) {
-    return isLoading
-      ? <Skeleton />
-      : <div>columnGroupsをロードできません</div>
-  }
+  const {
+    columnGroups,
+    addColumnGroup,
+  } = useRealtimeColumnGroups({
+    projectId
+  });
+
+  if (columnGroups == null) return (
+    <Skeleton />
+  );
 
   return (
     <div 
@@ -55,7 +47,7 @@ const RealtimeColumnGroups: React.FC<
       <div className='divider'></div>
       <Button 
         className='btn-success'
-        onClick={async () => await mutateAsync({
+        onClick={async () => await addColumnGroup({
           name: '新しい列グループ',
           type: 'sequence',
           sort: null,

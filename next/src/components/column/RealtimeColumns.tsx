@@ -3,7 +3,6 @@
 import React from 'react';
 import clsx from 'clsx';
 
-import { trpc } from '@/providers/TrpcProvider';
 
 import type {
   Column
@@ -11,6 +10,8 @@ import type {
 
 import RealtimeColumn from '@/components/column/RealtimeColumn';
 import Button from '@/components/common/Button';
+
+import { useRealtimeColumns } from '@/hooks/useRealtimeColumns';
 
 const RealtimeColumns: React.FC<
   React.ComponentProps<'div'>
@@ -27,22 +28,14 @@ const RealtimeColumns: React.FC<
   ...props
 }) => {
 
-  const utils = trpc.useUtils();
-  const { data: columns } = trpc.column.list.useQuery(
-    { projectId, columnGroupId },
-    { enabled: false, initialData: initialColumns }
-  );
-  trpc.column.onUpdateList.useSubscription(
-    { projectId, columnGroupId },
-    {
-      onData: data => utils.column.list.setData(
-        { projectId, columnGroupId },
-        data
-      ),
-      onError: err => console.error(err),
-    }
-  );
-  const { mutateAsync } = trpc.column.add.useMutation();
+  const {
+    columns,
+    addColumn,
+  } = useRealtimeColumns({
+    initialColumns,
+    projectId,
+    columnGroupId,
+  });
 
   return (
     <div
@@ -61,7 +54,7 @@ const RealtimeColumns: React.FC<
         className='btn-success'
         onClick={async () => {
           console.log('Adding column to column group, ', columnGroupId);
-          await mutateAsync({
+          await addColumn({
             name: '',
             projectId,
             columnGroupId,
