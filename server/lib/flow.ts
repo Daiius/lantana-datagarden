@@ -45,3 +45,33 @@ export const getNested = async ({
   };
 };
 
+export const listNested = async ({
+  projectId
+}: {
+  projectId: string
+}) => {
+  // projectに属するflowsをまとめて取得します
+  const relatedFlows = await db.query.flows.findMany({
+    where: eq(flows.projectId, projectId)
+  });
+  // 関連するcolumnGroupをまとめて取得します
+  // TODO Map化して検索を易化する方がよいかも
+  const relatedColumnGroups = await db.query.columnGroups
+    .findMany({
+      where: eq(columnGroups.projectId, projectId),
+    });
+  // それらのcolumnGroupsをネストされたオブジェクトに置き換えます
+  const nestedRelatedFlows = relatedFlows
+    .map(flow => ({
+      ...flow,
+      columnGroups:
+        flow.columnGroupIds.map(group =>
+          group.flatMap(id =>
+            relatedColumnGroups.find(cg => cg.id === id)
+            ?? []
+          ) // undefined を値からも型からも取り除くイディオム
+        )
+    }));
+  return nestedRelatedFlows;
+};
+

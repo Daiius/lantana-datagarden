@@ -18,6 +18,7 @@ export const useRealtimeFlow = ({
     { enabled: false, initialData: initialFlow },
   );
   const { mutateAsync: updateFlow } = trpc.flow.update.useMutation();
+  const { mutateAsync: deleteFlow } = trpc.flow.delete.useMutation();
   trpc.flow.onUpdate.useSubscription(
     { id, projectId },
     {
@@ -36,6 +37,7 @@ export const useRealtimeFlow = ({
   return {
     flow,
     updateFlow,
+    deleteFlow,
   };
 };
 
