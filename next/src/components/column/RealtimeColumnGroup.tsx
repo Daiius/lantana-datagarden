@@ -1,8 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
 
-import { trpc } from '@/providers/TrpcProvider';
-
 import type {
   ColumnGroup,
   Column,
@@ -11,7 +9,9 @@ import type {
 import RealtimeColumns from '@/components/column/RealtimeColumns';
 import DebouncedInput from '@/components/common/DebouncedInput';
 import Button from '@/components/common/Button';
-import { TrashIcon } from '@/components/icon/Icons';
+import { IconTrash } from '@tabler/icons-react';
+
+import { useRealtimeColumnGroup } from '@/hooks/useRealtimeColumnGroup';
 
 type ColumnGroupWithColumns = ColumnGroup & { columns: Column[] };
 
@@ -23,31 +23,15 @@ const RealtimeColumnGroup: React.FC<
   className,
   ...props
 }) => {
-  const utils = trpc.useUtils();
-  const { id, projectId } = initialColumnGroup;
-  const { data: queriedColumnGroup } = trpc.columnGroup.get.useQuery(
-    { id, projectId },
-    { enabled: false, initialData: initialColumnGroup }
-  );
- 
-  const { mutateAsync: updateColumnGroup } = 
-    trpc.columnGroup.update.useMutation();
-  const { mutateAsync: deleteColumnGroup } =
-    trpc.columnGroup.remove.useMutation();
 
-  trpc.columnGroup.onUpdate.useSubscription(
-    { id, projectId },
-    {
-      onData: data => utils.columnGroup.get.setData(
-        { id, projectId }, data
-      ),
-      onError: err => console.error(err),
-    }
-  );
-  const columnGroup = {
-    ...initialColumnGroup,
-    ...queriedColumnGroup,
-  };
+  const { id, projectId } = initialColumnGroup;
+  const {
+    columnGroup,
+    updateColumnGroup,
+    deleteColumnGroup,
+  } = useRealtimeColumnGroup({
+    initialColumnGroup
+  });
 
   return (
     <div 
@@ -79,7 +63,7 @@ const RealtimeColumnGroup: React.FC<
             { ...columnGroup }
           )}
         >
-          <TrashIcon />
+          <IconTrash />
         </Button>
       </div>
       <RealtimeColumns 
