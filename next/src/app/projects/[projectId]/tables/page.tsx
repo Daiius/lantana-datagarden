@@ -1,6 +1,9 @@
 import React from 'react';
 import clsx from 'clsx';
 
+import { t } from 'server/trpc';
+import { appRouter } from 'server/router';
+
 import Header from '@/components/header/Header';
 import FlowSelect from '@/components/flow/FlowSelect';
 
@@ -10,6 +13,11 @@ export default async function TablesPage(
 ) {
 
   const { projectId } = await params;
+
+  const createCaller = t.createCallerFactory(appRouter);
+  const caller = createCaller({});
+
+  const project = await caller.project.get({ id: projectId });
   
   return (
     <div>
