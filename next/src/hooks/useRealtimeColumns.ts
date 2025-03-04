@@ -1,4 +1,4 @@
-import { Column } from '@/types';
+import { Column, ColumnGroup } from '@/types';
 import { trpc } from '@/providers/TrpcProvider';
 
 export const useRealtimeColumns = ({
@@ -6,14 +6,16 @@ export const useRealtimeColumns = ({
   projectId,
   columnGroupId,
 }: {
-  initialColumns: Column[];
+  initialColumns?: Column[];
   projectId: string;
-  columnGroupId: string;
+  columnGroupId: ColumnGroup['id'];
 }) => {
   const utils = trpc.useUtils();
   const { data: columns } = trpc.column.list.useQuery(
     { projectId, columnGroupId },
-    { enabled: false, initialData: initialColumns }
+    initialColumns
+    ? { enabled: false, initialData: initialColumns }
+    : { enabled: true }
   );
   trpc.column.onUpdateList.useSubscription(
     { projectId, columnGroupId },
