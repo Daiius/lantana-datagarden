@@ -6,6 +6,7 @@ import {
   int,
   bigint,
   json,
+  AnyMySqlColumn,
 } from 'drizzle-orm/mysql-core';
 
 import { relations } from 'drizzle-orm';
@@ -18,7 +19,7 @@ import { z } from 'zod';
 
 const UUID_LENGTH = 36 as const;
 const PROJECT_ID_LENGTH = UUID_LENGTH;
-const PROJECT_NAME_LENGTH = 1024 as const;
+const PROJECT_NAME_LENGTH = 64 as const;
 
 /**
  * プロジェクトは最も大きな
@@ -27,17 +28,25 @@ const PROJECT_NAME_LENGTH = 1024 as const;
  * 将来的にはログイン中のユーザが関連付けられた
  * プロジェクトのみを閲覧可能にする予定です
  */
-export const projects = mysqlTable('Projects', {
-  id:
-    varchar('id', { length: PROJECT_ID_LENGTH })
-      .notNull()
-      .$default(() => uuidv4())  //ユーザのIDとプロジェクトのIDを混同しながら作り始めたかも
-      .primaryKey(),
-  name:
-    varchar('name', { length: PROJECT_NAME_LENGTH })
-      .notNull()
-      .default('新しいプロジェクト'),
-});
+export const projects = mysqlTable(
+  'Projects', 
+  {
+    id:
+      varchar('id', { length: PROJECT_ID_LENGTH })
+        .notNull()
+        .$default(() => uuidv4())  //ユーザのIDとプロジェクトのIDを混同しながら作り始めたかも
+        .primaryKey(),
+    name:
+      varchar('name', { length: PROJECT_NAME_LENGTH })
+        .notNull()
+        .default('新しいプロジェクト'),
+    lastSelectedFlow:
+      bigint(
+        'last_selected_flow', 
+        { mode: 'number', unsigned: true }
+      ).references((): AnyMySqlColumn => flows.id),
+  },
+);
 
 
 const COLUMN_GROUP_NAME_LENGTH = 127 as const;
@@ -183,7 +192,7 @@ export const data = mysqlTable(
 
     parentId:
       bigint('parent_id', { mode: 'number', unsigned: true })
-        .references(() => data.id, {
+        .references((): AnyMySqlColumn => data.id, {
           onDelete: 'cascade', onUpdate: 'cascade'
         }),
   }, 

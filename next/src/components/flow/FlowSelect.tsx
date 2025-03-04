@@ -5,9 +5,10 @@ import clsx from 'clsx';
 
 import { useRouter } from 'next/navigation';
 
-import {
-  useRealtimeFlows
-} from '@/hooks/useRealtimeFlows';
+import { trpc } from '@/providers/TrpcProvider';
+
+import { useRealtimeFlows } from '@/hooks/useRealtimeFlows';
+import { useRealtimeProject } from '@/hooks/useRealtimeProject';
 
 /**
  * Flowを選択するためのコンポーネント
@@ -31,6 +32,11 @@ const FlowSelect: React.FC<
   ...props
 }) => {
   const { flows } = useRealtimeFlows({ projectId });
+  const { 
+    project,
+    updateProject,
+  } = useRealtimeProject({ id: projectId });
+
   const router = useRouter();
 
   if (flows == null) return (
@@ -46,6 +52,12 @@ const FlowSelect: React.FC<
         const selectedFlow = flows
           .find(f => f.name === newName);
           if (selectedFlow == null) return;
+          if (project == null) return;
+
+          await updateProject({ 
+            ...project, 
+            lastSelectedFlow: selectedFlow.id
+          });
 
           router.push(
             `/projects/${projectId}/tables/${selectedFlow.id}`
