@@ -12,75 +12,18 @@ import {
   useReactTable,
   getCoreRowModel,
   flexRender,
-  Table as TanstackTable,
-  Column as TanstackColumn,
-  Row as TanstackRow,
 } from '@tanstack/react-table';
 
 
-import { 
-  Column,
-  Data,
-  //JsonData,
-} from '@/types';
+import { Data } from '@/types';
 
-import DebouncedInput from '@/components/common/DebouncedInput';
 import Button from '@/components/common/Button';
 import { IconTrash } from '@tabler/icons-react';
 
+import { useRealtimeColumns } from '@/hooks/useRealtimeColumns';
 
-const RealtimeTableCell: React.FC<
-  React.ComponentProps<'input'>
-  & {
-    column: Column;
-    tanstackColumn: TanstackColumn<Data>;
-    row: TanstackRow<Data>;
-    table: TanstackTable<Data>;
-  }
-> = ({
-  row,
-  column,
-  tanstackColumn,
-  table,
-  className,
-  ...props
-}) => {
-  const { id, projectId, columnGroupId } = row.original;
-  const { data } = trpc.data.get.useQuery(
-    { id, projectId, columnGroupId },
-    { enabled: false, initialData: row.original }
-  );
-  const utils = trpc.useUtils();
-  trpc.data.onUpdate.useSubscription(
-    { id, projectId, columnGroupId },
-    {
-      onData: data => utils.data.get.setData(
-        { id, projectId, columnGroupId },
-        data,
-      ),
-      onError: err => console.error(err),
-    }
-  );
-  const { mutateAsync: updateData } = trpc.data.update.useMutation();
-  if (data == null) return <div>loading...</div>
-  return (
-    <DebouncedInput
-      className='input-ghost'
-      value={data.data[column.name]}
-      validation={column.type !== 'string' ? 'number' : undefined}
-      debouncedOnChange={async newValue =>
-        updateData({ 
-          ...data,
-          data: {
-            ...data.data,
-            [column.name]: newValue
-          }
-        })
-      }
-      {...props}
-    />
-  );
-};
+import RealtimeTableCell from '@/components/table/RealtimeTableCell';
+
 
 
 /**
@@ -105,19 +48,9 @@ const RealtimeTable: React.FC<
   const utils = trpc.useUtils();
   const columnHelper = createColumnHelper<Data>();
 
-  const { data: columns } = trpc.column.list.useQuery({ 
-    columnGroupId, projectId 
+  const { columns } = useRealtimeColumns({
+    projectId, columnGroupId
   });
-  trpc.column.onUpdateList.useSubscription(
-    { columnGroupId, projectId },
-    {
-      onData: data => utils.column.list.setData(
-        { columnGroupId, projectId },
-        data,
-      ),
-      onError: err => console.error(err),
-    }
-  );
 
   const tableColumns = React.useMemo(() => 
     columns?.map(c =>
