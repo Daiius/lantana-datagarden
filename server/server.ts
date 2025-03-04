@@ -11,11 +11,11 @@ const handler = applyWSSHandler({
   wss,
   router: appRouter,
   createContext,
-  keepAlive: {
-    enabled: true,
-    pingMs: 30000,
-    pongWaitMs: 5000,
-  },
+  //keepAlive: {
+  //  enabled: true,
+  //  pingMs: 30000,
+  //  pongWaitMs: 5000,
+  //},
 });
 
 wss.on('connection', ws => {
