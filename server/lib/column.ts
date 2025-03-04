@@ -8,6 +8,7 @@ import {
 import { eq, and } from 'drizzle-orm';
 
 
+type Column = typeof columns.$inferSelect;
 
 /** 列データのnameを変更します
  *
@@ -21,12 +22,9 @@ export const updateName = async ({
   columnGroupId,
   oldName,
   newName,
-}: {
-  id: string,
-  projectId: string,
-  columnGroupId: string,
-  oldName: string,
-  newName: string,
+}: Pick<Column, 'id' | 'projectId' | 'columnGroupId'> & {
+  oldName: Column['name'],
+  newName: Column['name'],
 }) => {
     await db.transaction(async tx => {
       // 確実に名前だけ更新する
@@ -123,16 +121,12 @@ export const updateType = async ({
   id,
   projectId,
   columnGroupId,
-  columnName,
+  name,
   oldType,
   newType,
-}: {
-  id: string,
-  projectId: string,
-  columnGroupId: string,
-  columnName: string,
-  oldType: typeof COLUMNS_DATA_TYPES[number],
-  newType: typeof COLUMNS_DATA_TYPES[number],
+}: Pick<Column, 'id' | 'projectId' | 'columnGroupId' | 'name'> & {
+  oldType: Column['type'],
+  newType: Column['type'],
 }) => {
   await db.transaction(async tx => {
     // 確実にtypeだけを変更
@@ -160,7 +154,7 @@ export const updateType = async ({
       data:
         Object.entries(d.data)
           .map(([k, v]) =>
-            ({ [k]: k === columnName 
+            ({ [k]: k === name 
                       ? convert({ oldType, newType, v })
                       : v
             })
@@ -189,11 +183,7 @@ export const deleteColumn = async ({
   projectId,
   columnGroupId,
   id,
-}: {
-  projectId: string,
-  columnGroupId: string,
-  id: string,
-}) => {
+}: Pick<Column, 'id' | 'projectId' | 'columnGroupId'>) => {
   await db.transaction(async tx => {
     const columnToDelete = await db.query.columns.findFirst({
       where: and(

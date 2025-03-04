@@ -1,11 +1,11 @@
 
 import { db } from 'database/db';
-import { eq, and, inArray } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import {
   flows,
   columnGroups,
 } from 'database/db/schema';
-import { v7 as uuidv7 } from 'uuid';
+//import { v7 as uuidv7 } from 'uuid';
 
 type ColumnGroup = typeof columnGroups.$inferSelect;
 type Flow = typeof flows.$inferSelect;
@@ -21,17 +21,17 @@ import {
   listNested,
 } from '../lib/flow';
 
+// TODO 型推論が上手くいかないので手動で設定、注意
 const selectSchema = createSelectSchema(flows)
   .extend({
-    columnGroupIds: z.array(z.array(z.string())),
+    columnGroupIds: z.array(z.array(z.number())),
   });
 
 
 import mitt from 'mitt';
 type FlowEvents = {
   onUpdate: FlowWithColumnGroup,
-  onUpdateList: {
-    projectId: string;
+  onUpdateList: Pick<Flow, 'projectId'> & {
     flows: FlowWithColumnGroup[];
   }
 }
@@ -43,9 +43,9 @@ export const flowRouter = router({
    * 指定されたのflowの情報を取得します
    */
   get: publicProcedure
-    .input(z.object({
-      id: z.string(),
-      projectId: z.string(),
+    .input(selectSchema.pick({
+      id: true,
+      projectId: true,
     }))
     .query(async ({ input }) => 
       await db.query.flows.findFirst({
@@ -59,9 +59,9 @@ export const flowRouter = router({
    * 指定されたのflowのネストされた情報を取得します
    */
   getNested: publicProcedure
-    .input(z.object({
-      id: z.string(),
-      projectId: z.string(),
+    .input(selectSchema.pick({
+      id: true,
+      projectId: true,
     }))
     .query(async ({ input }) => {
       return await getNested(input);
@@ -129,12 +129,9 @@ export const flowRouter = router({
       ee.emit('onUpdate', newFlow);
     }),
   add: publicProcedure
-    .input(selectSchema.partial({ id: true}))
+    .input(selectSchema.omit({ id: true}))
     .mutation(async ({ input }) => {
-      await db.insert(flows).values({
-       ...input,
-       id: uuidv7(),
-      });
+      await db.insert(flows).values({ ...input });
       const newList= await listNested({ projectId: input.projectId });
       ee.emit(
         'onUpdateList',
@@ -142,7 +139,10 @@ export const flowRouter = router({
       );
     }),
   delete: publicProcedure
-    .input(z.object({ projectId: z.string(), id: z.string() }))
+    .input(selectSchema.pick({ 
+      projectId: true, 
+      id: true 
+    }))
     .mutation(async ({ input }) => {
       await db.delete(flows).where(
         and(
@@ -157,7 +157,10 @@ export const flowRouter = router({
       );
     }),
   onUpdate: publicProcedure
-    .input(z.object({ projectId: z.string(), id: z.string() }))
+    .input(selectSchema.pick({ 
+      projectId: true, 
+      id: true 
+    }))
     .subscription(({ input }) =>
       observable<FlowEvents['onUpdate']>(emit => {
         const handler = (flow: FlowEvents['onUpdate']) => {

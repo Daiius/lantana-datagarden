@@ -3,7 +3,9 @@
 import React from 'react';
 import clsx from 'clsx';
 
-import { trpc } from '@/providers/TrpcProvider';
+import type { Flow } from '@/types';
+
+import { useRealtimeFlow } from '@/hooks/useRealtimeFlow';
 
 import RealtimeTable from '@/components/table/RealtimeTable';
 
@@ -11,14 +13,18 @@ const RealtimeTables: React.FC<
   React.ComponentProps<'div'>
   & {
     projectId: string;
+    flowId: Flow['id'];
   }
 > = ({
   projectId,
+  flowId,
   className,
   ...props
 }) => {
-  const { data: columnGroups } = trpc.columnGroup.list.useQuery(
-    { projectId }
+  const { flow } = useRealtimeFlow({ projectId, id: flowId });
+
+  if (flow == null) return (
+    <div className='skeleton h-32 w-full'/>
   );
 
   return (
@@ -29,15 +35,19 @@ const RealtimeTables: React.FC<
       )}
       {...props}
     >
-      {columnGroups?.map(cg =>
-        <div key={cg.id}>
-          <div className='font-bold text-lg'>
-            {cg.name}
-          </div>
-          <RealtimeTable 
-            projectId={cg.projectId}
-            columnGroupId={cg.id}
-          />
+      {flow.columnGroups?.map((group, igroup) =>
+        <div key={igroup} className='flex flex-col gap-8'>
+          {group.map((cg, icg) =>
+            <div key={`${cg.id}-${icg}`}>
+              <div className='font-bold text-lg'>
+                {cg.name}
+              </div>
+              <RealtimeTable 
+                projectId={cg.projectId}
+                columnGroupId={cg.id}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

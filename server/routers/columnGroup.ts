@@ -8,7 +8,7 @@ import {
 import { eq, and, asc } from 'drizzle-orm';
 
 import {
-  createInsertSchema,
+  //createInsertSchema,
   createSelectSchema,
 } from 'drizzle-zod';
 
@@ -21,8 +21,9 @@ import mitt from 'mitt';
 
 
 const selectSchema = createSelectSchema(columnGroups);
-const insertSchema = createInsertSchema(columnGroups);
+//const insertSchema = createInsertSchema(columnGroups);
 
+type ColumnGroup = typeof columnGroups.$inferSelect;
 
 
 //const literalUnionFromArray = 
@@ -37,9 +38,7 @@ const insertSchema = createInsertSchema(columnGroups);
 
 export const getNestedColumnGroups = async ({
   projectId
-}: {
-  projectId: string
-}) => await db.query.columnGroups.findMany({
+}: Pick<ColumnGroup, 'projectId'>) => await db.query.columnGroups.findMany({
   where: eq(columnGroups.projectId, projectId),
   with: {
     columns: {
@@ -50,10 +49,7 @@ export const getNestedColumnGroups = async ({
 export const getNestedColumnGroup = async ({
   projectId,
   id,
-}: {
-  projectId: string;
-  id: string;
-}) => await db.query.columnGroups.findFirst({
+}: Pick<ColumnGroup, 'projectId' | 'id'>) => await db.query.columnGroups.findFirst({
   where: and(
     eq(columnGroups.projectId, projectId),
     eq(columnGroups.id, id),
@@ -81,11 +77,10 @@ export const columnGroupRouter = router({
    * 指定したidのカテゴリを取得します
    */
   get: publicProcedure
-    .input(z.object({ 
-      id: z.string(),
-      projectId: z.string(),
+    .input(selectSchema.pick({ 
+      id: true,
+      projectId: true,
     }))
-    .output(selectSchema.optional())
     .query(async ({ input }) => 
        await db.query.columnGroups.findFirst({
          where: eq(columnGroups.id, input.id)
@@ -142,7 +137,10 @@ export const columnGroupRouter = router({
    * 指定したidのカテゴリが更新された際に発生するイベントです
    */
   onUpdate: publicProcedure
-    .input(z.object({ id: z.string(), projectId: z.string() }))
+    .input(selectSchema.pick({
+      id: true,
+      projectId: true
+    }))
     .subscription(({ input }) =>
       observable<ColumnGroupEvents['onUpdate']>(emit => {
         const handler = (data: ColumnGroupEvents['onUpdate']) => {
@@ -178,9 +176,9 @@ export const columnGroupRouter = router({
    * 関連付けられたColumnsもDataも全て削除されます
    */
   remove: publicProcedure
-    .input(z.object({
-      id: z.string(),
-      projectId: z.string(),
+    .input(selectSchema.pick({
+      id: true,
+      projectId: true,
     }))
     .mutation(async ({ input }) => {
       await db.transaction(async tx => {

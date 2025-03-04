@@ -7,15 +7,20 @@ import type {
 type FlowColumnGroups = Flow & { columnGroups: ColumnGroup[][] };
 
 export const useRealtimeFlow = ({
+  projectId,
+  id,
   initialFlow
 }: {
-  initialFlow: FlowColumnGroups
+  projectId: string;
+  id: Flow['id'];
+  initialFlow?: FlowColumnGroups;
 }) => {
   const utils = trpc.useUtils();
-  const { id, projectId } = initialFlow;
   const { data: flow } = trpc.flow.getNested.useQuery(
     { id, projectId },
-    { enabled: false, initialData: initialFlow },
+    initialFlow == null
+    ? { enabled: true }
+    : { enabled: false, initialData: initialFlow },
   );
   const { mutateAsync: updateFlow } = trpc.flow.update.useMutation();
   const { mutateAsync: deleteFlow } = trpc.flow.delete.useMutation();
