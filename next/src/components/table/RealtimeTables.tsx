@@ -21,7 +21,13 @@ const RealtimeTables: React.FC<
   className,
   ...props
 }) => {
-  const { flow } = useRealtimeFlow({ projectId, id: flowId });
+  const { flow, error } = useRealtimeFlow({ projectId, id: flowId });
+
+  if (error != null) return (
+    <div className='bg-error rounded-md'>
+      {error.message}
+    </div>
+  );
 
   if (flow == null) return (
     <div className='skeleton h-32 w-full'/>

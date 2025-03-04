@@ -16,7 +16,7 @@ export const useRealtimeFlow = ({
   initialFlow?: FlowColumnGroups;
 }) => {
   const utils = trpc.useUtils();
-  const { data: flow } = trpc.flow.getNested.useQuery(
+  const { data: flow, error } = trpc.flow.getNested.useQuery(
     { id, projectId },
     initialFlow == null
     ? { enabled: true }
@@ -43,6 +43,7 @@ export const useRealtimeFlow = ({
     flow,
     updateFlow,
     deleteFlow,
+    error,
   };
 };
 
