@@ -20,7 +20,9 @@ const laBelleAurore = La_Belle_Aurore({
 
 const Header: React.FC<
   React.ComponentProps<'div'>
+  & { projectId?: string }
 > = ({
+  projectId,
   className,
   ...props
 }) => (
@@ -43,28 +45,39 @@ const Header: React.FC<
       </div>
     </Link>
 
-    <div className={clsx(
-      'flex flex-row gap-4 align-middle justify-center',
-      'flex-grow',
-    )}>
-      <Link href='/table' className='flex flex-row items-center'>
-        <IconTable stroke={1}/>
-        Tables
-      </Link>
-      <Link href='/flows' className='flex flex-row items-center'>
-        <IconSortDescending2 stroke={1} className='-rotate-90' />
-        Flows
-      </Link>
-      <Link href='/columns' className='flex flex-row items-center'>
-        <IconColumnInsertRight stroke={1} />
-        Columns
-      </Link>
-    </div>
+    {projectId &&
+      <div className={clsx(
+        'flex flex-row gap-4 align-middle justify-center',
+        'flex-grow',
+      )}>
+        <Link 
+          href={`/projects/${projectId}/tables`} 
+          className='flex flex-row items-center'
+        >
+          <IconTable stroke={1}/>
+          Tables
+        </Link>
+        <Link 
+          href={`/projects/${projectId}/flows`} 
+          className='flex flex-row items-center'
+        >
+          <IconSortDescending2 stroke={1} className='-rotate-90' />
+          Flows
+        </Link>
+        <Link 
+          href={`/projects/${projectId}/columns`} 
+          className='flex flex-row items-center'
+        >
+          <IconColumnInsertRight stroke={1} />
+          Columns
+        </Link>
+      </div>
+    }
 
     <Link 
       href='https://github.com/Daiius/lantana-datagarden'
       target='_blank'
-      className='flex-none'
+      className='flex-none ms-auto'
     >
       <Button className='btn-ghost'>
         <IconBrandGithub />

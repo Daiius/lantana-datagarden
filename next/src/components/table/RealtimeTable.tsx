@@ -5,6 +5,8 @@ import clsx from 'clsx';
 
 import { trpc } from '@/providers/TrpcProvider';
 
+import type { ColumnGroup } from '@/types';
+
 import {
   createColumnHelper,
   useReactTable,
@@ -91,7 +93,7 @@ const RealtimeTable: React.FC<
   React.ComponentProps<'table'>
   & {
     projectId: string,
-    columnGroupId: string,
+    columnGroupId: ColumnGroup['id'],
   }
 > = ({
   projectId,
@@ -120,8 +122,7 @@ const RealtimeTable: React.FC<
   const tableColumns = React.useMemo(() => 
     columns?.map(c =>
       columnHelper.accessor(d => d.data[c.name], {
-        id: c.id,
-        header: () => c.name,
+        id: c.name,
         cell: ({ row, column, table }) =>
           <RealtimeTableCell
             column={c}

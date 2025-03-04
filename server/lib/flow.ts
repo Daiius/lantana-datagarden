@@ -7,13 +7,12 @@ import {
   eq, and, inArray
 } from 'drizzle-orm';
 
+type Flow = typeof flows.$inferSelect;
+
 export const getNested = async ({
   projectId,
   id,
-}: {
-  projectId: string;
-  id: string;
-}) => {
+}: Pick<Flow, 'id' | 'projectId'>) => {
   const relatedFlow = await db.query.flows.findFirst({
     where: and(
       eq(flows.id, id),

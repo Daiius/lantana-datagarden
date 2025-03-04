@@ -29,7 +29,11 @@ const Flow: React.FC<
     flow,
     updateFlow,
     deleteFlow,
-  } = useRealtimeFlow({ initialFlow });
+  } = useRealtimeFlow({ 
+    initialFlow, 
+    projectId: initialFlow.projectId,
+    id: initialFlow.id,
+  });
   const {
     columnGroups
   } = useRealtimeColumnGroups({ projectId });

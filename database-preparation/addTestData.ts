@@ -9,7 +9,7 @@ import {
   flows,
 } from 'database/db/schema';
 import { 
-  v7 as uuidv7,
+//  v7 as uuidv7,
 //  v4 as uuidv4,
 } from 'uuid';
 
@@ -36,40 +36,33 @@ await db.insert(projects).values({ id: testProjectId });
 //  definitions: [{ name: '列名1', type: 'number' }],
 //});
 
-const testColumnGroupId = uuidv7();
-
 await db.insert(columnGroups).values({
-  id: testColumnGroupId,
   projectId: testProjectId,
   type: 'sequence',
 });
 
 
 await db.insert(columns).values([{
-  id: uuidv7(),
-  columnGroupId: testColumnGroupId,
+  columnGroupId: 1,
   projectId: testProjectId,
   name: 'テスト列1',
   type: 'string',
 }, {
-  id: uuidv7(),
-  columnGroupId: testColumnGroupId,
+  columnGroupId: 1,
   projectId: testProjectId,
   name: '2列目',
   type: 'number',
 }]);
 
 await db.insert(data).values([{
-  id: uuidv7(),
-  columnGroupId: testColumnGroupId,
+  columnGroupId: 1,
   projectId: testProjectId,
   data: { 
     'テスト列1': 'テストデータ',
     '2列目': 123,
   } 
 }, {
-  id: uuidv7(),
-  columnGroupId: testColumnGroupId,
+  columnGroupId: 1,
   projectId: testProjectId,
   data: { 
     'テスト列1': 'テストデータ2',
@@ -78,10 +71,9 @@ await db.insert(data).values([{
 }]);
 
 await db.insert(flows).values({
-  id: uuidv7(),
   projectId: zeroId,
   name: 'テスト用フロー',
-  columnGroupIds: [[testColumnGroupId]],
+  columnGroupIds: [[1]],
 });
 
 
