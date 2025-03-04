@@ -17,14 +17,14 @@ import { z } from 'zod';
 import { router, publicProcedure } from '../trpc';
 import { observable, } from '@trpc/server/observable';
 
-import { v7 as uuidv7 } from 'uuid';
+//import { v7 as uuidv7 } from 'uuid';
+
+type Data = typeof data.$inferSelect;
 
 import mitt from 'mitt';
 type DataEvents = {
   onUpdate:     z.infer<typeof selectSchema>,
-  onUpdateList: {
-    projectId: string;
-    columnGroupId: string;
+  onUpdateList: Pick<Data, 'projectId' | 'columnGroupId'> & {
     newList: z.infer<typeof selectSchema>[]
   },
 }
@@ -36,10 +36,10 @@ const selectSchema = createSelectSchema(data);
 
 export const dataRouter = router({
   get: publicProcedure
-    .input(z.object({ 
-      projectId: z.string(),
-      columnGroupId: z.string(),
-      id: z.string(),
+    .input(selectSchema.pick({ 
+      projectId: true,
+      columnGroupId: true,
+      id: true,
     }))
     .query(async ({ input }) => 
        await db.query.data.findFirst({
@@ -51,9 +51,9 @@ export const dataRouter = router({
        })
     ),
   list: publicProcedure
-    .input(z.object({ 
-      projectId: z.string(),
-      columnGroupId: z.string(),
+    .input(selectSchema.pick({ 
+      projectId: true,
+      columnGroupId: true,
     }))
     .query(async ({ input }) =>
       await db.query.data.findMany({
@@ -101,10 +101,10 @@ export const dataRouter = router({
       ee.emit('onUpdate', input);
     }),
   onUpdate: publicProcedure
-    .input(z.object({ 
-      id: z.string(), 
-      columnGroupId: z.string(),
-      projectId: z.string(),
+    .input(selectSchema.pick({ 
+      id: true, 
+      columnGroupId: true,
+      projectId: true,
     }))
     .subscription(({ input }) =>
       observable<DataEvents['onUpdate']>(emit => {
@@ -122,9 +122,9 @@ export const dataRouter = router({
     ),
   // データ追加、削除などlist更新のイベント
   onUpdateList: publicProcedure
-    .input(z.object({ 
-      columnGroupId: z.string(),
-      projectId: z.string(),
+    .input(selectSchema.pick({ 
+      columnGroupId: true,
+      projectId: true,
     }))
     .subscription(({ input }) =>
       observable<DataEvents['onUpdateList']>(emit => {
@@ -140,12 +140,9 @@ export const dataRouter = router({
       })
     ),
   add: publicProcedure
-    .input(selectSchema.partial({ id: true }))
-    .output(z.object({ id: z.string() }))
+    .input(selectSchema.omit({ id: true }))
     .mutation(async ({ input }) => {
-      const newId = uuidv7();
-      const newData = { ...input, id: newId };
-      await db.insert(data).values(newData);
+      await db.insert(data).values(input);
       // list からコードを持ってきただけなので
       // 改良の余地ありかも
       const newList = await db.query.data.findMany({
@@ -160,13 +157,12 @@ export const dataRouter = router({
         columnGroupId: input.columnGroupId,
         newList,
       });
-      return { id: newId };
     }),
   remove: publicProcedure
-    .input(z.object({ 
-      projectId: z.string(), 
-      columnGroupId: z.string(),
-      id: z.string(),
+    .input(selectSchema.pick({ 
+      projectId: true, 
+      columnGroupId: true,
+      id: true,
     }))
     .mutation(async ({ input }) => {
       await db.delete(data).where(

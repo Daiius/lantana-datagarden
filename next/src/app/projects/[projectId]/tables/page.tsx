@@ -2,15 +2,18 @@ import React from 'react';
 import clsx from 'clsx';
 
 import Header from '@/components/header/Header';
-//import RelationsTable from '@/components/table/RelationsTable';
-import RealtimeTables from '@/components/table/RealtimeTables';
+import FlowSelect from '@/components/flow/FlowSelect';
 
-export default async function Page() {
-  const zeroId = '00000000-0000-0000-0000-000000000000' as const;
+export default async function TablesPage(
+  { params }
+  : { params: Promise<{ projectId: string }> }
+) {
+
+  const { projectId } = await params;
   
   return (
     <div>
-      <Header className='h-[4rem]'/>
+      <Header className='h-[4rem]' projectId={projectId}/>
       <div
         className={clsx(
           'h-[calc(100vh-4rem)] overflow-auto scroll-m-4',
@@ -22,7 +25,9 @@ export default async function Page() {
             'bg-gradient-to-r from-neutral from-20% via-base-300 to-base-300',
           )}
         >
-          <RealtimeTables className='p-4' projectId={zeroId} />
+          <FlowSelect
+            projectId={projectId}
+          />
         </div>
       </div>
     </div>

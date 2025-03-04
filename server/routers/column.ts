@@ -21,7 +21,7 @@ import {
   updateType,
 } from '../lib/column';
 
-import { v7 as uuidv7 } from 'uuid';
+//import { v7 as uuidv7 } from 'uuid';
 
 import mitt from 'mitt';
 type ColumnEvents = {
@@ -46,21 +46,25 @@ const selectSchema = createSelectSchema(columns);
 export const columnRouter = router({
   /** 単一の列データを取得します */
   get: publicProcedure
-    .input(z.object({ 
-      id: z.string(), 
-      projectId: z.string(),
-      columnGroupId: z.string(),
+    .input(selectSchema.pick({
+      id: true,
+      projectId: true,
+      columnGroupId: true,
     }))
     .query(async ({ input }) => 
        await db.query.columns.findFirst({
-         where: eq(columns.id, input.id)
+         where: and(
+           eq(columns.id, input.id),
+           eq(columns.projectId, input.projectId),
+           eq(columns.columnGroupId, input.columnGroupId),
+         ),
        })
     ),
   /** 指定した列グループに属する列データを取得します */
   list: publicProcedure
-    .input(z.object({ 
-      projectId: z.string(), 
-      columnGroupId: z.string() 
+    .input(selectSchema.pick({ 
+      projectId: true, 
+      columnGroupId: true,
     }))
     .query(async ({ input }) =>
       await db.query.columns.findMany({
@@ -105,7 +109,7 @@ export const columnRouter = router({
           id: input.id,
           projectId: input.projectId,
           columnGroupId: input.columnGroupId,
-          columnName: input.name,
+          name: input.name,
           oldType,
           newType,
         });
@@ -117,7 +121,7 @@ export const columnRouter = router({
     .input(selectSchema.partial({ id: true }))
     .mutation(async ({ input }) => {
       await db.insert(columns).values(
-        { ...input, id: uuidv7() }
+        { ...input }
       );
       const newList = await db.query.columns.findMany({
         where: and(
@@ -134,10 +138,10 @@ export const columnRouter = router({
    * DataテーブルにJSON形式で記録されているデータも削除されます
    */
   remove: publicProcedure
-    .input(z.object({
-      id: z.string(),
-      projectId: z.string(),
-      columnGroupId: z.string(),
+    .input(selectSchema.pick({
+      id: true,
+      projectId: true,
+      columnGroupId: true,
     }))
     .mutation(async ({ input }) => {
       // 該当する列をDataから削除します
@@ -153,10 +157,10 @@ export const columnRouter = router({
       ee.emit('onUpdateList', newList); 
     }),
   onUpdate: publicProcedure
-    .input(z.object({ 
-      id: z.string(), 
-      projectId: z.string(),
-      columnGroupId: z.string(),
+    .input(selectSchema.pick({ 
+      id: true, 
+      projectId: true,
+      columnGroupId: true,
     }))
     .subscription(({ input }) =>
       observable<ColumnEvents['onUpdate']>(emit => {
@@ -173,9 +177,9 @@ export const columnRouter = router({
       })
     ),
   onUpdateList: publicProcedure
-    .input(z.object({ 
-      projectId: z.string(), 
-      columnGroupId: z.string(),
+    .input(selectSchema.pick({ 
+      projectId: true, 
+      columnGroupId: true,
     }))
     .subscription(({ input }) =>
       observable<ColumnEvents['onUpdateList']>(emit => {

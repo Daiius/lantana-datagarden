@@ -4,13 +4,13 @@ import {
   foreignKey,
   varchar,
   int,
+  bigint,
   json,
 } from 'drizzle-orm/mysql-core';
 
 import { relations } from 'drizzle-orm';
 
 import { 
-  v7 as uuidv7,
   v4 as uuidv4,
 } from 'uuid';
 
@@ -40,7 +40,6 @@ export const projects = mysqlTable('Projects', {
 });
 
 
-const COLUMN_GROUP_ID_LENGTH = UUID_LENGTH;
 const COLUMN_GROUP_NAME_LENGTH = 127 as const;
 export const COLUMN_GROUP_TYPES = [
   'sequence', 
@@ -57,9 +56,9 @@ export const COLUMN_GROUP_TYPES = [
  */
 export const columnGroups = mysqlTable('ColumnGroups', {
   id:
-    varchar('id', { length: COLUMN_GROUP_ID_LENGTH })
+    bigint('id', { mode: 'number', unsigned: true })
       .notNull()
-      .$default(() => uuidv7())
+      .autoincrement()
       .primaryKey(),
   projectId:
     varchar('project_id', { length: PROJECT_ID_LENGTH })
@@ -82,7 +81,6 @@ export const columnGroups = mysqlTable('ColumnGroups', {
     int('sort', { unsigned: true })
 });
 
-const COLUMNS_ID_LENGTH = UUID_LENGTH;
 const COLUMNS_NAME_LENGTH = 64 as const;
 export const COLUMNS_DATA_TYPES = [
   'string',
@@ -99,12 +97,12 @@ export const COLUMNS_DATA_TYPES = [
  */
 export const columns = mysqlTable('Columns', {
   id:
-    varchar('id', { length: COLUMNS_ID_LENGTH })
+    bigint('id', { mode: 'number', unsigned: true })
       .notNull()
-      .$default(() => uuidv7())
+      .autoincrement()
       .primaryKey(),
   columnGroupId:
-    varchar('column_group_id', { length: COLUMN_GROUP_ID_LENGTH })
+    bigint('column_group_id', { mode: 'number', unsigned: true })
       .notNull()
       .references(() => columnGroups.id, {
         onDelete: 'restrict', onUpdate: 'cascade' 
@@ -133,8 +131,6 @@ export const columns = mysqlTable('Columns', {
 ]);
 
 export type JsonData = Record<string, string | number>;
-const DATA_ID_LENGTH = UUID_LENGTH;
-
 
 export const validate = ({
   type,
@@ -166,11 +162,12 @@ export const data = mysqlTable(
   'Data', 
   {
     id:
-      varchar('id', { length: DATA_ID_LENGTH })
+      bigint('id', { mode: 'number', unsigned: true })
         .notNull()
+        .autoincrement()
         .primaryKey(),
     columnGroupId:
-      varchar('column_group_id', { length: COLUMN_GROUP_ID_LENGTH })
+      bigint('column_group_id', { mode: 'number', unsigned: true })
         .notNull()
         .references(() => columnGroups.id, {
           onDelete: 'cascade', onUpdate: 'cascade',
@@ -185,7 +182,10 @@ export const data = mysqlTable(
       json('data').$type<JsonData>().notNull(),
 
     parentId:
-      varchar('parent_id', { length: DATA_ID_LENGTH })
+      bigint('parent_id', { mode: 'number', unsigned: true })
+        .references(() => data.id, {
+          onDelete: 'cascade', onUpdate: 'cascade'
+        }),
   }, 
   (table) => [
     foreignKey({
@@ -195,7 +195,6 @@ export const data = mysqlTable(
   ]
 );
 
-const FLOW_ID_LENGTH = UUID_LENGTH;
 const FLOW_NAME_LENGTH = 36;
 
 /**
@@ -205,7 +204,8 @@ export const flows = mysqlTable(
   'Flows',
   {
     id:
-      varchar('id', { length: FLOW_ID_LENGTH })
+      bigint('id', { mode: 'number', unsigned: true })
+        .autoincrement()
         .notNull()
         .primaryKey(),
     projectId:
@@ -220,7 +220,7 @@ export const flows = mysqlTable(
     columnGroupIds:
       json('column_groups')
         .notNull()
-        .$type<string[][]>()
+        .$type<number[][]>()
         .default([]),
   }
 );
