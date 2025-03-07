@@ -2,10 +2,11 @@
 import { db } from 'database/db';
 import { 
   data,
+  flows,
   columns,
   validate,
 } from 'database/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 
 import {
   createSelectSchema,
@@ -64,6 +65,29 @@ export const dataRouter = router({
         orderBy: data.id,
       })
     ),
+  listByFlow: publicProcedure
+    .input(z.object({
+      projectId: z.string(),
+      flowId: z.number(),
+    }))
+    .query(async ({ input }) => {
+      const flow = await db.query.flows.findFirst({
+        where: and(
+          eq(flows.projectId, input.projectId), 
+          eq(flows.id, input.flowId),
+        )
+      });
+      if (flow == null) throw new Error(
+        `cannot find flow with id ${input.flowId}`
+      );
+      const flatColumnGroupIds = flow.columnGroupIds.flatMap(g => g);
+      return await db.query.data.findMany({
+        where: and(
+          eq(data.projectId, input.projectId),
+          inArray(data.columnGroupId, flatColumnGroupIds),
+        ),
+      });
+    }),
   update: publicProcedure
     .input(selectSchema)
     .mutation(async ({ input }) => {

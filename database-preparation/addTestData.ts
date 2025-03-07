@@ -36,10 +36,14 @@ await db.insert(projects).values({ id: testProjectId });
 //  definitions: [{ name: '列名1', type: 'number' }],
 //});
 
-await db.insert(columnGroups).values({
+await db.insert(columnGroups).values([{
   projectId: testProjectId,
   type: 'sequence',
-});
+}, {
+  projectId: testProjectId,
+  name: '2番目の列グループ',
+  type: 'sequence',
+}]);
 
 
 await db.insert(columns).values([{
@@ -52,6 +56,11 @@ await db.insert(columns).values([{
   projectId: testProjectId,
   name: '2列目',
   type: 'number',
+}, {
+  columnGroupId: 2,
+  projectId: testProjectId,
+  name: '追加列',
+  type: 'string',
 }]);
 
 await db.insert(data).values([{
@@ -68,12 +77,19 @@ await db.insert(data).values([{
     'テスト列1': 'テストデータ2',
     '2列目': 456,
   } 
+}, {
+  columnGroupId: 2,
+  projectId: testProjectId,
+  data: {
+    '追加列': 'テスト',
+  },
+  parentId: 1,
 }]);
 
 await db.insert(flows).values({
   projectId: zeroId,
   name: 'テスト用フロー',
-  columnGroupIds: [[1]],
+  columnGroupIds: [[1], [2]],
 });
 
 
