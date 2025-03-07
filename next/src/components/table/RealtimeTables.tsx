@@ -5,9 +5,12 @@ import clsx from 'clsx';
 
 import type { Flow } from '@/types';
 
-import { useRealtimeFlow } from '@/hooks/useRealtimeFlow';
+import { useRealtimeTables } from '@/hooks/useRealtimeTables';
+import { useLines, Connection } from '@/hooks/useLines';
 
 import RealtimeTable from '@/components/table/RealtimeTable';
+
+import Line from '@/components/line/Line';
 
 const RealtimeTables: React.FC<
   React.ComponentProps<'div'>
@@ -21,27 +24,51 @@ const RealtimeTables: React.FC<
   className,
   ...props
 }) => {
-  const { flow, error } = useRealtimeFlow({ projectId, id: flowId });
 
-  if (error != null) return (
-    <div className='bg-error rounded-md'>
-      {error.message}
-    </div>
-  );
+  const [mounted, setMounted] = React.useState<boolean>(false);
+  const [connections, setConnections] = React.useState<Connection[]>([]);
 
-  if (flow == null) return (
+  const { flowWithData } = useRealtimeTables({
+    projectId, flowId
+  });
+  const allData = flowWithData
+    ?.columnGroups
+    .flatMap(cgs => cgs.flatMap(cg => cg.data)) ?? [];
+
+  React.useEffect(() => {
+    if (!mounted) {
+      setMounted(true);
+      console.log('first rendering...');
+      return;
+    }
+
+    console.log('second rendering...');
+
+    setTimeout(() => {
+      const { connections } = useLines({ data: allData, });
+      setConnections(connections);
+      console.log('allData: ', allData);
+      console.log('connections: ', connections);
+    }, 1_000);
+
+  }, [flowWithData, mounted]);
+
+
+  if (flowWithData == null) return (
     <div className='skeleton h-32 w-full'/>
   );
 
   return (
     <div
+      id='tables-container'
       className={clsx(
         'flex flex-row gap-8',
+        'relative',
         className,
       )}
       {...props}
     >
-      {flow.columnGroups?.map((group, igroup) =>
+      {flowWithData.columnGroups?.map((group, igroup) =>
         <div key={igroup} className='flex flex-col gap-8'>
           {group.map((cg, icg) =>
             <div key={`${cg.id}-${icg}`}>
@@ -55,6 +82,9 @@ const RealtimeTables: React.FC<
             </div>
           )}
         </div>
+      )}
+      {connections.map((c,ic) =>
+        <Line key={ic} position={c} />
       )}
     </div>
   );

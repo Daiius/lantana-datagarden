@@ -238,6 +238,9 @@ export const projectRelations =
   relations(projects, ({ many }) => ({ 
     categories: many(columnGroups),
   }));
+// TODO
+// 本当は flows と columnGroups のrelationも定義したいが、
+// flowの中のcolumnGroupIdsはJSON型なのでちょっと無理
 
 export const columnGroupRelations =
   relations(columnGroups, ({ one, many }) => ({
@@ -246,6 +249,7 @@ export const columnGroupRelations =
       references: [projects.id],
     }),
     columns: many(columns),
+    data: many(data),
   }));
 
 export const columnRelations =
@@ -263,5 +267,9 @@ export const dataRelations =
       references: [data.id],
     }),
     children: many(data),
+    columnGroup: one(columnGroups, {
+      fields: [data.columnGroupId],
+      references: [columnGroups.id],
+    }),
   }));
 
