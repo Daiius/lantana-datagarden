@@ -20,7 +20,9 @@ export default function RootLayout({
         suppressHydrationWarning
         className={clsx('bg-base-300')}
       >
-        <TrpcProvider>{children}</TrpcProvider>
+        <TrpcProvider>
+          {children}
+        </TrpcProvider>
       </body>
     </html>
   )

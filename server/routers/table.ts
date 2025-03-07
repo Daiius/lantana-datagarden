@@ -4,6 +4,7 @@ import {
   data,
   columns,
   columnGroups,
+  flows,
   validate,
 } from 'database/db/schema';
 import { eq, and, asc } from 'drizzle-orm';
@@ -27,28 +28,24 @@ export const tableRouter = router({
   get: publicProcedure
     .input(z.object({ 
       projectId: z.string(),
+      flowId: z.number(),
     }))
     .query(async ({ input }) => {
-      const relatedColumnGroups = 
-        await db.query.columnGroups.findMany({
-          where: eq(columnGroups.projectId, input.projectId),
-          with: {
-            columns: {
-              orderBy: [asc(columns.id)],
+      const flow = await db.query.flows.findFirst({
+        where: and(
+          eq(flows.id, input.flowId),
+          eq(flows.projectId, input.projectId)
+        ),
+        with: {
+          columnGroups: {
+            with: {
+              data: true
             }
           }
-        });
+        }
+      });
 
-      const nestedData =
-        await db.query.data.findMany({
-          where: and(
-            eq(data.projectId, input.projectId),
-          ),
-        });
-      return {
-        data: nestedData,
-        columns: relatedColumnGroups,
-      };
+      return flow;
     }),
 });
 

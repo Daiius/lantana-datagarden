@@ -151,7 +151,11 @@ const RealtimeTable: React.FC<
         </thead>
         <tbody>
           {table.getRowModel().rows.map(row =>
-            <tr key={row.id}>
+            <tr 
+              key={row.id}
+              id={`tr-${row.original.id}`}
+              className={clsx(`tr-${row.original.id}`)}
+            >
               {row.getVisibleCells().map(cell =>
                 <td 
                   key={cell.id}
