@@ -18,6 +18,7 @@ import { createSelectSchema } from 'drizzle-zod';
 import { observable, } from '@trpc/server/observable';
 import { 
   getNested,
+  getNestedWithData,
   listNested,
 } from '../lib/flow';
 
@@ -65,6 +66,14 @@ export const flowRouter = router({
     }))
     .query(async ({ input }) => {
       return await getNested(input);
+    }),
+  getNestedWithData: publicProcedure
+    .input(selectSchema.pick({
+      id: true,
+      projectId: true
+    }))
+    .query(async ({ input }) => {
+      return await getNestedWithData(input);
     }),
   /**
    * プロジェクトに属するflowを列挙します
