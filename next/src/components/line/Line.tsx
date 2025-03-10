@@ -41,6 +41,11 @@ const Line: React.FC<
     x: position.end.x - minX,
     y: position.end.y - minY,
   };
+  // 真横を向いた線の時には線の半分がviewboxから出てしまうことを防ぐ
+  if (start.y === 0 && end.y === 0) {
+    start.y = 1;
+    end.y = 1;
+  }
   return (
     <svg
       className={clsx(

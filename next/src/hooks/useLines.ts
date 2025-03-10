@@ -21,6 +21,7 @@ export const useLines = ({
 }): {
   connections: { start: Point; end: Point; }[]
 } => {
+
   if (data == null) return { connections: [] };
 
   const containerRect = 
