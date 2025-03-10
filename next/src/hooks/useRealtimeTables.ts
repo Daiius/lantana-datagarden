@@ -10,12 +10,19 @@ export const useRealtimeTables = ({
   projectId: string;
 }) => {
 
+  const utils = trpc.useUtils();
   const { data: flowWithData } = trpc.flow.getNestedWithData.useQuery(
     { id: flowId, projectId: projectId },
   );
+  const invalidate = async () => {
+    await utils.flow.getNestedWithData.invalidate({
+      projectId, id: flowId,
+    });
+  };
 
   return {
-    flowWithData
+    flowWithData,
+    invalidate,
   }
 };
 
