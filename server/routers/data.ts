@@ -26,7 +26,8 @@ import mitt from 'mitt';
 type DataEvents = {
   onUpdate:     z.infer<typeof selectSchema>,
   onUpdateList: Pick<Data, 'projectId' | 'columnGroupId'> & {
-    newList: z.infer<typeof selectSchema>[]
+    newList: z.infer<typeof selectSchema>[];
+    newId?: number;
   },
 }
 
@@ -166,7 +167,9 @@ export const dataRouter = router({
   add: publicProcedure
     .input(selectSchema.omit({ id: true }))
     .mutation(async ({ input }) => {
-      await db.insert(data).values(input);
+      const newIds = await db.insert(data)
+        .values(input)
+        .$returningId();
       // list からコードを持ってきただけなので
       // 改良の余地ありかも
       const newList = await db.query.data.findMany({
@@ -175,11 +178,12 @@ export const dataRouter = router({
           eq(data.columnGroupId, input.columnGroupId),
         ),
         orderBy: data.id,
-      })
+      });
       ee.emit('onUpdateList', { 
         projectId: input.projectId,
         columnGroupId: input.columnGroupId,
         newList,
+        newId: newIds.map(e => e.id)[0],
       });
     }),
   remove: publicProcedure
@@ -208,7 +212,8 @@ export const dataRouter = router({
       ee.emit('onUpdateList', {
         projectId: input.projectId,
         columnGroupId: input.columnGroupId,
-        newList
+        newList,
+        newId: undefined,
       });
     }),
 });

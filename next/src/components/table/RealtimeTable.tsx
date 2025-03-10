@@ -23,6 +23,7 @@ import { IconTrash } from '@tabler/icons-react';
 import { useRealtimeColumns } from '@/hooks/useRealtimeColumns';
 
 import RealtimeTableCell from '@/components/table/RealtimeTableCell';
+import RowDropdown from '@/components/table/RowDropdown';
 
 
 
@@ -37,10 +38,14 @@ const RealtimeTable: React.FC<
   & {
     projectId: string,
     columnGroupId: ColumnGroup['id'],
+    followingColumnGroups: ColumnGroup[],
+    updateLine: () => void;
   }
 > = ({
   projectId,
   columnGroupId,
+  followingColumnGroups,
+  updateLine,
   className,
   ...props
 }) => {
@@ -81,6 +86,7 @@ const RealtimeTable: React.FC<
           { projectId, columnGroupId },
           data.newList,
         );
+        updateLine();
         console.log('data, onData: %o', data);
       },
       onError: err => console.error(err),
@@ -152,6 +158,7 @@ const RealtimeTable: React.FC<
         <tbody>
           {table.getRowModel().rows.map(row =>
             <tr 
+              tabIndex={0}
               key={row.id}
               id={`tr-${row.original.id}`}
               className={clsx(`tr-${row.original.id}`)}
@@ -171,14 +178,22 @@ const RealtimeTable: React.FC<
               )}
               <td className='border border-gray-300' >
                 {/* 削除ボタン */}
-                <Button
-                  className='text-error'
-                  onClick={async () => await removeData({ 
-                    ...row.original
+                {/*
+                */}
+                <RowDropdown
+                  projectId={projectId}
+                  dataId={row.original.id}
+                  columnGroupId={row.original.columnGroupId}
+                  followingColumnGroups={followingColumnGroups}
+                  removeData={async () => await removeData({
+                    id: row.original.id, projectId, columnGroupId,
                   })}
-                >
-                  <IconTrash />
-                </Button>
+                  addData={async params => await addData({
+                    ...params,
+                    parentId: row.original.id,
+                    projectId, data: {},
+                  })}
+                />
               </td>
             </tr>
           )}
