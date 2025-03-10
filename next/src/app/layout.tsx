@@ -18,7 +18,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         suppressHydrationWarning
-        className={clsx('bg-base-300')}
+        className={clsx('bg-base-300 antialiased')}
       >
         <TrpcProvider>
           {children}

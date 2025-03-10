@@ -27,10 +27,18 @@ const RealtimeTables: React.FC<
 
   const [mounted, setMounted] = React.useState<boolean>(false);
   const [connections, setConnections] = React.useState<Connection[]>([]);
+  const [updateLineCount, setUpdateLineCount] = React.useState<number>(0);
 
-  const { flowWithData } = useRealtimeTables({
+  const { flowWithData, invalidate } = useRealtimeTables({
     projectId, flowId
   });
+
+  // TODO データの追加・削除の度に
+  // データの取得し直しをしているので効率が悪い
+  const updateLine = async () => {
+    setUpdateLineCount(prev => prev + 1);
+    await invalidate();
+  }
   const allData = flowWithData
     ?.columnGroups
     .flatMap(cgs => cgs.flatMap(cg => cg.data)) ?? [];
@@ -51,7 +59,7 @@ const RealtimeTables: React.FC<
       console.log('connections: ', connections);
     }, 1_000);
 
-  }, [flowWithData, mounted]);
+  }, [flowWithData, mounted, updateLineCount]);
 
 
   if (flowWithData == null) return (
@@ -78,6 +86,20 @@ const RealtimeTables: React.FC<
               <RealtimeTable 
                 projectId={cg.projectId}
                 columnGroupId={cg.id}
+                followingColumnGroups={
+                  Array.from(
+                    new Map(
+                      flowWithData
+                        .columnGroups
+                        .filter((_, ig) => ig > igroup)
+                        .flatMap(group => group.map(g => g))
+                        .map(g => [g.id, g])
+                    )
+                    .entries()
+                    .map(([_,v]) => v)
+                  )
+                }
+                updateLine={updateLine}
               />
             </div>
           )}
