@@ -1,11 +1,7 @@
-
-import { db } from 'database/db';
-import { eq, and } from 'drizzle-orm';
 import {
   flows,
   columnGroups,
 } from 'database/db/schema';
-//import { v7 as uuidv7 } from 'uuid';
 
 type ColumnGroup = typeof columnGroups.$inferSelect;
 type Flow = typeof flows.$inferSelect;
@@ -17,6 +13,11 @@ import { router, publicProcedure } from '../trpc';
 import { createSelectSchema } from 'drizzle-zod';
 import { observable, } from '@trpc/server/observable';
 import { 
+  get,
+  list,
+  update,
+  add,
+  remove,
   getNested,
   getNestedWithData,
   listNested,
@@ -32,6 +33,8 @@ const selectSchema = createSelectSchema(flows)
 import mitt from 'mitt';
 type FlowEvents = {
   onUpdate: FlowWithColumnGroup,
+  onAdd: Flow,
+  onRemove: Pick<Flow, 'id' | 'projectId'>,
   onUpdateList: Pick<Flow, 'projectId'> & {
     flows: FlowWithColumnGroup[];
   }
@@ -42,20 +45,15 @@ export const ee = mitt<FlowEvents>();
 export const flowRouter = router({
   /**
    * 指定されたのflowの情報を取得します
+   *
+   * 特定のflowについての表示に使用します
    */
   get: publicProcedure
     .input(selectSchema.pick({
       id: true,
       projectId: true,
     }))
-    .query(async ({ input }) => 
-      await db.query.flows.findFirst({
-        where: and(
-          eq(flows.id, input.id),
-          eq(flows.projectId, input.projectId),
-        ),
-      })
-    ),
+    .query(async ({ input }) => await get(input)),
   /**
    * 指定されたのflowのネストされた情報を取得します
    */
@@ -64,17 +62,19 @@ export const flowRouter = router({
       id: true,
       projectId: true,
     }))
-    .query(async ({ input }) => {
-      return await getNested(input);
-    }),
+    .query(async ({ input }) => await getNested(input)),
+
+  /**
+   * データも含むflow情報を取得します
+   *
+   * TODO 本来はtable処理用なのでそちらに移動します
+   */
   getNestedWithData: publicProcedure
     .input(selectSchema.pick({
       id: true,
       projectId: true
     }))
-    .query(async ({ input }) => {
-      return await getNestedWithData(input);
-    }),
+    .query(async ({ input }) => await getNestedWithData(input)),
   /**
    * プロジェクトに属するflowを列挙します
    */
@@ -82,11 +82,7 @@ export const flowRouter = router({
     .input(z.object({
       projectId: z.string()
     }))
-    .query(async ({ input }) =>
-       await db.query.flows.findMany({
-         where: eq(flows.projectId, input.projectId)
-       })
-    ),
+    .query(async ({ input }) => await list(input)),
   /**
    * プロジェクトに属するflowを列挙します
    *
@@ -102,69 +98,53 @@ export const flowRouter = router({
   update: publicProcedure
     .input(selectSchema)
     .mutation(async ({ input }) => {
-      await db.transaction(async tx => {
-        // input中のcolumnGroupIdsについて、
-        // 既存の値かどうかチェックする
-        const existingColumnGroupIds = (
-          await tx.query.columnGroups.findMany({
-            where: eq(columnGroups.projectId, input.projectId),
-            columns: { id: true },
-          })
-        ).map(cg => cg.id);
-
-        const invalidIds = input.columnGroupIds
-          .flatMap(group => group)
-          .filter(id => !existingColumnGroupIds.includes(id));
-        if (invalidIds.length > 0) throw new Error(
-          `these flow.columnGroupIds does not exist in db: ${invalidIds.map(s => `'${s}'`).toString()}`
-        );
-        
-        // inputに従ってデータ更新 
-        await tx.update(flows)
-          .set(input)
-          .where(
-            and(
-              eq(flows.id, input.id),
-              eq(flows.projectId, input.projectId),
-            )
-          );
-      });
-      const newFlow = await getNested({
-        id: input.id, projectId: input.projectId
-      });
-      if (newFlow == null) throw new Error(
-        `cannot find flow ${input.id}`
-      );
+      const newFlow = await update(input);
       ee.emit('onUpdate', newFlow);
     }),
   add: publicProcedure
     .input(selectSchema.omit({ id: true}))
     .mutation(async ({ input }) => {
-      await db.insert(flows).values({ ...input });
-      const newList= await listNested({ projectId: input.projectId });
-      ee.emit(
-        'onUpdateList',
-        { projectId: input.projectId, flows: newList }
-      );
+      const newFlow = await add(input);
+      ee.emit('onAdd', newFlow);
     }),
-  delete: publicProcedure
+  remove: publicProcedure
     .input(selectSchema.pick({ 
       projectId: true, 
       id: true 
     }))
     .mutation(async ({ input }) => {
-      await db.delete(flows).where(
-        and(
-          eq(flows.projectId, input.projectId),
-          eq(flows.id, input.id),
-        )
-      );
+      await remove(input);
+      ee.emit('onRemove', input);
       const newList= await listNested({ projectId: input.projectId });
       ee.emit(
         'onUpdateList',
         { projectId: input.projectId, flows: newList }
       );
     }),
+  onAdd: publicProcedure
+    .input(selectSchema.pick({ projectId: true }))
+    .subscription(({ input }) =>
+      observable<FlowEvents['onAdd']>(emit => {
+        const handler = (e: FlowEvents['onAdd']) => {
+          if (e.projectId === input.projectId) { emit.next(e); }
+        };
+        ee.on('onAdd', handler);
+        return () => ee.off('onAdd', handler);
+      })
+    ),
+  onRemove: publicProcedure
+    .input(selectSchema.pick({ projectId: true, id: true }))
+    .subscription(({ input }) =>
+      observable<FlowEvents['onRemove']>(emit => {
+        const handler = (e: FlowEvents['onRemove']) => {
+          if ( e.projectId === input.projectId
+            && e.id        === input.id
+          ) { emit.next(e) }
+        };
+        ee.on('onRemove', handler);
+        return () => ee.off('onRemove', handler);
+      })
+    ),
   onUpdate: publicProcedure
     .input(selectSchema.pick({ 
       projectId: true, 
