@@ -1,10 +1,11 @@
 import { db } from 'database/db';
 import {
   flows,
+  columns,
   columnGroups,
 } from 'database/db/schema';
 import {
-  eq, and, inArray
+  eq, and, inArray, asc
 } from 'drizzle-orm';
 
 type Flow = typeof flows.$inferSelect;
@@ -65,7 +66,12 @@ export const getNestedWithData = async ({
         relatedFlow.columnGroupIds.flatMap(s => s),
       ),
     ),
-    with: { data: true }
+    with: { 
+      data: true,
+      columns: {
+        orderBy: [asc(columns.id)],
+      },
+    }
   });
 
   return {
