@@ -11,14 +11,15 @@ import {
   createColumnHelper,
   useReactTable,
   getCoreRowModel,
+  getSortedRowModel,
   flexRender,
+  SortingState,
 } from '@tanstack/react-table';
 
 
 import { Data } from '@/types';
 
 import Button from '@/components/common/Button';
-import { IconTrash } from '@tabler/icons-react';
 
 import { useRealtimeColumns } from '@/hooks/useRealtimeColumns';
 
@@ -72,6 +73,12 @@ const RealtimeTable: React.FC<
     ) ?? [],
     [columns]
   ); 
+  
+  const [sorting, setSortingPrivate] = React.useState<SortingState>([]);
+  const setSorting: typeof setSortingPrivate = (sort) => {
+    setSortingPrivate(sort);
+    updateLine();
+  };
 
   const { data } = trpc.data.list.useQuery(
     { projectId, columnGroupId }
@@ -99,6 +106,9 @@ const RealtimeTable: React.FC<
     data: tableData,
     columns: tableColumns,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    state: { sorting },
+    onSortingChange: setSorting,
   });
 
   //console.log('RealtimeTable rendered @ ', new Date);
@@ -134,7 +144,11 @@ const RealtimeTable: React.FC<
                     'text-center',
                     //'sticky left-0',
                   )}
+                  onClick={
+                    header.column.getToggleSortingHandler()
+                  }
                 >
+                  <div className='flex flex-row'>
                   {header.isPlaceholder
                     ? null
                     : flexRender(
@@ -142,6 +156,13 @@ const RealtimeTable: React.FC<
                         header.getContext()
                       )
                   }
+                  {   header.column.getIsSorted() === 'asc'
+                    ? <div>↑</div>
+                    : header.column.getIsSorted() === 'desc'
+                    ? <div>↓</div>
+                    : <div></div>
+                  }
+                  </div>
                 </th>
               )}
               <th
