@@ -4,12 +4,12 @@ import React from 'react';
 import clsx from 'clsx';
 
 import Skeleton from '../common/Skeleton';
-import RealtimeColumnGroup from '@/components/column/RealtimeColumnGroup';
+import ColumnGroup from '@/components/column/ColumnGroup';
 import Button from '@/components/common/Button';
 
-import { useRealtimeColumnGroups } from '@/hooks/useRealtimeColumnGroups';
+import { useColumnGroups } from '@/hooks/useColumnGroups';
 
-const RealtimeColumnGroups: React.FC<
+const ColumnGroups: React.FC<
   React.ComponentProps<'div'>
   & { projectId: string }
 > = ({
@@ -21,7 +21,7 @@ const RealtimeColumnGroups: React.FC<
   const {
     columnGroups,
     addColumnGroup,
-  } = useRealtimeColumnGroups({
+  } = useColumnGroups({
     projectId
   });
 
@@ -42,7 +42,7 @@ const RealtimeColumnGroups: React.FC<
         列グループ
       </div>
       {columnGroups.map(c =>
-        <RealtimeColumnGroup key={c.id} columnGroup={c} />
+        <ColumnGroup key={c.id} columnGroup={c} />
       )}
       <div className='divider'></div>
       <Button 
@@ -60,5 +60,5 @@ const RealtimeColumnGroups: React.FC<
   );
 };
 
-export default RealtimeColumnGroups;
+export default ColumnGroups;
 

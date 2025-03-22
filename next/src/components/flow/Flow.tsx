@@ -3,8 +3,8 @@ import clsx from 'clsx';
 
 import type { FlowColumnGroups } from '@/types';
 
-import { useRealtimeFlow } from '@/hooks/useRealtimeFlow';
-import { useRealtimeColumnGroups } from '@/hooks/useRealtimeColumnGroups';
+import { useFlow } from '@/hooks/useFlow';
+import { useColumnGroups } from '@/hooks/useColumnGroups';
 
 import { IconTrash } from '@tabler/icons-react';
 
@@ -29,14 +29,14 @@ const Flow: React.FC<
     flow,
     updateFlow,
     removeFlow,
-  } = useRealtimeFlow({ 
+  } = useFlow({ 
     initialFlow, 
     projectId: initialFlow.projectId,
     id: initialFlow.id,
   });
   const {
     columnGroups
-  } = useRealtimeColumnGroups({ projectId });
+  } = useColumnGroups({ projectId });
 
   const handleAddFlowStep = async () => {
 

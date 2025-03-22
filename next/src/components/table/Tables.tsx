@@ -5,15 +5,15 @@ import clsx from 'clsx';
 
 import type { Flow } from '@/types';
 
-import { useRealtimeTables } from '@/hooks/useRealtimeTables';
+import { useTables } from '@/hooks/useTables';
 import { useLines, Connection } from '@/hooks/useLines';
 
-import RealtimeTable from '@/components/table/RealtimeTable';
+import Table from '@/components/table/Table';
 import TableGroupSelector from '@/components/table/TableGroupSelector';
 
 import Line from '@/components/line/Line';
 
-const RealtimeTables: React.FC<
+const Tables: React.FC<
   React.ComponentProps<'div'>
   & {
     projectId: string;
@@ -30,7 +30,7 @@ const RealtimeTables: React.FC<
   const [connections, setConnections] = React.useState<Connection[]>([]);
   const [updateLineCount, setUpdateLineCount] = React.useState<number>(0);
 
-  const { flowWithData, invalidate } = useRealtimeTables({
+  const { flowWithData, invalidate } = useTables({
     projectId, flowId
   });
 
@@ -94,7 +94,7 @@ const RealtimeTables: React.FC<
                 setSelected={newSelected => console.log(newSelected)}
               />
               {/* tableの表示、ここをグループ分けしたい */}
-              <RealtimeTable 
+              <Table 
                 projectId={cg.projectId}
                 columnGroupId={cg.id}
                 followingColumnGroups={
@@ -123,5 +123,5 @@ const RealtimeTables: React.FC<
   );
 };
 
-export default RealtimeTables;
+export default Tables;
 

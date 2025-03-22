@@ -6,7 +6,7 @@ import type {
 
 type FlowColumnGroups = Flow & { columnGroups: ColumnGroup[][] };
 
-export const useRealtimeFlow = ({
+export const useFlow = ({
   projectId,
   id,
   initialFlow

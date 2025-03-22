@@ -2,7 +2,7 @@ import React from 'react';
 import clsx from 'clsx';
 
 import Header from '@/components/header/Header';
-import RealtimeTables from '@/components/table/RealtimeTables';
+import Tables from '@/components/table/Tables';
 
 import FlowSelect from '@/components/flow/FlowSelect';
 
@@ -30,7 +30,7 @@ const TablesForFlowIdPage = async ({
           projectId={projectId}
           initialId={flowId}
         />
-        <RealtimeTables
+        <Tables
           projectId={projectId}
           flowId={flowId}
         />

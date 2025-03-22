@@ -1,6 +1,6 @@
 import { trpc } from '@/providers/TrpcProvider';
 
-export const useRealtimeColumnGroups = ({
+export const useColumnGroups = ({
   projectId
 }: {
   projectId: string;
