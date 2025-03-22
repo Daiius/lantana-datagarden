@@ -9,6 +9,7 @@ import { useRealtimeTables } from '@/hooks/useRealtimeTables';
 import { useLines, Connection } from '@/hooks/useLines';
 
 import RealtimeTable from '@/components/table/RealtimeTable';
+import TableGroupSelector from '@/components/table/TableGroupSelector';
 
 import Line from '@/components/line/Line';
 
@@ -76,13 +77,23 @@ const RealtimeTables: React.FC<
       )}
       {...props}
     >
+      {/* flowのstep毎に横向きに表示する部分 */}
       {flowWithData.columnGroups?.map((group, igroup) =>
         <div key={igroup} className='flex flex-col gap-8'>
+          {/* 同じstepに属するcolumnGroupを縦に重ねて表示する部分 */}
           {group.map((cg, icg) =>
             <div key={`${cg.id}-${icg}`}>
+              {/* columnGroup名の表示 */}
               <div className='font-bold text-lg'>
                 {cg.name}
               </div>
+              {/* TODO : グループ分けの選択 */}
+              <TableGroupSelector 
+                columnNames={cg.columns.map(c => c.name)}
+                selected={[]}
+                setSelected={newSelected => console.log(newSelected)}
+              />
+              {/* tableの表示、ここをグループ分けしたい */}
               <RealtimeTable 
                 projectId={cg.projectId}
                 columnGroupId={cg.id}
