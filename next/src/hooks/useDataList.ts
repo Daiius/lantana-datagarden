@@ -5,7 +5,7 @@ import { trpc } from '@/providers/TrpcProvider';
 
 import type { Data, Flow } from '@/types';
 
-export const useRealtimeDataList = ({
+export const useDataList = ({
   flow
 }: {
   flow?: Flow

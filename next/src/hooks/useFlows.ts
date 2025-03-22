@@ -1,6 +1,6 @@
 import { trpc } from '@/providers/TrpcProvider';
 
-export const useRealtimeFlows = ({
+export const useFlows = ({
   projectId,
 }: {
   projectId: string;

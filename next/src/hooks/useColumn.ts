@@ -4,7 +4,7 @@ import {
 import { trpc } from '@/providers/TrpcProvider';
 
 
-export const useRealtimeColumn = ({
+export const useColumn = ({
   initialColumn
 }: {
   initialColumn: Column

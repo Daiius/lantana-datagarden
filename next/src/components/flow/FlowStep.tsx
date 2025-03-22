@@ -11,8 +11,8 @@ import type {
 import ColumnGroupSelect from '@/components/column/ColumnGroupSelect';
 import Button from '@/components/common/Button';
 import {
-  useRealtimeColumnGroups
-} from '@/hooks/useRealtimeColumnGroups';
+  useColumnGroups
+} from '@/hooks/useColumnGroups';
 
 const FlowStep: React.FC<
   React.ComponentProps<'div'>
@@ -47,7 +47,7 @@ const FlowStep: React.FC<
 
   const {
     columnGroups: allColumnGroups,
-  } = useRealtimeColumnGroups({
+  } = useColumnGroups({
     projectId
   });
 

@@ -2,7 +2,7 @@ import React from 'react';
 import clsx from 'clsx';
 
 import Header from '@/components/header/Header';
-import RealtimeColumnGroups from '@/components/column/RealtimeColumnGroups';
+import ColumnGroups from '@/components/column/ColumnGroups';
 
 export default async function Page({
   params
@@ -19,7 +19,7 @@ export default async function Page({
       <div
         className='h-[calc(100vh-4rem)] overflow-auto'
       >
-        <RealtimeColumnGroups projectId={projectId} />
+        <ColumnGroups projectId={projectId} />
       </div>
     </div>
   );

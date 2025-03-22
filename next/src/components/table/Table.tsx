@@ -21,9 +21,9 @@ import { Data } from '@/types';
 
 import Button from '@/components/common/Button';
 
-import { useRealtimeColumns } from '@/hooks/useRealtimeColumns';
+import { useColumns } from '@/hooks/useColumns';
 
-import RealtimeTableCell from '@/components/table/RealtimeTableCell';
+import TableCell from '@/components/table/TableCell';
 import RowDropdown from '@/components/table/RowDropdown';
 
 
@@ -34,7 +34,7 @@ import RowDropdown from '@/components/table/RowDropdown';
  * 個別のデータについては数が多くなると思われるので、
  * 更新があったことの通知のみとする
  */
-const RealtimeTable: React.FC<
+const Table: React.FC<
   React.ComponentProps<'table'>
   & {
     projectId: string,
@@ -54,7 +54,7 @@ const RealtimeTable: React.FC<
   const utils = trpc.useUtils();
   const columnHelper = createColumnHelper<Data>();
 
-  const { columns } = useRealtimeColumns({
+  const { columns } = useColumns({
     projectId, columnGroupId
   });
 
@@ -63,7 +63,7 @@ const RealtimeTable: React.FC<
       columnHelper.accessor(d => d.data[c.name], {
         id: c.name,
         cell: ({ row, column, table }) =>
-          <RealtimeTableCell
+          <TableCell
             column={c}
             tanstackColumn={column}
             row={row}
@@ -111,7 +111,7 @@ const RealtimeTable: React.FC<
     onSortingChange: setSorting,
   });
 
-  //console.log('RealtimeTable rendered @ ', new Date);
+  //console.log('Table rendered @ ', new Date);
 
   return (
     //<div
@@ -235,5 +235,5 @@ const RealtimeTable: React.FC<
   );
 };
 
-export default RealtimeTable;
+export default Table;
 

@@ -3,7 +3,7 @@ import clsx from 'clsx';
 
 import DebouncedSelect from '@/components/common/DebouncedSelect';
 
-import { useRealtimeColumnGroups } from '@/hooks/useRealtimeColumnGroups';
+import { useColumnGroups } from '@/hooks/useColumnGroups';
 
 
 const ColumnGroupSelect: React.FC<
@@ -24,7 +24,7 @@ const ColumnGroupSelect: React.FC<
   // 簡易化しても良いかも
   const {
     columnGroups
-  } = useRealtimeColumnGroups({
+  } = useColumnGroups({
     projectId
   });
 

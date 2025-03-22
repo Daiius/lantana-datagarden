@@ -2,7 +2,7 @@ import React from 'react';
 
 import { trpc } from '@/providers/TrpcProvider';
 
-export const useRealtimeTables = ({
+export const useTables = ({
   flowId,
   projectId,
 }: { 

@@ -36,8 +36,10 @@ const Project: React.FC<
   );
   const debouncedOnChange = useDebouncedCallback(
     async (newValue: string) => {
+      if (project == null) return;
       await mutation.mutateAsync({ 
-        id: zeroId, name: newValue 
+        ...project,
+        name: newValue,
       });
     },
     1_000

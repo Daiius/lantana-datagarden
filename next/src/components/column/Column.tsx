@@ -10,10 +10,10 @@ import Skeleton from '../common/Skeleton';
 import Button from '@/components/common/Button';
 import { IconTrash } from '@tabler/icons-react';
 
-import { useRealtimeColumn } from '@/hooks/useRealtimeColumn';
+import { useColumn } from '@/hooks/useColumn';
 
 
-const RealtimeColumn: React.FC<
+const Column: React.FC<
   React.ComponentProps<'div'>
   & { initialColumn: Column }
 > = ({
@@ -25,7 +25,7 @@ const RealtimeColumn: React.FC<
     column,
     updateColumn,
     deleteColumn,
-  } = useRealtimeColumn({ initialColumn });
+  } = useColumn({ initialColumn });
 
   if (column == null) return (
     <Skeleton />
@@ -72,5 +72,5 @@ const RealtimeColumn: React.FC<
   );
 };
 
-export default RealtimeColumn;
+export default Column;
 
