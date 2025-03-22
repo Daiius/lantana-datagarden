@@ -33,7 +33,7 @@ const selectSchema = createSelectSchema(flows)
 import mitt from 'mitt';
 type FlowEvents = {
   onUpdate: FlowWithColumnGroup,
-  onAdd: Flow,
+  onAdd: FlowWithColumnGroup,
   onRemove: Pick<Flow, 'id' | 'projectId'>,
   onUpdateList: Pick<Flow, 'projectId'> & {
     flows: FlowWithColumnGroup[];
@@ -105,7 +105,8 @@ export const flowRouter = router({
     .input(selectSchema.omit({ id: true}))
     .mutation(async ({ input }) => {
       const newFlow = await add(input);
-      ee.emit('onAdd', newFlow);
+      const newNestedFlow = await getNested(newFlow);
+      ee.emit('onAdd', newNestedFlow);
     }),
   remove: publicProcedure
     .input(selectSchema.pick({ 
@@ -133,13 +134,11 @@ export const flowRouter = router({
       })
     ),
   onRemove: publicProcedure
-    .input(selectSchema.pick({ projectId: true, id: true }))
+    .input(selectSchema.pick({ projectId: true }))
     .subscription(({ input }) =>
       observable<FlowEvents['onRemove']>(emit => {
         const handler = (e: FlowEvents['onRemove']) => {
-          if ( e.projectId === input.projectId
-            && e.id        === input.id
-          ) { emit.next(e) }
+          if (e.projectId === input.projectId) { emit.next(e) }
         };
         ee.on('onRemove', handler);
         return () => ee.off('onRemove', handler);

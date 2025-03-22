@@ -44,7 +44,10 @@ export const projects = mysqlTable(
       bigint(
         'last_selected_flow', 
         { mode: 'number', unsigned: true }
-      ).references((): AnyMySqlColumn => flows.id),
+      ).references((): AnyMySqlColumn => flows.id, {
+        onDelete: 'set null',
+        onUpdate: 'cascade',
+      }),
   },
 );
 

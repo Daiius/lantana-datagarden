@@ -28,7 +28,7 @@ const Flow: React.FC<
   const {
     flow,
     updateFlow,
-    deleteFlow,
+    removeFlow,
   } = useRealtimeFlow({ 
     initialFlow, 
     projectId: initialFlow.projectId,
@@ -39,7 +39,10 @@ const Flow: React.FC<
   } = useRealtimeColumnGroups({ projectId });
 
   const handleAddFlowStep = async () => {
-    const defaultColumnGroupId = columnGroups?.[0]?.id ?? '';
+
+    if (flow == null) return;
+
+    const defaultColumnGroupId = columnGroups?.[0]?.id ?? 0;
     const newColumnGroupIds = [
       ...flow.columnGroupIds,
       [defaultColumnGroupId],
@@ -52,9 +55,12 @@ const Flow: React.FC<
     newColumnGroupIds,
   }: {
     istep: number;
-    newColumnGroupIds: string[];
+    newColumnGroupIds: number[];
   }) => {
     console.log('handleUpdateStep: %o', newColumnGroupIds);
+
+    if (flow == null) return;
+
     // TODO 要名前の検討
     const newColumnGroupIds_ =
       flow.columnGroupIds.map((group, igroup) =>
@@ -70,6 +76,7 @@ const Flow: React.FC<
   const handleDeleteStep = async ({
     istep
   }: { istep: number }) => {
+    if (flow == null) return;
     const newColumnGroupIds =
       flow.columnGroupIds.filter((_, igroup) =>
         istep !== igroup
@@ -109,7 +116,7 @@ const Flow: React.FC<
         </fieldset>
         <Button 
           className='text-error ms-auto'
-          onClick={async () => { await deleteFlow({ projectId, id }); }}
+          onClick={async () => { await removeFlow({ projectId, id }); }}
         >
           <IconTrash />
         </Button>
