@@ -22,7 +22,84 @@ Next.js Web アプリケーション
   - 複数人で編集している場合、変更内容を反映・通知して知らせる
   - 複雑な履歴機能や元に戻す機能はきびしいかも
 
+## データ表示方法の整理
+- データを表示する方法の制御についてまとめる
+- 他ユーザと表示方法を共有する方法も考える
 
+- データベースに実体があるデータ構造と、表示するための仮想的なデータ構造がある
+  - projects, flows 等はデータベースに実体がある
+  - tables は無い、データベースの「影」、もっと言えば純粋関数による射影
+- 表示する側の階層構造(tableGroups, tableGroup, tables) に合わせて
+  データベース側のデータ構造を配置すると分かりやすくなるかも
+
+data と flows が独立しているために柔軟な表示方法を取れるが、
+それゆえにlinesを引くのにdataを取ってくる部分が浮いている感じの
+現在の実装の問題点を明らかにしてくれている気がする。
+
+
+```mermaid
+flowchart TD
+
+    subgraph database
+        projects
+        flows
+        columnGroups
+        columns
+        flows
+        %%flowSteps
+        %%tableOptions
+        data
+    end
+
+    subgraph views
+        tableGroups
+        tableGroup
+        tables
+        tableRows
+        tableColumns
+        lines((lines))
+    end
+
+    projects --have--> columnGroups
+    projects --have--> flows
+
+    columnGroups --have--> columns
+
+    flows -.order & place.-> columnGroups
+
+    columnGroups --have--> data
+
+    columns -.specify columns.-> data
+
+    flows -.specify.-> tableGroups((tableGroups))
+    %%flows --have--> flowSteps
+    %%flowSteps --have--> tableOptions
+
+    %%flowSteps --specify--> tableGroup
+    %%tableOptions --specify--> tables
+
+    tableGroups --have--> tableGroup((tableGroup))
+    tableGroups --have--> lines
+
+    tableGroup --have--> tables((tables))
+
+    data -.places.-> lines
+
+    tables --have--> tableRows((tableRows))
+    tables --have--> tableColumns((tableColumns))
+```
+
+
+
+
+
+
+
+WRITING...
+
+
+<details>
+<summary>以前のメモ</summary>
 ## データ間を線で結ぶ方法について
 データが追加された際に線を書き直すのが意外と難しい
 
@@ -36,16 +113,6 @@ RealtimeTables内で線を引いているが、
 だが現状はRealtimeTable内のonUpdateListを検出できれば良いので、
 propsで渡してしまうか...
 
-
-
-
-
-
-WRITING...
-
-
-<details>
-<summary>以前のメモ</summary>
 ### 親子関係のあるデータの扱い再考
 `trpc.table.get` 中では先にcolumn関連の情報を取得している。
 それに合わせてデータを取得している感じ
