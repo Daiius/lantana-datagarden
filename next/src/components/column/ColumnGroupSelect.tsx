@@ -12,7 +12,7 @@ const ColumnGroupSelect: React.FC<
     'options' | 'debouncedOnChange'
   > & { 
     projectId: string;
-    debouncedOnChange: (newValue: { id: string; name: string }) => Promise<void>;
+    debouncedOnChange: (newValue: { id: number; name: string }) => Promise<void>;
   }
 > = ({
   projectId,

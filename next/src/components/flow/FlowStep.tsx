@@ -20,13 +20,13 @@ const FlowStep: React.FC<
     istep: number;
     projectId: string;
     columnGroups: ColumnGroup[];
-    columnGroupIds: string[];
+    columnGroupIds: number[];
     updateStep: ({
       istep, 
       newColumnGroupIds,
     }: {
       istep: number;
-      newColumnGroupIds: string[];
+      newColumnGroupIds: number[];
     }) => void;
     deleteStep: ({ istep }: { istep: number }) => void;
     deletable?: boolean;
@@ -54,7 +54,7 @@ const FlowStep: React.FC<
   const handleUpdateFlowColumnGroup = async ({
     newColumnGroup, icolumnGroup,
   }: {
-    newColumnGroup: { id: string; name: string };
+    newColumnGroup: { id: number; name: string };
     icolumnGroup: number;
   }) => {
     const newColumnGroupIds = 
@@ -67,7 +67,7 @@ const FlowStep: React.FC<
   };
   
   const handleAddFlowColumnGroup = async () => {
-    const defaultColumnGroupId = allColumnGroups?.[0]?.id ?? '';
+    const defaultColumnGroupId = allColumnGroups?.[0]?.id ?? 0;
     const newColumnGroupIds = 
       [...columnGroupIds, defaultColumnGroupId];
 

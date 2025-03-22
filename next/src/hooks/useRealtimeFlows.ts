@@ -10,19 +10,36 @@ export const useRealtimeFlows = ({
     projectId,
   });
   const { mutateAsync: addFlow } = trpc.flow.add.useMutation();
-  trpc.flow.onUpdateList.useSubscription(
+  const { mutateAsync: removeFlow } = trpc.flow.remove.useMutation();
+
+  trpc.flow.onAdd.useSubscription(
     { projectId },
     {
       onData: data => utils.flow.listNested.setData(
         { projectId },
-        data.flows
+        flows == null
+        ? [data]
+        : [ ...flows, data]
       ),
-      onError: err => console.error(err),
+    }
+  );
+
+  trpc.flow.onRemove.useSubscription(
+    { projectId },
+    {
+      onData: data => utils.flow.listNested.setData(
+        { projectId },
+        flows == null
+        ? undefined
+        : flows.filter(f => f.id !== data.id)
+      ),
     }
   );
 
   return {
     flows,
     addFlow,
+    removeFlow,
   };
 };
+

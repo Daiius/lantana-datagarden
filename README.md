@@ -89,9 +89,12 @@ flowchart TD
     tables --have--> tableColumns((tableColumns))
 ```
 
+## バックエンドの階層分け
+tRPCのルート、プロシージャを、現在のデータベース構造よりのものから
+アプリケーション寄りに変えたい。
 
-
-
+flows であれば flows ページで使用する機能を列挙し、
+tables であれば tables ページで使用する機能を列挙するイメージ。
 
 
 
