@@ -1,47 +1,34 @@
 
-import { db } from 'database/db';
-import { 
-  columns,
-//  data,
-} from 'database/db/schema';
-import { eq, and, asc } from 'drizzle-orm';
+import { columns } from 'database/db/schema';
 
 import {
   createSelectSchema,
 } from 'drizzle-zod';
 
-import { z } from 'zod';
-
 import { router, publicProcedure } from '../trpc';
-import { observable, } from '@trpc/server/observable';
 
 import { 
-  deleteColumn,
-  updateName,
-  updateType,
+  get,
+  list,
+  update,
+  add,
+  remove,
 } from '../lib/column';
-
-//import { v7 as uuidv7 } from 'uuid';
+import { createSubscription } from '../lib/common';
 
 import mitt from 'mitt';
+type Column = typeof columns.$inferSelect;
 type ColumnEvents = {
-  onUpdate: z.infer<typeof selectSchema>,
-  onUpdateList: z.infer<typeof selectSchema>[],
+  onAdd: Column,
+  onRemove: Pick<Column, 'id' | 'projectId' | 'columnGroupId'>,
+  onUpdate: Column,
+  onUpdateList: Column[],
 }
 
 export const ee = mitt<ColumnEvents>();
 
 const selectSchema = createSelectSchema(columns);
 
-//const literalUnionFromArray = 
-//  <T extends readonly string[]>(values: T) =>
-//    z.union(
-//      values.map(v => z.literal(v)) as [
-//        z.ZodLiteral<T[number]>,
-//        z.ZodLiteral<T[number]>,
-//        ...Array<z.ZodLiteral<T[number]>>
-//      ]
-//    );
 
 export const columnRouter = router({
   /** 単一の列データを取得します */
@@ -51,85 +38,30 @@ export const columnRouter = router({
       projectId: true,
       columnGroupId: true,
     }))
-    .query(async ({ input }) => 
-       await db.query.columns.findFirst({
-         where: and(
-           eq(columns.id, input.id),
-           eq(columns.projectId, input.projectId),
-           eq(columns.columnGroupId, input.columnGroupId),
-         ),
-       })
-    ),
+    .query(async ({ input }) => await get(input)),
   /** 指定した列グループに属する列データを取得します */
   list: publicProcedure
     .input(selectSchema.pick({ 
       projectId: true, 
       columnGroupId: true,
     }))
-    .query(async ({ input }) =>
-      await db.query.columns.findMany({
-        where: and(
-          eq(columns.columnGroupId, input.columnGroupId),
-          eq(columns.projectId, input.projectId),
-        ),
-        orderBy: [asc(columns.id)],
-      })
-    ),
+    .query(async ({ input }) => await list(input)),
   update: publicProcedure
     .input(selectSchema)
     .mutation(async ({ input }) => {
-
-      const lastData = await db.query.columns.findFirst({
-        where: and(
-          eq(columns.id, input.id),
-          eq(columns.columnGroupId, input.columnGroupId),
-          eq(columns.projectId, input.projectId),
-        )
-      });
-
-      if (lastData == null) 
-        throw new Error(`cannot find column with id ${input.id}`);
-
-      if (lastData.name !== input.name) {
-        const oldName = lastData.name;
-        const newName = input.name;
-        await updateName({
-          id: input.id, 
-          projectId: input.projectId, 
-          columnGroupId: input.columnGroupId,
-          oldName,
-          newName,
-        });
-      }
-      
-      if (lastData.type !== input.type) {
-        const oldType = lastData.type;
-        const newType = input.type;
-        await updateType({
-          id: input.id,
-          projectId: input.projectId,
-          columnGroupId: input.columnGroupId,
-          name: input.name,
-          oldType,
-          newType,
-        });
-      }
-
-      ee.emit('onUpdate', { ...input });
+      const newColumn = await update(input);
+      ee.emit('onUpdate', newColumn);
     }),
   add: publicProcedure
     .input(selectSchema.partial({ id: true }))
     .mutation(async ({ input }) => {
-      await db.insert(columns).values(
-        { ...input }
+      const newColumn = await add(input);
+      if (newColumn == null) throw new Error(
+        `cannot find added column`
       );
-      const newList = await db.query.columns.findMany({
-        where: and(
-          eq(columns.projectId, input.projectId),
-          eq(columns.columnGroupId, input.columnGroupId),
-        ),
-        orderBy: [asc(columns.id)],
-      });
+      ee.emit('onAdd', newColumn);
+      
+      const newList = await list(input);
       ee.emit('onUpdateList', newList); 
     }),
   /**
@@ -145,15 +77,9 @@ export const columnRouter = router({
     }))
     .mutation(async ({ input }) => {
       // 該当する列をDataから削除します
-      await deleteColumn(input);
+      await remove(input);
 
-      const newList = await db.query.columns.findMany({
-        where: and(
-          eq(columns.projectId, input.projectId),
-          eq(columns.columnGroupId, input.columnGroupId),
-        ),
-        orderBy: [asc(columns.id)],
-      });
+      const newList = await list(input);
       ee.emit('onUpdateList', newList); 
     }),
   onUpdate: publicProcedure
@@ -163,17 +89,14 @@ export const columnRouter = router({
       columnGroupId: true,
     }))
     .subscription(({ input }) =>
-      observable<ColumnEvents['onUpdate']>(emit => {
-        const handler = (data: ColumnEvents['onUpdate']) => {
-          if ( data.id         === input.id
-            && data.columnGroupId === input.columnGroupId
-            && data.projectId === input.projectId
-          ) {
-            emit.next({ ...data });
-          }
-        };
-        ee.on('onUpdate', handler);
-        return () => ee.off('onUpdate', handler);
+      createSubscription({
+        filter: data => ( 
+             data.id            === input.id
+          && data.columnGroupId === input.columnGroupId
+          && data.projectId     === input.projectId
+        ),
+        eventEmitter: ee,
+        eventName: 'onAdd',
       })
     ),
   onUpdateList: publicProcedure
@@ -182,14 +105,43 @@ export const columnRouter = router({
       columnGroupId: true,
     }))
     .subscription(({ input }) =>
-      observable<ColumnEvents['onUpdateList']>(emit => {
-        const handler = (data: ColumnEvents['onUpdateList']) => {
-          if (data[0]?.columnGroupId === input.columnGroupId) {
-            emit.next(data);
-          }
-        };
-        ee.on('onUpdateList', handler);
-        return () => ee.off('onUpdateList', handler);
+      createSubscription({
+        filter: data => (
+             data[0]?.columnGroupId === input.columnGroupId
+          && data[0]?.projectId     === input.projectId
+        ),
+        eventEmitter: ee,
+        eventName: 'onUpdateList',
+      })
+    ),
+  onAdd: publicProcedure
+    .input(selectSchema.pick({
+      projectId: true,
+      columnGroupId: true,
+    }))
+    .subscription(({ input }) =>
+      createSubscription({
+        filter: data => (
+             data.projectId === input.projectId
+          && data.columnGroupId === input.columnGroupId
+        ),
+        eventEmitter: ee,
+        eventName: 'onAdd',
+      })
+    ),
+  onRemove: publicProcedure
+    .input(selectSchema.pick({
+      projectId: true,
+      columnGroupId: true,
+    }))
+    .subscription(({ input }) =>
+      createSubscription({
+        eventEmitter: ee,
+        eventName: 'onRemove',
+        filter: data => (
+             data.projectId === input.projectId
+          && data.columnGroupId === data.columnGroupId
+        ),
       })
     ),
 });
