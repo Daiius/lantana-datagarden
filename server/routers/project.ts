@@ -1,7 +1,5 @@
 
-import { db } from 'database/db';
 import { projects } from 'database/db/schema';
-import { eq } from 'drizzle-orm';
 
 import {
   createSelectSchema,
@@ -17,6 +15,12 @@ type ProjectEvents = {
   onUpdate: z.infer<typeof selectSchema>,
 }
 
+import {
+  get,
+  list,
+  update,
+} from '../lib/project';
+
 export const ee = mitt<ProjectEvents>();
 
 const selectSchema = createSelectSchema(projects);
@@ -24,24 +28,13 @@ const selectSchema = createSelectSchema(projects);
 export const projectRouter = router({
   get: publicProcedure
     .input(z.object({ id: z.string() }))
-    //.output(selectSchema.optional())
-    .query(async ({ input }) => 
-       await db.query.projects.findFirst({
-         where: eq(projects.id, input.id)
-       })
-    ),
-  /** TODO ユーザが属するプロジェクトだけ返却する様に！ */
-  list: publicProcedure
-    .query(async () =>
-      await db.query.projects.findMany()
-    ),
+    .query(async ({ input }) => await get(input)),
+  list: publicProcedure.query(async () => await list()),
   update: publicProcedure
-    .input(selectSchema)
+    .input(selectSchema.omit({ lastSelectedFlow: true }))
     .mutation(async ({ input }) => {
-      await db.update(projects)
-        .set({ ...input })
-        .where(eq(projects.id, input.id));
-      ee.emit('onUpdate', { ...input });
+      const newProject = await update(input);
+      ee.emit('onUpdate', newProject);
     }),
   onUpdate: publicProcedure
     .input(z.object({ id: z.string() }))
