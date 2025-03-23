@@ -10,6 +10,26 @@ import {
 
 type Flow = typeof flows.$inferSelect;
 
+export const get = async ({
+  projectId,
+  id,
+}: Pick<Flow, 'id' | 'projectId'>) => 
+  await db.query.flows.findFirst({
+    where: and(
+      eq(flows.id, id),
+      eq(flows.projectId, projectId),
+    ),
+  });
+
+
+export const list = async ({
+  projectId,
+}: Pick<Flow, 'projectId'>) =>
+  await db.query.flows.findMany({
+    where: eq(flows.projectId, projectId)
+  });
+
+
 export const getNested = async ({
   projectId,
   id,
@@ -115,4 +135,64 @@ export const listNested = async ({
     }));
   return nestedRelatedFlows;
 };
+
+export const update = async (flow: Flow) => {
+  await db.transaction(async tx => {
+    // flow中のcolumnGroupIdsについて、
+    // 既存の値かどうかチェックする
+    const existingColumnGroupIds = (
+      await tx.query.columnGroups.findMany({
+        where: eq(columnGroups.projectId, flow.projectId),
+        columns: { id: true },
+      })
+    ).map(cg => cg.id);
+
+    const invalidIds = flow.columnGroupIds
+      .flatMap(group => group)
+      .filter(id => !existingColumnGroupIds.includes(id));
+    if (invalidIds.length > 0) throw new Error(
+      `these flow.columnGroupIds does not exist in db: ${invalidIds.map(s => `'${s}'`).toString()}`
+    );
+    
+    // flowに従ってデータ更新 
+    await tx.update(flows)
+      .set(flow)
+      .where(
+        and(
+          eq(flows.id, flow.id),
+          eq(flows.projectId, flow.projectId),
+        )
+      );
+  });
+  const newFlow = await getNested({
+    id: flow.id, projectId: flow.projectId
+  });
+  if (newFlow == null) throw new Error(
+    `cannot find flow ${flow.id}`
+  );
+
+  return newFlow;
+};
+
+export const add = async (
+  newFlowData: Omit<Flow, 'id'>
+): Promise<Flow> => {
+  const newId = (
+    await db.insert(flows).values({ ...newFlowData })
+      .$returningId()
+  )[0]?.id;
+  if (newId == null) throw new Error('cannot get new id');
+
+  return { ...newFlowData, id: newId };
+}
+
+export const remove = async (
+  { id, projectId }: Pick<Flow, 'id' | 'projectId'>
+) => 
+  await db.delete(flows).where(
+    and(
+      eq(flows.projectId, projectId),
+      eq(flows.id, id),
+    )
+  );
 

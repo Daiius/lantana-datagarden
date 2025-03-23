@@ -6,16 +6,16 @@ import type {
   Column,
 } from '@/types';
 
-import RealtimeColumns from '@/components/column/RealtimeColumns';
+import Columns from '@/components/column/Columns';
 import DebouncedInput from '@/components/common/DebouncedInput';
 import Button from '@/components/common/Button';
 import { IconTrash } from '@tabler/icons-react';
 
-import { useRealtimeColumnGroup } from '@/hooks/useRealtimeColumnGroup';
+import { useColumnGroup } from '@/hooks/useColumnGroup';
 
 type ColumnGroupWithColumns = ColumnGroup & { columns: Column[] };
 
-const RealtimeColumnGroup: React.FC<
+const ColumnGroup: React.FC<
   React.ComponentProps<'div'>
   & { columnGroup: ColumnGroupWithColumns }
 > = ({
@@ -29,7 +29,7 @@ const RealtimeColumnGroup: React.FC<
     columnGroup,
     updateColumnGroup,
     deleteColumnGroup,
-  } = useRealtimeColumnGroup({
+  } = useColumnGroup({
     initialColumnGroup
   });
 
@@ -66,7 +66,7 @@ const RealtimeColumnGroup: React.FC<
           <IconTrash />
         </Button>
       </div>
-      <RealtimeColumns 
+      <Columns 
         projectId={projectId}
         columnGroupId={id}
         initialColumns={columnGroup.columns} 
@@ -75,5 +75,5 @@ const RealtimeColumnGroup: React.FC<
   );
 };
 
-export default RealtimeColumnGroup;
+export default ColumnGroup;
 

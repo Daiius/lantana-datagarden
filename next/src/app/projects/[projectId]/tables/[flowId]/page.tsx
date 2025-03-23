@@ -2,7 +2,7 @@ import React from 'react';
 import clsx from 'clsx';
 
 import Header from '@/components/header/Header';
-import RealtimeTables from '@/components/table/RealtimeTables';
+import Tables from '@/components/table/Tables';
 
 import FlowSelect from '@/components/flow/FlowSelect';
 
@@ -11,7 +11,13 @@ const TablesForFlowIdPage = async ({
 }: {
   params: Promise<{ projectId: string, flowId: string }>
 }) => {
-  const { projectId, flowId } = await params;
+  const { projectId, flowId: flowIdString } = await params;
+
+  // TODO
+  // flowId が存在するか否かのチェック、
+  // 無ければエラー表示、リダイレクト等対応
+
+  const flowId = Number(flowIdString);
 
   return (
     <div>
@@ -22,11 +28,11 @@ const TablesForFlowIdPage = async ({
       <div className='h-[calc(100vh-4rem)] overflow-auto p-4'>
         <FlowSelect
           projectId={projectId}
-          initialId={Number(flowId)}
+          initialId={flowId}
         />
-        <RealtimeTables
+        <Tables
           projectId={projectId}
-          flowId={Number(flowId)}
+          flowId={flowId}
         />
       </div>
     </div>

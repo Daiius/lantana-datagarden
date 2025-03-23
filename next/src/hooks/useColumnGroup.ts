@@ -7,7 +7,7 @@ import { trpc } from '@/providers/TrpcProvider';
 type ColumnGroupWithColumns =
   ColumnGroup & { columns: Column[] };
 
-export const useRealtimeColumnGroup = ({
+export const useColumnGroup = ({
   initialColumnGroup,
 }: {
   initialColumnGroup: ColumnGroupWithColumns

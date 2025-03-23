@@ -1,6 +1,6 @@
 import { trpc } from '@/providers/TrpcProvider';
 
-export const useRealtimeProject = ({
+export const useProject = ({
   id
 }: {
   id: string

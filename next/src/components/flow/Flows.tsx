@@ -6,8 +6,8 @@ import clsx from 'clsx';
 import Flow from '@/components/flow/Flow';
 import Button from '@/components/common/Button';
 
-import { useRealtimeFlows } from '@/hooks/useRealtimeFlows';
-import { useRealtimeColumnGroups } from '@/hooks/useRealtimeColumnGroups';
+import { useFlows } from '@/hooks/useFlows';
+import { useColumnGroups } from '@/hooks/useColumnGroups';
 
 /**
  * データ表示方法を規定するflow表示用のコンポーネント
@@ -25,7 +25,7 @@ const Flows: React.FC<
   const { 
     flows,
     addFlow,
-  } = useRealtimeFlows({ projectId });
+  } = useFlows({ projectId });
 
   if (flows == null) return (
     <div className='skeleton h-32 w-full'></div>

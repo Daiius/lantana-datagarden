@@ -11,8 +11,8 @@ import type {
 import ColumnGroupSelect from '@/components/column/ColumnGroupSelect';
 import Button from '@/components/common/Button';
 import {
-  useRealtimeColumnGroups
-} from '@/hooks/useRealtimeColumnGroups';
+  useColumnGroups
+} from '@/hooks/useColumnGroups';
 
 const FlowStep: React.FC<
   React.ComponentProps<'div'>
@@ -20,13 +20,13 @@ const FlowStep: React.FC<
     istep: number;
     projectId: string;
     columnGroups: ColumnGroup[];
-    columnGroupIds: string[];
+    columnGroupIds: number[];
     updateStep: ({
       istep, 
       newColumnGroupIds,
     }: {
       istep: number;
-      newColumnGroupIds: string[];
+      newColumnGroupIds: number[];
     }) => void;
     deleteStep: ({ istep }: { istep: number }) => void;
     deletable?: boolean;
@@ -47,14 +47,14 @@ const FlowStep: React.FC<
 
   const {
     columnGroups: allColumnGroups,
-  } = useRealtimeColumnGroups({
+  } = useColumnGroups({
     projectId
   });
 
   const handleUpdateFlowColumnGroup = async ({
     newColumnGroup, icolumnGroup,
   }: {
-    newColumnGroup: { id: string; name: string };
+    newColumnGroup: { id: number; name: string };
     icolumnGroup: number;
   }) => {
     const newColumnGroupIds = 
@@ -67,7 +67,7 @@ const FlowStep: React.FC<
   };
   
   const handleAddFlowColumnGroup = async () => {
-    const defaultColumnGroupId = allColumnGroups?.[0]?.id ?? '';
+    const defaultColumnGroupId = allColumnGroups?.[0]?.id ?? 0;
     const newColumnGroupIds = 
       [...columnGroupIds, defaultColumnGroupId];
 

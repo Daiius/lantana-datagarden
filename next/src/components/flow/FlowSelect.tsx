@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation';
 
 import { trpc } from '@/providers/TrpcProvider';
 
-import { useRealtimeFlows } from '@/hooks/useRealtimeFlows';
-import { useRealtimeProject } from '@/hooks/useRealtimeProject';
+import { useFlows } from '@/hooks/useFlows';
+import { useProject } from '@/hooks/useProject';
 
 /**
  * Flowを選択するためのコンポーネント
@@ -31,11 +31,11 @@ const FlowSelect: React.FC<
   className,
   ...props
 }) => {
-  const { flows } = useRealtimeFlows({ projectId });
+  const { flows } = useFlows({ projectId });
   const { 
     project,
     updateProject,
-  } = useRealtimeProject({ id: projectId });
+  } = useProject({ id: projectId });
 
   const router = useRouter();
 
