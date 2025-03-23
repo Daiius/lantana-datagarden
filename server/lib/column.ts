@@ -5,7 +5,7 @@ import {
   JsonData,
   data,
 } from 'database/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, asc } from 'drizzle-orm';
 
 
 type Column = typeof columns.$inferSelect;
@@ -16,7 +16,7 @@ type Column = typeof columns.$inferSelect;
  * この列に関連付けられている全てのデータに対して
  * 列名変更処理が走るので、大規模なデータは時間が掛かります
  */
-export const updateName = async ({
+const updateName = async ({
   id,
   projectId,
   columnGroupId,
@@ -117,7 +117,7 @@ const convert = ({
  * TODO 現在は string <-> number の変換のみ実装します
  *
  */
-export const updateType = async ({
+const updateType = async ({
   id,
   projectId,
   columnGroupId,
@@ -177,9 +177,12 @@ export const updateType = async ({
 };
 
 /**
- * 列をDataから削除します
+ * Columnを削除します
+ *
+ * Columnに属しているデータも全て削除されます
+ * TODO 挙動について検討、この操作は破壊的で、元に戻すのが困難...
  */
-export const deleteColumn = async ({
+export const remove = async ({
   projectId,
   columnGroupId,
   id,
@@ -237,4 +240,90 @@ export const deleteColumn = async ({
     }
   });
 };
+
+export const get = async ({
+  id,
+  projectId,
+  columnGroupId,
+}: Pick<Column, 'id' | 'projectId' | 'columnGroupId'>) =>
+  await db.query.columns.findFirst({
+    where: and(
+      eq(columns.id, id),
+      eq(columns.projectId, projectId),
+      eq(columns.columnGroupId, columnGroupId),
+    ),
+  });
+  
+export const list = async ({
+  projectId,
+  columnGroupId,
+}: Pick<Column, 'projectId' | 'columnGroupId'>) =>
+  await db.query.columns.findMany({
+    where: and(
+      eq(columns.columnGroupId, columnGroupId),
+      eq(columns.projectId, projectId),
+    ),
+    orderBy: [asc(columns.id)],
+  });
+
+export const update = async (column: Column) => {
+  const lastData = await db.query.columns.findFirst({
+    where: and(
+      eq(columns.id, column.id),
+      eq(columns.columnGroupId, column.columnGroupId),
+      eq(columns.projectId, column.projectId),
+    )
+  });
+
+  if (lastData == null) 
+    throw new Error(`cannot find column with id ${column.id}`);
+
+  if (lastData.name !== column.name) {
+    const oldName = lastData.name;
+    const newName = column.name;
+    await updateName({
+      id: column.id, 
+      projectId: column.projectId, 
+      columnGroupId: column.columnGroupId,
+      oldName,
+      newName,
+    });
+  }
+  
+  if (lastData.type !== column.type) {
+    const oldType = lastData.type;
+    const newType = column.type;
+    await updateType({
+      id: column.id,
+      projectId: column.projectId,
+      columnGroupId: column.columnGroupId,
+      name: column.name,
+      oldType,
+      newType,
+    });
+  }
+
+  const newColumn = await get(column);
+  if (newColumn == null) throw new Error(
+    `cannot get updated column, ${column.id}`
+  );
+
+  return newColumn;
+}
+
+export const add = async (column: Omit<Column, 'id'>) => {
+  const newId = (
+    await db.insert(columns).values(column)
+      .$returningId()
+  )[0]?.id;
+  if (newId == null) throw new Error(
+    `cannot get inserted column id`
+  );
+  const newColumn = await get({ ...column, id: newId });
+  if (newColumn == null) throw new Error(
+    `cannot find inserted column, ${newId}`
+  );
+  return newColumn;
+};
+
 

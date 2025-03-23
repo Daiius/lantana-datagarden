@@ -11,10 +11,10 @@ import {
 
 import type { Data, Column } from '@/types';
 
-import { useRealtimeData } from '@/hooks/useRealtimeData';
+import { useData } from '@/hooks/useData';
 import DebouncedInput from '@/components/common/DebouncedInput';
 
-const RealtimeTableCell: React.FC<
+const TableCell: React.FC<
   React.ComponentProps<'input'>
   & {
     column: Column;
@@ -31,7 +31,7 @@ const RealtimeTableCell: React.FC<
   ...props
 }) => {
   const { id, projectId, columnGroupId } = row.original;
-  const { data, updateData } = useRealtimeData({
+  const { data, updateData } = useData({
     id, projectId, columnGroupId
   });
   if (data == null) return <div>loading...</div>
@@ -54,5 +54,5 @@ const RealtimeTableCell: React.FC<
   );
 };
 
-export default RealtimeTableCell;
+export default TableCell;
 

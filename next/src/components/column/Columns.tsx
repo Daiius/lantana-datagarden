@@ -5,20 +5,20 @@ import clsx from 'clsx';
 
 
 import type {
-  Column
+  Column as ColumnType
 } from '@/types';
 
-import RealtimeColumn from '@/components/column/RealtimeColumn';
+import Column from '@/components/column/Column';
 import Button from '@/components/common/Button';
 
-import { useRealtimeColumns } from '@/hooks/useRealtimeColumns';
+import { useColumns } from '@/hooks/useColumns';
 
-const RealtimeColumns: React.FC<
+const Columns: React.FC<
   React.ComponentProps<'div'>
   & { 
     projectId: string;
-    columnGroupId: string;
-    initialColumns: Column[]; 
+    columnGroupId: number;
+    initialColumns: ColumnType[]; 
   }
 > = ({
   columnGroupId,
@@ -31,7 +31,7 @@ const RealtimeColumns: React.FC<
   const {
     columns,
     addColumn,
-  } = useRealtimeColumns({
+  } = useColumns({
     initialColumns,
     projectId,
     columnGroupId,
@@ -47,8 +47,8 @@ const RealtimeColumns: React.FC<
       )}
       {...props}
     >
-      {columns.map(c =>
-        <RealtimeColumn key={c.id} initialColumn={c} />
+      {columns?.map(c =>
+        <Column key={c.id} initialColumn={c} />
       )}
       <Button 
         className='btn-success'
@@ -69,5 +69,5 @@ const RealtimeColumns: React.FC<
   );
 };
 
-export default RealtimeColumns;
+export default Columns;
 

@@ -1,7 +1,7 @@
 import { Column, ColumnGroup } from '@/types';
 import { trpc } from '@/providers/TrpcProvider';
 
-export const useRealtimeColumns = ({
+export const useColumns = ({
   initialColumns,
   projectId,
   columnGroupId,

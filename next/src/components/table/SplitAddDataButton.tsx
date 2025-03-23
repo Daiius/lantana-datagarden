@@ -39,8 +39,7 @@ const ShrinkedSplitAddDataButton: React.FC<
   ...props
 }) => {
   const projectId = columns[0]?.projectId ?? '';
-  const columnGroupId = columns[0]?.columnGroupId ?? '';
-  const innerColumnGroupId = columns[0]?.innerColumnGroupId ?? '';
+  const columnGroupId = columns[0]?.columnGroupId ?? 0;
 
   const { mutateAsync } = trpc.data.add.useMutation();
   const utils = trpc.useUtils();
@@ -65,7 +64,7 @@ const ShrinkedSplitAddDataButton: React.FC<
             columns.map(c => [c.name, ''])
           );
           const { id: newId } = await mutateAsync({
-            projectId, columnGroupId, innerColumnGroupId,
+            projectId, columnGroupId,
             parentId: null,
             data: newData,
           });

@@ -7,7 +7,6 @@ import { trpc } from '@/providers/TrpcProvider';
 
 import Skeleton from '@/components/common/Skeleton';
 import DebouncedInput from '@/components/common/DebouncedInput';
-import RealtimeCategories from '@/components/category/RealtimeCategories';
 
 /**
  * リアルタイム更新を行うProjectコンポーネント
@@ -16,7 +15,7 @@ import RealtimeCategories from '@/components/category/RealtimeCategories';
  * TODO
  * Categoriesの数が変わったことを検出する方法が無い...
  */
-const RealtimeProject: React.FC<
+const Project: React.FC<
   React.ComponentProps<'div'>
   & { projectId: string }
 > = ({
@@ -68,16 +67,15 @@ const RealtimeProject: React.FC<
         <label className='fieldset-label'>プロジェクト名：</label>
         <DebouncedInput
           value={project.name}
-          debouncedOnChange={async (newValue: string) =>
-            await mutateAsync({ ...project, name: newValue })
+          debouncedOnChange={async newValue =>
+            await mutateAsync({ ...project, name: newValue as string })
           }
         />
       </fieldset>
       <div className='divider'></div>
-      <RealtimeCategories projectId={project.id} />
     </div>
   );
 };
 
-export default RealtimeProject;
+export default Project;
 

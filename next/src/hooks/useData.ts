@@ -5,7 +5,7 @@ import { trpc } from '@/providers/TrpcProvider';
 
 import type { Data } from '@/types';
 
-export const useRealtimeData = ({
+export const useData = ({
   id,
   projectId,
   columnGroupId,

@@ -1,22 +1,13 @@
 
 import { db } from 'database/db';
 import { 
-  data,
-  columns,
-  columnGroups,
   flows,
-  validate,
 } from 'database/db/schema';
-import { eq, and, asc } from 'drizzle-orm';
-
-import {
-  createSelectSchema,
-} from 'drizzle-zod';
+import { eq, and } from 'drizzle-orm';
 
 import { z } from 'zod';
 
 import { router, publicProcedure } from '../trpc';
-import { observable, } from '@trpc/server/observable';
 
 import mitt from 'mitt';
 type TableEvents = {
