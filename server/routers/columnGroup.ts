@@ -1,74 +1,41 @@
 
-import { db } from 'database/db';
 import { 
   columnGroups,
   columns,
-  data,
 } from 'database/db/schema';
-import { eq, and, asc } from 'drizzle-orm';
 
-import {
-  //createInsertSchema,
-  createSelectSchema,
-} from 'drizzle-zod';
+import { createSelectSchema } from 'drizzle-zod';
 
 import { z } from 'zod';
 
 import { router, publicProcedure } from '../trpc';
-import { observable, } from '@trpc/server/observable';
 
 import mitt from 'mitt';
+import {
+  get,
+  //getNested,
+  list,
+  listNested,
+  update,
+  add,
+  remove,
+} from '../lib/columnGroup';
+import { createSubscription } from '../lib/common';
 
 
 const selectSchema = createSelectSchema(columnGroups);
-//const insertSchema = createInsertSchema(columnGroups);
 
 type ColumnGroup = typeof columnGroups.$inferSelect;
+type Column = typeof columns.$inferSelect;
 
 
-//const literalUnionFromArray = 
-//  <T extends readonly string[]>(values: T) =>
-//    z.union(
-//      values.map(v => z.literal(v)) as [
-//        z.ZodLiteral<T[number]>,
-//        z.ZodLiteral<T[number]>,
-//        ...Array<z.ZodLiteral<T[number]>>
-//      ]
-//    );
-
-export const getNestedColumnGroups = async ({
-  projectId
-}: Pick<ColumnGroup, 'projectId'>) => await db.query.columnGroups.findMany({
-  where: eq(columnGroups.projectId, projectId),
-  with: {
-    columns: {
-      orderBy: [asc(columns.id)]
-    },
-  }
-});
-export const getNestedColumnGroup = async ({
-  projectId,
-  id,
-}: Pick<ColumnGroup, 'projectId' | 'id'>) => await db.query.columnGroups.findFirst({
-  where: and(
-    eq(columnGroups.projectId, projectId),
-    eq(columnGroups.id, id),
-  ),
-  with: {
-    columns: {
-      orderBy: [asc(columns.id)]
-    }
-  }
-});
-
-type Element<T> = T extends (infer U)[] ? U : never;
-type NestedColumnGroup = Element<Awaited<ReturnType<
-  typeof getNestedColumnGroups>
->>
+type NestedColumnGroup = ColumnGroup & { columns: Column[] };
 
 type ColumnGroupEvents = {
-  onUpdate:     NestedColumnGroup,
-  onUpdateList: NestedColumnGroup[],
+  onAdd: NestedColumnGroup;
+  onRemove: Pick<NestedColumnGroup, 'id'|'projectId'>;
+  onUpdate:     NestedColumnGroup;
+  onUpdateList: NestedColumnGroup[];
 }
 export const ee = mitt<ColumnGroupEvents>();
 
@@ -81,37 +48,19 @@ export const columnGroupRouter = router({
       id: true,
       projectId: true,
     }))
-    .query(async ({ input }) => 
-       await db.query.columnGroups.findFirst({
-         where: eq(columnGroups.id, input.id)
-       })
-    ),
+    .query(async ({ input }) => await get(input)),
   /**
    * 指定したprojectIdを持つカテゴリを取得します
+   *
    */
   listNested: publicProcedure
     .input(z.object({ 
       projectId: z.string(), 
     }))
-    .query(async ({ input }) =>
-      await db.query.columnGroups.findMany({
-        where: eq(columnGroups.projectId, input.projectId),
-        orderBy: [asc(columnGroups.id)],
-        with: {
-          columns: {
-            orderBy: [asc(columns.id)],
-          }
-        }
-      })
-    ),
+    .query(async ({ input }) => await listNested(input)),
   list: publicProcedure
     .input(z.object({ projectId: z.string() }))
-    .query(async ({ input }) =>
-      await db.query.columnGroups.findMany({
-        where: eq(columnGroups.projectId, input.projectId),
-        orderBy: [asc(columnGroups.id)],
-      })
-    ),
+    .query(async ({ input }) => await list(input)),
   /**
    * 指定したidのカテゴリを更新します
    * onUpdateイベントが発行されます
@@ -119,19 +68,13 @@ export const columnGroupRouter = router({
   update: publicProcedure
     .input(selectSchema)
     .mutation(async ({ input }) => {
-      console.log('input: %o', input);
-      await db.update(columnGroups)
-        .set({ ...input })
-        .where(
-          and(
-            eq(columnGroups.id, input.id),
-            eq(columnGroups.projectId, input.projectId)
-          )
-        );
-      const nestedColumnGroup = await getNestedColumnGroup(input);
-      if (nestedColumnGroup == null) 
+      const newColumnGroup = await update(input);
+      if (newColumnGroup == null) throw new Error(
+        `cannot find updated columnGroup, ${input.id}`
+      );
+      if (newColumnGroup == null) 
         throw new Error('failed to get updated nested column group');
-      ee.emit('onUpdate', nestedColumnGroup);
+      ee.emit('onUpdate', newColumnGroup);
     }),
   /**
    * 指定したidのカテゴリが更新された際に発生するイベントです
@@ -142,16 +85,13 @@ export const columnGroupRouter = router({
       projectId: true
     }))
     .subscription(({ input }) =>
-      observable<ColumnGroupEvents['onUpdate']>(emit => {
-        const handler = (data: ColumnGroupEvents['onUpdate']) => {
-          if ( data.id === input.id 
-            && data.projectId === input.projectId
-          ) {
-            emit.next({ ...data });
-          }
-        };
-        ee.on('onUpdate', handler);
-        return () => ee.off('onUpdate', handler);
+      createSubscription({
+        eventEmitter: ee,
+        eventName: 'onUpdate',
+        filter: data => (
+             data.id        === input.id 
+          && data.projectId === input.projectId
+        ),
       })
     ),
   /**
@@ -164,10 +104,10 @@ export const columnGroupRouter = router({
   add: publicProcedure
     .input(selectSchema.partial({ id: true }))
     .mutation(async ({ input }) => {
-      await db.insert(columnGroups).values({
-        ...input
-      });
-      const nestedColumnGroups = await getNestedColumnGroups(input);
+      const newColumnGroup = await add(input);
+      ee.emit('onAdd', newColumnGroup);
+
+      const nestedColumnGroups = await listNested(input);
       ee.emit('onUpdateList', nestedColumnGroups);
     }),
   /**
@@ -181,29 +121,23 @@ export const columnGroupRouter = router({
       projectId: true,
     }))
     .mutation(async ({ input }) => {
-      await db.transaction(async tx => {
-        await tx.delete(data).where(
-          and(
-            eq(data.columnGroupId, input.id),
-            eq(data.projectId, input.projectId),
-          ),
-        );
-        await tx.delete(columns).where(
-          and(
-            eq(columns.columnGroupId, input.id),
-            eq(columns.projectId, input.projectId),
-          )
-        );
-        await tx.delete(columnGroups).where(
-          and(
-            eq(columnGroups.id, input.id),
-            eq(columnGroups.projectId, input.projectId),
-          )
-        );
-      });
-      const nestedColumnGroups = await getNestedColumnGroups(input);
+      const removedIds = await remove(input);
+      ee.emit('onRemove', removedIds);
+
+      const nestedColumnGroups = await listNested(input);
       ee.emit('onUpdateList', nestedColumnGroups);
     }) ,
+  onRemove: publicProcedure
+    .input(selectSchema.pick({ projectId: true }))
+    .subscription(({ input }) =>
+      createSubscription({
+        eventEmitter: ee,
+        eventName: 'onRemove',
+        filter: data => (
+          data.projectId === input.projectId
+        ),
+      })
+    ),
   /**
    * 新しいカテゴリが追加された際、同じプロジェクトに属する
    * 一連のcategoryの配列を返します
@@ -211,14 +145,12 @@ export const columnGroupRouter = router({
   onUpdateList: publicProcedure
     .input(z.object({ projectId: z.string() }))
     .subscription(({ input }) =>
-      observable<ColumnGroupEvents['onUpdateList']>(emit => {
-        const handler = (arg: ColumnGroupEvents['onUpdateList']) => {
-          if (arg[0]?.projectId === input.projectId) {
-            emit.next(arg);
-          }
-        };
-        ee.on('onUpdateList', handler);
-        return () => ee.off('onUpdateList', handler);
+      createSubscription({
+        eventEmitter: ee,
+        eventName: 'onUpdateList',
+        filter: data => (
+          data[0]?.projectId === input.projectId
+        ),
       })
     ),
 });
