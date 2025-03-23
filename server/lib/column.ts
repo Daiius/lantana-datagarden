@@ -16,7 +16,7 @@ type Column = typeof columns.$inferSelect;
  * この列に関連付けられている全てのデータに対して
  * 列名変更処理が走るので、大規模なデータは時間が掛かります
  */
-export const updateName = async ({
+const updateName = async ({
   id,
   projectId,
   columnGroupId,
@@ -117,7 +117,7 @@ const convert = ({
  * TODO 現在は string <-> number の変換のみ実装します
  *
  */
-export const updateType = async ({
+const updateType = async ({
   id,
   projectId,
   columnGroupId,
