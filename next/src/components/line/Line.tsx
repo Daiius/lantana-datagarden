@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react';
 import clsx from 'clsx';
 
@@ -5,6 +7,8 @@ type Point = {
   x: number;
   y: number;
 }
+
+const LINE_HOVER_WIDTH = 10 as const;
 
 const calcBounds = (p1: Point, p2: Point ) => {
   return {
@@ -32,37 +36,46 @@ const Line: React.FC<
     minX, minY, maxX, maxY,
   }= calcBounds(position.start, position.end);
   const width = Math.max(maxX - minX, 2);
-  const height = Math.max(maxY - minY, 2);
+  const height = Math.max(maxY - minY, 2) + LINE_HOVER_WIDTH / 2;
+  const left = minX;
+  const top  = minY - LINE_HOVER_WIDTH / 2; 
   const start = {
     x: position.start.x - minX,
-    y: position.start.y - minY,
+    y: position.start.y - minY + LINE_HOVER_WIDTH / 2,
   };
   const end = {
     x: position.end.x - minX,
-    y: position.end.y - minY,
+    y: position.end.y - minY + LINE_HOVER_WIDTH/ 2,
   };
   // 真横を向いた線の時には線の半分がviewboxから出てしまうことを防ぐ
-  if (start.y === 0 && end.y === 0) {
-    start.y = 1;
-    end.y = 1;
-  }
+  //if (start.y === 0 && end.y === 0) {
+  //  start.y = 1;
+  //  end.y = 1;
+  //}
   return (
     <svg
       className={clsx(
         className,
         'absolute',
-        'stroke-white pointer-events-none',
+        'stroke-white/50 pointer-events-none',
       )}
       viewBox={`0 0 ${width} ${height}`}
-      style={{ 
-        left: minX, 
-        top: minY, 
-        width, height,
-      }}
+      style={{ left, top, width, height }}
       stroke='currentColor'
       {...props}
     >
-      <line x1={start.x} y1={start.y} x2={end.x} y2={end.y}/>
+      {/* 当たり判定用の太めのline */}
+      <line
+        className='peer pointer-events-auto'
+        x1={start.x} y1={start.y} x2={end.x} y2={end.y}
+        strokeWidth={LINE_HOVER_WIDTH}
+        stroke='transparent'
+      />
+      {/* 表示するline */}
+      <line 
+        className='peer-hover:stroke-white'
+        x1={start.x} y1={start.y} x2={end.x} y2={end.y}
+      />
     </svg>
   );
 };
