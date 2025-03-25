@@ -17,11 +17,11 @@ export const useProject = ({
     }
   );
 
-  const { mutateAsync: updateProject } = trpc.project.update.useMutation();
+  const { mutateAsync: update } = trpc.project.update.useMutation();
 
   return {
     project,
-    updateProject,
+    update,
   };
 };
 

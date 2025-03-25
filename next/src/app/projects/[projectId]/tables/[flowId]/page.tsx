@@ -25,11 +25,12 @@ const TablesForFlowIdPage = async ({
         className='h-[4rem]' 
         projectId={projectId}
       />
-      <div className='h-[calc(100vh-4rem)] overflow-auto p-4'>
-        <FlowSelect
-          projectId={projectId}
-          initialId={flowId}
-        />
+      <FlowSelect
+        className='m-[1rem] h-[3rem]'
+        projectId={projectId}
+        initialId={flowId}
+      />
+      <div className='h-[calc(100vh-9rem)] overflow-auto p-4'>
         <Tables
           projectId={projectId}
           flowId={flowId}

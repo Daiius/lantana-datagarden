@@ -5,8 +5,6 @@ import clsx from 'clsx';
 
 import { useRouter } from 'next/navigation';
 
-import { trpc } from '@/providers/TrpcProvider';
-
 import { useFlows } from '@/hooks/useFlows';
 import { useProject } from '@/hooks/useProject';
 
@@ -34,7 +32,7 @@ const FlowSelect: React.FC<
   const { flows } = useFlows({ projectId });
   const { 
     project,
-    updateProject,
+    update,
   } = useProject({ id: projectId });
 
   const router = useRouter();
@@ -54,7 +52,7 @@ const FlowSelect: React.FC<
           if (selectedFlow == null) return;
           if (project == null) return;
 
-          await updateProject({ 
+          await update({ 
             ...project, 
             lastSelectedFlow: selectedFlow.id
           });
