@@ -23,8 +23,8 @@ const Column: React.FC<
 }) => { 
   const {
     column,
-    updateColumn,
-    deleteColumn,
+    update,
+    remove,
   } = useColumn({ initialColumn });
 
   if (column == null) return (
@@ -43,7 +43,7 @@ const Column: React.FC<
         <DebouncedInput
           value={column.name}
           debouncedOnChange={async newValue =>
-            await updateColumn({ ...column, name: newValue as string })
+            await update({ ...column, name: newValue as string })
           }
         />
       </fieldset>
@@ -55,16 +55,14 @@ const Column: React.FC<
           value={column.type}
           options={DataTypes}
           debouncedOnChange={async (newValue) =>
-            await updateColumn({ ...column, type: newValue })
+            await update({ ...column, type: newValue })
           }
         />
       </fieldset>
       {/* TODO 手動で位置を調整してしまっている...... */}
       <Button 
         className='text-error ml-8 mt-7'
-        onClick={async () => await deleteColumn(
-          { ...column }
-        )}
+        onClick={async () => await remove(column)}
       >
         <IconTrash />
       </Button>

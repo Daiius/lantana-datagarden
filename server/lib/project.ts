@@ -23,10 +23,7 @@ export const list = async () =>
 /**
  * プロジェクトを更新します
  */
-export const update = async(
-  // NOTE ユーザにはlastSelectedFlowを直接編集させません
-  project: Omit<Project, 'lastSelectedFlow'>
-) => {
+export const update = async(project: Project) => {
   await db.update(projects)
     .set(project)
     .where(eq(projects.id, project.id));
