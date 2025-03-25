@@ -24,6 +24,7 @@ import Button from '@/components/common/Button';
 import { useColumns } from '@/hooks/useColumns';
 
 import TableCell from '@/components/table/TableCell';
+import TableHeader from '@/components/table/TableHeader';
 import RowDropdown from '@/components/table/RowDropdown';
 
 
@@ -111,8 +112,6 @@ const Table: React.FC<
     onSortingChange: setSorting,
   });
 
-  //console.log('Table rendered @ ', new Date);
-
   return (
     //<div
     //  className={clsx(
@@ -120,7 +119,7 @@ const Table: React.FC<
     //    'w-full',
     //  )}
     //>
-    <>
+    <div className='w-fit'>
       <table
         className={clsx(
           'border-collapse w-full',
@@ -136,34 +135,7 @@ const Table: React.FC<
               //className='sticky top-0'
             >
               {headerGroup.headers.map(header =>
-                <th 
-                  key={header.id}
-                  className={clsx(
-                    'border border-gray-300 bg-gray-500',
-                    'min-w-32 w-32',
-                    'text-center',
-                    //'sticky left-0',
-                  )}
-                  onClick={
-                    header.column.getToggleSortingHandler()
-                  }
-                >
-                  <div className='flex flex-row'>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )
-                  }
-                  {   header.column.getIsSorted() === 'asc'
-                    ? <div>↑</div>
-                    : header.column.getIsSorted() === 'desc'
-                    ? <div>↓</div>
-                    : <div></div>
-                  }
-                  </div>
-                </th>
+                <TableHeader key={header.id} header={header} />
               )}
               <th
                 className={clsx(
@@ -230,7 +202,7 @@ const Table: React.FC<
       >
         データ追加
       </Button>
-    </>
+    </div>
     //</div>
   );
 };
