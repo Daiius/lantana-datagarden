@@ -19,19 +19,18 @@ const calcBounds = (p1: Point, p2: Point ) => {
   };
 };
 
-const Line: React.FC<
-  React.ComponentProps<'svg'>
-  & { 
-    position: {
-      start: { x: number, y: number };
-      end  : { x: number, y: number };
-    }
-  }
-> = ({ 
+type LineProps = {
+  position: {
+    start: { x: number, y: number };
+    end  : { x: number, y: number };
+  };
+  className?: string;
+}
+
+const Line = ({ 
   position,
   className,
-  ...props
-}) => {
+}: LineProps) => {
   const {
     minX, minY, maxX, maxY,
   }= calcBounds(position.start, position.end);
@@ -62,7 +61,6 @@ const Line: React.FC<
       viewBox={`0 0 ${width} ${height}`}
       style={{ left, top, width, height }}
       stroke='currentColor'
-      {...props}
     >
       {/* 当たり判定用の太めのline */}
       <line
