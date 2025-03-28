@@ -13,18 +13,17 @@ import TableGroupSelector from '@/components/table/TableGroupSelector';
 
 import Line from '@/components/line/Line';
 
-const Tables: React.FC<
-  React.ComponentProps<'div'>
-  & {
-    projectId: string;
-    flowId: Flow['id'];
-  }
-> = ({
+type TablesProps = {
+  projectId: string;
+  flowId: Flow['id'];
+  className?: string;
+}
+
+const Tables = ({
   projectId,
   flowId,
   className,
-  ...props
-}) => {
+}: TablesProps) => {
 
   const [mounted, setMounted] = React.useState<boolean>(false);
   const [connections, setConnections] = React.useState<Connection[]>([]);
@@ -75,7 +74,6 @@ const Tables: React.FC<
         'relative',
         className,
       )}
-      {...props}
     >
       {/* flowのstep毎に横向きに表示する部分 */}
       {flowWithData.columnGroups?.map((group, igroup) =>

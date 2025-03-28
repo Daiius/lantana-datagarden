@@ -1,19 +1,26 @@
-import React from 'react';
+import { 
+  ReactNode,
+  MouseEventHandler,
+} from 'react';
 import clsx from 'clsx';
 
-const Button: React.FC<
-  React.ComponentProps<'button'>
-> = ({
+type ButtonProps = {
+  children: ReactNode;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
+  className?: string;
+}
+
+const Button = ({
   children,
+  onClick,
   className,
-  ...props
-}) => (
+}: ButtonProps) => (
   <button
     type='button'
     className={clsx(
       'btn', className
     )}
-    {...props}
+    onClick={onClick}
   >
     {children}
   </button>
