@@ -5,14 +5,14 @@ import clsx from 'clsx';
 
 import { useDebouncedCallback } from 'use-debounce';
 
+type DebouncedSelectProps<T extends readonly string[]> = {
+  debouncedOnChange: (newValue: T[number]) => Promise<void>,
+  options: T,
+  wait?: number,
 
-type DebouncedSelectOptions<T extends readonly string[],> = 
-  React.ComponentProps<'select'>
-  & {
-    debouncedOnChange: (newValue: T[number]) => Promise<void>,
-    options: T,
-    wait?: number,
-  };
+  className?: string;
+  value: string | undefined;
+}
 
 const DebouncedSelect = <T extends readonly string[],>({
   value, // 注. headless Select にはやっぱり value がない
@@ -21,7 +21,7 @@ const DebouncedSelect = <T extends readonly string[],>({
   wait = 1_000,
   className,
   ...props
-}: DebouncedSelectOptions<T>) => {
+}: DebouncedSelectProps<T>) => {
   const [valuePrivate, setValuePrivate] =
     React.useState<typeof value>(value);
   const stableValueRef = React.useRef<typeof value>(value);

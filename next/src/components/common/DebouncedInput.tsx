@@ -8,24 +8,25 @@ import { useDebouncedCallback } from 'use-debounce';
 import { validate } from '@/types';
 import type { Column } from '@/types';
 
+type DebouncedInputProps = {
+  debouncedOnChange: (newValue: string | number) => Promise<void>,
+  wait?: number,
+  validation?: Column['type'],
+
+  className?: string;
+  value: string | number | readonly string[] | undefined;
+}
+
 /**
  * debouncedOnChangeを提供するinputです
  */
-const DebouncedInput: React.FC<
-  React.ComponentProps<'input'>
-  & { 
-    debouncedOnChange: (newValue: string | number) => Promise<void>,
-    wait?: number,
-    validation?: Column['type'],
-  }
-> = ({
+const DebouncedInput = ({
   className,
   debouncedOnChange,
   wait = 1_000,
   validation,
   value,
-  ...props
-}) => {
+}: DebouncedInputProps) => {
 
   const [valuePrivate, setValuePrivate] = 
     React.useState<typeof value>(value);
@@ -67,7 +68,6 @@ const DebouncedInput: React.FC<
         await debouncedUpdate(e.target.value);
       }}
       value={valuePrivate}
-      {...props}
     />
   )
 };
