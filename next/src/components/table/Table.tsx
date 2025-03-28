@@ -27,6 +27,14 @@ import TableCell from '@/components/table/TableCell';
 import TableHeader from '@/components/table/TableHeader';
 import RowDropdown from '@/components/table/RowDropdown';
 
+type TableProps = {
+  projectId: string,
+  columnGroupId: ColumnGroup['id'],
+  followingColumnGroups: ColumnGroup[],
+  updateLine: () => void;
+
+  className?: string;
+}
 
 
 /**
@@ -35,22 +43,13 @@ import RowDropdown from '@/components/table/RowDropdown';
  * 個別のデータについては数が多くなると思われるので、
  * 更新があったことの通知のみとする
  */
-const Table: React.FC<
-  React.ComponentProps<'table'>
-  & {
-    projectId: string,
-    columnGroupId: ColumnGroup['id'],
-    followingColumnGroups: ColumnGroup[],
-    updateLine: () => void;
-  }
-> = ({
+const Table = ({
   projectId,
   columnGroupId,
   followingColumnGroups,
   updateLine,
   className,
-  ...props
-}) => {
+}: TableProps) => {
 
   const utils = trpc.useUtils();
   const columnHelper = createColumnHelper<Data>();
@@ -126,7 +125,6 @@ const Table: React.FC<
           'table table-sm table-zebra',
           className,
         )}
-        {...props}
       >
         <thead>
           {table.getHeaderGroups().map(headerGroup =>

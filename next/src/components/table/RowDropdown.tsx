@@ -5,28 +5,29 @@ import clsx from 'clsx';
 
 import type { ColumnGroup } from '@/types';
 
-import Button from '@/components/common/Button';
 import { IconTrash } from '@tabler/icons-react';
 
-const RowDropdown: React.FC<
-  React.ComponentProps<'div'>
-  & { 
-    projectId: string;
-    dataId: number;
-    columnGroupId: number;
-    followingColumnGroups: ColumnGroup[];
-    removeData: () => Promise<void>;
-    addData: (params: { columnGroupId: number }) => Promise<void>;
-  }
-> = ({
+type RowDropdownProps = {
+  projectId: string;
+  dataId: number;
+  columnGroupId: number;
+  followingColumnGroups: ColumnGroup[];
+  removeData: () => Promise<void>;
+  addData: (params: { columnGroupId: number }) => Promise<void>;
+
+  className?: string;
+}
+
+const RowDropdown = ({
   followingColumnGroups,
   removeData,
   addData,
-}) => {
+  className,
+}: RowDropdownProps) => {
   const menuRef = React.useRef<HTMLUListElement>(null);
   return (
     <div
-      className='dropdown'
+      className={clsx('dropdown', className)}
     >
       <div 
         tabIndex={0} 
