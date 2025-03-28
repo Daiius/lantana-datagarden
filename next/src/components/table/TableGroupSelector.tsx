@@ -3,6 +3,14 @@
 import React from 'react';
 import clsx from 'clsx';
 
+type TableGroupSelectorProps = {
+  columnNames: string[];
+  selected: string[];
+  setSelected: (selected: string[]) => void;
+
+  className?: string;
+}
+
 /**
  * Tableをデータ内容にしたがってグループ化するための
  * 選択用コンポーネントです
@@ -14,36 +22,26 @@ import clsx from 'clsx';
  * グループ化方法をDBに記録する？どうやって他の人と共有する？
  *
  */
-const TableGroupSelector: React.FC<
-  React.ComponentProps<'div'>
-  & {
-    columnNames: string[];
-    selected: string[];
-    setSelected: (selected: string[]) => void;
-  }
-> = ({
+const TableGroupSelector = ({
   columnNames,
   selected,
   setSelected,
   className,
-  ...props
-}) => {
+}: TableGroupSelectorProps) => {
 
   return (
-    <div 
+    <div
       className={clsx(
-        'collapse collapse-arrow bg-base-100 border-base-300 border',
+        'dropdown dropdown-allow bg-base-100 border-base-300 border',
         className,
       )}
-      {...props}
     >
-      <input type='checkbox' className='checkbox'/>
-      <div className='collapse-title flex flex-row'>
+      <div tabIndex={0} className='btn' role='button'>
         グループ化...
       </div>
-      <div className='collapse-content flex flex-row gap-2'>
+      <div className='dropdown-content bg-base-100 rounded-box z-1 p-2 shadow-sm flex flex-row gap-2'>
         {columnNames.map(columnName =>
-          <fieldset key={columnName} className='fieldset'>
+          <fieldset key={columnName} className='fieldset whitespace-nowrap'>
             <label className='fieldset-label'>
               <input 
                 type='checkbox' 
