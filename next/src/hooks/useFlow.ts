@@ -22,8 +22,8 @@ export const useFlow = ({
     ? { enabled: true }
     : { enabled: false, initialData: initialFlow },
   );
-  const { mutateAsync: updateFlow } = trpc.flow.update.useMutation();
-  const { mutateAsync: removeFlow } = trpc.flow.remove.useMutation();
+  const { mutateAsync: update } = trpc.flow.update.useMutation();
+  const { mutateAsync: remove } = trpc.flow.remove.useMutation();
   trpc.flow.onUpdate.useSubscription(
     { id, projectId },
     {
@@ -41,8 +41,8 @@ export const useFlow = ({
 
   return {
     flow,
-    updateFlow,
-    removeFlow,
+    update,
+    remove,
     error,
   };
 };

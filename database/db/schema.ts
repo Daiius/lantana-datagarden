@@ -229,10 +229,10 @@ export const flows = mysqlTable(
     name:
       varchar('name', { length: FLOW_NAME_LENGTH })
         .notNull(),
-    columnGroupIds:
+    columnGroupWithGroupings:
       json('column_groups')
         .notNull()
-        .$type<number[][]>()
+        .$type<{ id: number, grouping: string }[][]>()
         .default([]),
   }
 );

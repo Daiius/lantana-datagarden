@@ -26,7 +26,10 @@ import {
 // TODO 型推論が上手くいかないので手動で設定、注意
 const selectSchema = createSelectSchema(flows)
   .extend({
-    columnGroupIds: z.array(z.array(z.number())),
+    columnGroupWithGroupings: z.array(z.array(z.object({
+      id: z.number(),
+      grouping: z.string(),
+    }))),
   });
 
 

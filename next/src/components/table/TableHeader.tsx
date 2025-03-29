@@ -7,15 +7,13 @@ import {
   flexRender,
 } from '@tanstack/react-table';
 
-function TableHeader<TData extends RowData, TValue>(
-  {
+type TableHeaderProps<TData extends RowData, TValue> = {
+  header: Header<TData, TValue>
+};
+
+const TableHeader = <TData extends RowData, TValue>({
     header,
-  }:
-  React.ComponentProps<'th'>
-  & {
-    header: Header<TData, TValue>
-  }
-) {
+}: TableHeaderProps<TData, TValue>) => {
   return (
     <th 
       className={clsx(

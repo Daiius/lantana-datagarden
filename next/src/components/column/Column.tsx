@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import clsx from 'clsx';
 
 import type { Column } from '@/types';
 import { DataTypes } from '@/types';
@@ -12,15 +12,16 @@ import { IconTrash } from '@tabler/icons-react';
 
 import { useColumn } from '@/hooks/useColumn';
 
+type ColumnProps = {
+  initialColumn: Column;
+  
+  className?: string;
+};
 
-const Column: React.FC<
-  React.ComponentProps<'div'>
-  & { initialColumn: Column }
-> = ({
+const Column = ({
   initialColumn,
   className,
-  ...props
-}) => { 
+}: ColumnProps) => { 
   const {
     column,
     update,
@@ -33,8 +34,7 @@ const Column: React.FC<
 
   return (
     <div 
-      className='text-lg flex flex-row'
-      {...props}
+      className={clsx('text-lg flex flex-row', className)}
     >
       <fieldset className='fieldset'>
         <label className='fieldset-label'>
