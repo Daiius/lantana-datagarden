@@ -89,13 +89,16 @@ flowchart TD
     tables --have--> tableColumns((tableColumns))
 ```
 
-## バックエンドの階層分け
-tRPCのルート、プロシージャを、現在のデータベース構造よりのものから
-アプリケーション寄りに変えたい。
+## どうやってtableのグループ化を行うか
+単一のcolumnGroup in Step in Flowを、親や列の値でグループ化して
+表示したいのだが...
 
-flows であれば flows ページで使用する機能を列挙し、
-tables であれば tables ページで使用する機能を列挙するイメージ。
+columnGroup in step in flow は number[][] で表現されているので...
 
+グループ化に関する情報を記録しづらいというか...
+
+- 単純なidでなく、グループ化方法も記録できるオブジェクトとする?
+  - ColumnGroupWithGroupingMethod: { id: number, grouping: string }
 
 
 WRITING...
@@ -103,6 +106,13 @@ WRITING...
 
 <details>
 <summary>以前のメモ</summary>
+## バックエンドの階層分け
+tRPCのルート、プロシージャを、現在のデータベース構造よりのものから
+アプリケーション寄りに変えたい。
+
+flows であれば flows ページで使用する機能を列挙し、
+tables であれば tables ページで使用する機能を列挙するイメージ。
+
 ## データ間を線で結ぶ方法について
 データが追加された際に線を書き直すのが意外と難しい
 

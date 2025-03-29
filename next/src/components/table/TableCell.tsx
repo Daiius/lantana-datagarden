@@ -14,22 +14,22 @@ import type { Data, Column } from '@/types';
 import { useData } from '@/hooks/useData';
 import DebouncedInput from '@/components/common/DebouncedInput';
 
-const TableCell: React.FC<
-  React.ComponentProps<'input'>
-  & {
-    column: Column;
-    tanstackColumn: TanstackColumn<Data>;
-    row: TanstackRow<Data>;
-    table: TanstackTable<Data>;
-  }
-> = ({
+type TableCellProps = {
+  column: Column;
+  tanstackColumn: TanstackColumn<Data>;
+  row: TanstackRow<Data>;
+  table: TanstackTable<Data>;
+
+  className?: string;
+}
+
+const TableCell = ({
   row,
   column,
   tanstackColumn,
   table,
   className,
-  ...props
-}) => {
+}: TableCellProps) => {
   const { id, projectId, columnGroupId } = row.original;
   const { data, updateData } = useData({
     id, projectId, columnGroupId
@@ -49,7 +49,6 @@ const TableCell: React.FC<
           }
         })
       }
-      {...props}
     />
   );
 };

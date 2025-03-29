@@ -14,36 +14,36 @@ import {
   useColumnGroups
 } from '@/hooks/useColumnGroups';
 
-const FlowStep: React.FC<
-  React.ComponentProps<'div'>
-  & {
+type FlowStepProps = {
+  istep: number;
+  projectId: string;
+  columnGroups: ColumnGroup[];
+  columnGroupWithGroupings: { id: number, grouping: string}[];
+  updateStep: ({
+    istep, 
+    newColumnGroupWithGroupings,
+  }: {
     istep: number;
-    projectId: string;
-    columnGroups: ColumnGroup[];
-    columnGroupIds: number[];
-    updateStep: ({
-      istep, 
-      newColumnGroupIds,
-    }: {
-      istep: number;
-      newColumnGroupIds: number[];
-    }) => void;
-    deleteStep: ({ istep }: { istep: number }) => void;
-    deletable?: boolean;
-  }
-> = ({
+    newColumnGroupWithGroupings: { id: number, grouping: string}[];
+  }) => void;
+  deleteStep: ({ istep }: { istep: number }) => void;
+  deletable?: boolean;
+
+  className?: string;
+}
+
+const FlowStep = ({
   istep,
   projectId,
   // TODO 一覧なのか、columnGroupIdsに対応するモノなのか
   // あいまいになりがちで、バグを生じている
   columnGroups,
-  columnGroupIds,
+  columnGroupWithGroupings,
   updateStep,
   deleteStep,
   deletable = true,
   className,
-  ...props
-}) => {
+}: FlowStepProps) => {
 
   const {
     columnGroups: allColumnGroups,
@@ -57,31 +57,33 @@ const FlowStep: React.FC<
     newColumnGroup: { id: number; name: string };
     icolumnGroup: number;
   }) => {
-    const newColumnGroupIds = 
-        columnGroupIds.map((cgid,icgid) => 
+    const newColumnGroupWithGroupings = 
+        columnGroupWithGroupings.map((cgid,icgid) => 
           icgid === icolumnGroup
-          ? newColumnGroup.id
+          ? { ...cgid, id: newColumnGroup.id }
           : cgid
       );
-    updateStep({ istep, newColumnGroupIds });
+    updateStep({ istep, newColumnGroupWithGroupings });
   };
   
   const handleAddFlowColumnGroup = async () => {
     const defaultColumnGroupId = allColumnGroups?.[0]?.id ?? 0;
-    const newColumnGroupIds = 
-      [...columnGroupIds, defaultColumnGroupId];
+    const newColumnGroupWithGroupings = [
+      ...columnGroupWithGroupings, 
+      { id: defaultColumnGroupId, grouping: 'parent' },
+    ];
 
-    updateStep({ istep, newColumnGroupIds });
+    updateStep({ istep, newColumnGroupWithGroupings });
   };
   
   const handleDeleteFlowColumnGroup = async ({
     icolumnGroup,
   }: { icolumnGroup: number }) => {
-    const newColumnGroupIds =
-      columnGroupIds.filter((_, icolumnGroup_) =>
+    const newColumnGroupWithGroupings =
+      columnGroupWithGroupings.filter((_, icolumnGroup_) =>
         icolumnGroup !== icolumnGroup_
       );
-    updateStep({ istep, newColumnGroupIds });
+    updateStep({ istep, newColumnGroupWithGroupings });
   };
 
   return (
@@ -91,7 +93,6 @@ const FlowStep: React.FC<
         'flex flex-row items-center',
         className
       )}
-      {...props}
     >
       {/* flowの要素に含まれるcolumnGroupを縦に並べて表示する部分*/}
       <div  className='flex flex-col gap-2'>
@@ -112,7 +113,7 @@ const FlowStep: React.FC<
               }}
               value={columnGroup.name}
             />
-            {columnGroupIds.length > 1 &&
+            {columnGroupWithGroupings.length > 1 &&
               <Button 
                 className='text-error'
                 onClick={async () => 
