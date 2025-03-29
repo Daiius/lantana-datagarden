@@ -8,8 +8,7 @@ import type { Flow } from '@/types';
 import { useTables } from '@/hooks/useTables';
 import { useLines, Connection } from '@/hooks/useLines';
 
-import Table from '@/components/table/Table';
-import TableGroupSelector from '@/components/table/TableGroupSelector';
+import TableGroup from '@/components/table/TableGroup';
 
 import Line from '@/components/line/Line';
 
@@ -29,7 +28,7 @@ const Tables = ({
   const [connections, setConnections] = React.useState<Connection[]>([]);
   const [updateLineCount, setUpdateLineCount] = React.useState<number>(0);
 
-  const { flowWithData, invalidate } = useTables({
+  const { flowWithData, invalidate, update } = useTables({
     projectId, flowId
   });
 
@@ -66,6 +65,54 @@ const Tables = ({
     <div className='skeleton h-32 w-full'/>
   );
 
+  const handleUpdateGrouping = async (
+    {
+      flow,
+      newGrouping,
+      igroup,
+      icolumnGroup,
+    }: {
+      flow: Flow;
+      newGrouping: string;
+      igroup: number;
+      icolumnGroup: number;
+    }
+  ) => {
+    await update({ 
+      ...flow, 
+      columnGroupWithGroupings:
+      flowWithData
+      .columnGroupWithGroupings
+      .map((step, istep) =>
+        istep === igroup
+        ? step.map((v, iv) => 
+            iv === icolumnGroup
+            ? { ...v, grouping: newGrouping} 
+            : v
+          )
+        : step
+      ),
+    })
+  };
+
+  const calcFollowingColumnGroups = ({
+    flowWithData,
+    igroup,
+  }: {
+    flowWithData: ReturnType<typeof useTables>['flowWithData'],
+    igroup: number
+  }) => Array.from(
+    new Map(
+      flowWithData
+        ?.columnGroups
+        .filter((_, ig) => ig > igroup)
+        .flatMap(group => group.map(g => g))
+        .map(g => [g.id, g])
+    )
+    .entries()
+    .map(([_,v]) => v)
+  );
+
   return (
     <div
       id='tables-container'
@@ -85,29 +132,26 @@ const Tables = ({
               <div className='font-bold text-lg'>
                 {cg.name}
               </div>
-              {/* TODO : グループ分けの選択 */}
-              <TableGroupSelector 
-                columnNames={cg.columns.map(c => c.name)}
-                selected={[]}
-                setSelected={newSelected => console.log(newSelected)}
-              />
-              {/* tableの表示、ここをグループ分けしたい */}
-              <Table 
-                projectId={cg.projectId}
-                columnGroupId={cg.id}
-                followingColumnGroups={
-                  Array.from(
-                    new Map(
-                      flowWithData
-                        .columnGroups
-                        .filter((_, ig) => ig > igroup)
-                        .flatMap(group => group.map(g => g))
-                        .map(g => [g.id, g])
-                    )
-                    .entries()
-                    .map(([_,v]) => v)
-                  )
+              <TableGroup
+                columnGroup={cg}
+                grouping={
+                  flowWithData
+                  .columnGroupWithGroupings[igroup]?.[icg]
+                  ?.grouping
+                  ?? ''
                 }
+                updateGrouping={async (newGrouping) => 
+                  await handleUpdateGrouping({
+                    flow: flowWithData,
+                    igroup: igroup,
+                    icolumnGroup: icg,
+                    newGrouping,
+                  })
+                }
+                followingColumnGroups={calcFollowingColumnGroups({
+                  flowWithData,
+                  igroup,
+                })}
                 updateLine={updateLine}
               />
             </div>
