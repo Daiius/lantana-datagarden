@@ -5,8 +5,8 @@ import clsx from 'clsx';
 
 type TableGroupSelectorProps = {
   columnNames: string[];
-  selected: string[];
-  setSelected: (selected: string[]) => void;
+  selected: string | undefined;
+  setSelected: (selected: string) => Promise<void>;
 
   className?: string;
 }
@@ -32,25 +32,31 @@ const TableGroupSelector = ({
   return (
     <div
       className={clsx(
-        'dropdown dropdown-allow bg-base-100 border-base-300 border',
+        'dropdown dropdown-arrow bg-base-100 border-base-300 border',
         className,
       )}
     >
       <div tabIndex={0} className='btn' role='button'>
         グループ化...
       </div>
-      <div className='dropdown-content bg-base-100 rounded-box z-1 p-2 shadow-sm flex flex-row gap-2'>
+      <div 
+        className={clsx(
+          'dropdown-content bg-base-100 rounded-box z-1 p-2 shadow-sm',
+          'flex flex-row gap-2'
+        )}
+      >
         {columnNames.map(columnName =>
           <fieldset key={columnName} className='fieldset whitespace-nowrap'>
             <label className='fieldset-label'>
               <input 
                 type='checkbox' 
                 className='checkbox'
-                checked={selected.includes(columnName)}
+                checked={selected === columnName}
                 onChange={async e => {
-                  e.currentTarget.checked 
-                  ? setSelected([...selected, columnName])
-                  : setSelected(selected.filter(s => s !== columnName))
+                  console.log(e.currentTarget.checked);
+                  e.currentTarget.checked
+                  ? await setSelected(columnName)
+                  : await setSelected('')
                 }}
               />
               {columnName}
