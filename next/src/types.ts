@@ -34,5 +34,6 @@ export {
 
 export type { 
   JsonData,
+  Grouping,
 } from 'database/db/schema';
 

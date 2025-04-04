@@ -3,7 +3,7 @@
 import React from 'react';
 import clsx from 'clsx';
 
-import type { Flow } from '@/types';
+import type { Flow, Grouping } from '@/types';
 
 import { useTables } from '@/hooks/useTables';
 import { useLines, Connection } from '@/hooks/useLines';
@@ -73,7 +73,7 @@ const Tables = ({
       icolumnGroup,
     }: {
       flow: Flow;
-      newGrouping: string;
+      newGrouping: Grouping;
       igroup: number;
       icolumnGroup: number;
     }
@@ -87,7 +87,7 @@ const Tables = ({
         istep === igroup
         ? step.map((v, iv) => 
             iv === icolumnGroup
-            ? { ...v, grouping: newGrouping} 
+            ? { ...v, grouping: newGrouping } 
             : v
           )
         : step
@@ -138,7 +138,6 @@ const Tables = ({
                   flowWithData
                   .columnGroupWithGroupings[igroup]?.[icg]
                   ?.grouping
-                  ?? ''
                 }
                 updateGrouping={async (newGrouping) => 
                   await handleUpdateGrouping({

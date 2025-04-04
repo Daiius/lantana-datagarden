@@ -12,6 +12,7 @@ import DebouncedInput from '@/components/common/DebouncedInput';
 import Button from '@/components/common/Button';
 
 import FlowStep from '@/components/flow/FlowStep';
+import type { Grouping } from '@/types';
 
 
 type FlowProps = {
@@ -47,9 +48,12 @@ const Flow = ({
 
     const newColumnGroupWithGroupings = [
       ...flow.columnGroupWithGroupings,
-      [{ id: defaultColumnGroupId, grouping: 'parent'}],
+      [{ id: defaultColumnGroupId, grouping: { type: 'parent' as const} }],
     ];
-    await update({ ...flow, columnGroupWithGroupings: newColumnGroupWithGroupings });
+    await update({ 
+      ...flow, 
+      columnGroupWithGroupings: newColumnGroupWithGroupings 
+    });
   };
 
   const handleUpdateStep = async ({ 
@@ -57,7 +61,7 @@ const Flow = ({
     newColumnGroupWithGroupings,
   }: {
     istep: number;
-    newColumnGroupWithGroupings: { id: number, grouping: string }[];
+    newColumnGroupWithGroupings: { id: number, grouping?: Grouping }[];
   }) => {
     console.log('handleUpdateStep: %o', newColumnGroupWithGroupings);
 
@@ -138,7 +142,10 @@ const Flow = ({
             key={igroup}
             projectId={flow.projectId}
             columnGroups={group}
-            columnGroupWithGroupings={flow.columnGroupWithGroupings[igroup] ?? []}
+            columnGroupWithGroupings={
+              flow.columnGroupWithGroupings[igroup] 
+              ?? []
+            }
             istep={igroup}
             updateStep={handleUpdateStep}
             deleteStep={handleDeleteStep}

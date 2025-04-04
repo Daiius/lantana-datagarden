@@ -6,7 +6,8 @@ import {
   IconTrash,
 } from '@tabler/icons-react';
 import type {
-  ColumnGroup
+  ColumnGroup,
+  Grouping,
 } from '@/types';
 import ColumnGroupSelect from '@/components/column/ColumnGroupSelect';
 import Button from '@/components/common/Button';
@@ -18,13 +19,13 @@ type FlowStepProps = {
   istep: number;
   projectId: string;
   columnGroups: ColumnGroup[];
-  columnGroupWithGroupings: { id: number, grouping: string}[];
+  columnGroupWithGroupings: { id: number, grouping?: Grouping}[];
   updateStep: ({
     istep, 
     newColumnGroupWithGroupings,
   }: {
     istep: number;
-    newColumnGroupWithGroupings: { id: number, grouping: string}[];
+    newColumnGroupWithGroupings: { id: number, grouping?: Grouping}[];
   }) => void;
   deleteStep: ({ istep }: { istep: number }) => void;
   deletable?: boolean;
@@ -70,7 +71,7 @@ const FlowStep = ({
     const defaultColumnGroupId = allColumnGroups?.[0]?.id ?? 0;
     const newColumnGroupWithGroupings = [
       ...columnGroupWithGroupings, 
-      { id: defaultColumnGroupId, grouping: 'parent' },
+      { id: defaultColumnGroupId, grouping: { type: 'parent' } as Grouping },
     ];
 
     updateStep({ istep, newColumnGroupWithGroupings });

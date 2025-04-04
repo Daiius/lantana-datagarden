@@ -14,7 +14,7 @@ type FlowSelectProps = {
   initialId?: number;
 
   className?: string;
-  value: string | undefined;
+  value?: string;
 };
 
 /**
