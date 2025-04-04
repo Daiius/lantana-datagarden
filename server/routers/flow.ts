@@ -32,15 +32,29 @@ import {
 
 import { createSubscription } from '../lib/common';
 
+const groupingSchema = z.union([
+  z.object({
+    type: z.literal('parent')
+  }),
+  z.object({
+    type: z.literal('column'),
+    columnName: z.string(),
+  }),
+  z.undefined(),
+]);
+
+const columnGroupingSchema = z.object({
+  id: z.number(),
+  grouping: groupingSchema,
+});
+
 // TODO 型推論が上手くいかないので手動で設定、注意
 const selectSchema = createSelectSchema(flows)
   .extend({
-    columnGroupWithGroupings: z.array(z.array(z.object({
-      id: z.number(),
-      grouping: z.string(),
-    }))),
+    columnGroupWithGroupings: z.array(z.array(
+      columnGroupingSchema
+    )),
   });
-
 
 import mitt from 'mitt';
 type FlowEvents = {

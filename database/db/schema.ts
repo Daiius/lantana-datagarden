@@ -208,6 +208,10 @@ export const data = mysqlTable(
 );
 
 const FLOW_NAME_LENGTH = 36;
+export type Grouping = 
+  | { type: 'parent' }
+  | { type: 'column'; columnName: string; }
+  | undefined;
 
 /**
  * FlowはColumnGroupの繋がり・順番を規定します
@@ -232,7 +236,7 @@ export const flows = mysqlTable(
     columnGroupWithGroupings:
       json('column_groups')
         .notNull()
-        .$type<{ id: number, grouping: string }[][]>()
+        .$type<{ id: number; grouping?: Grouping }[][]>()
         .default([]),
   }
 );

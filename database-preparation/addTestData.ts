@@ -90,8 +90,8 @@ await db.insert(flows).values({
   projectId: zeroId,
   name: 'テスト用フロー',
   columnGroupWithGroupings: [
-    [{ id: 1, grouping: ''}], 
-    [{ id: 2, grouping: ''}],
+    [{ id: 1, grouping: { type: 'parent' }}], 
+    [{ id: 2, grouping: { type: 'parent' }}],
   ],
 });
 

@@ -3,10 +3,81 @@
 import React from 'react';
 import clsx from 'clsx';
 
+import type { Grouping } from '@/types';
+
+type TableGroupingCheckboxProps = {
+  option: NonNullable<Grouping>;
+  selected: Grouping;
+  setSelected: (value: Grouping) => Promise<void>;
+}
+
+const areGroupingsEqual = (
+  a: Grouping,
+  b: Grouping,
+): boolean => {
+  // 片方または両方がundefinedならfalse
+  if (a == null || b == null) return false;
+
+  // type === parent のときは、typeが合致すればよい
+  if (a.type === 'parent' && b.type === 'parent') return true;
+
+  // type === column のときは、columnNameまで合致する必要がある
+  if (a.type === 'column' && b.type === 'column') {
+    return a.columnName === b.columnName;
+  }
+
+  // type不一致の時は、他の内容に関わらずfalse
+  return false;
+}
+
+const groupingToKey = (
+  g: Grouping
+): string => {
+  if (g == null) return 'group-none';
+  if (g.type === 'parent') return 'group-parent';
+  if (g.type === 'column') return `group-column-${g.columnName}`;
+
+  // TODO Groupingの型を網羅しているので、ここには到達しないはず？
+  // これを担保する仕組みが有った様な...
+  return 'group';
+}
+
+const TableGroupingCheckbox = ({
+  option,
+  selected,
+  setSelected,
+}: TableGroupingCheckboxProps) => {
+
+  const checked = areGroupingsEqual(option, selected);
+          
+  return (
+    <fieldset className='fieldset whitespace-nowrap'>
+      <label className='fieldset-label'>
+        <input 
+          type='checkbox' 
+          className='checkbox'
+          checked={checked}
+          onChange={async () => {
+            checked
+            ? await setSelected(undefined)
+            : await setSelected(option)
+          }}
+        />
+        {option.type === 'parent'
+          ? '親'
+          : option.type === 'column'
+            ? option.columnName
+            : '不明なオプション'
+        }
+      </label>
+    </fieldset>
+  );
+}
+
 type TableGroupSelectorProps = {
   columnNames: string[];
-  selected: string | undefined;
-  setSelected: (selected: string) => Promise<void>;
+  selected: Grouping;
+  setSelected: (selected: Grouping) => Promise<void>;
 
   className?: string;
 }
@@ -29,6 +100,13 @@ const TableGroupSelector = ({
   className,
 }: TableGroupSelectorProps) => {
 
+  const options: NonNullable<Grouping>[] = [
+    { type: 'parent' },
+    ...columnNames.map(columnName => (
+      { type: 'column' as const, columnName }
+    )),
+  ];
+
   return (
     <div
       className={clsx(
@@ -45,23 +123,13 @@ const TableGroupSelector = ({
           'flex flex-row gap-2'
         )}
       >
-        {columnNames.map(columnName =>
-          <fieldset key={columnName} className='fieldset whitespace-nowrap'>
-            <label className='fieldset-label'>
-              <input 
-                type='checkbox' 
-                className='checkbox'
-                checked={selected === columnName}
-                onChange={async e => {
-                  console.log(e.currentTarget.checked);
-                  e.currentTarget.checked
-                  ? await setSelected(columnName)
-                  : await setSelected('')
-                }}
-              />
-              {columnName}
-            </label>
-          </fieldset>
+        {options.map(option =>
+          <TableGroupingCheckbox
+            key={groupingToKey(option)}
+            option={option}
+            selected={selected}
+            setSelected={setSelected}
+          />
         )}
       </div>
     </div>

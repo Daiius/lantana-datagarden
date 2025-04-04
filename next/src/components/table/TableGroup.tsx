@@ -5,6 +5,7 @@ import Table from '@/components/table/Table';
 import { 
   ColumnGroup,
   Column,
+  Grouping,
 } from '@/types';
 
 type ColumnGroupWithColumns = ColumnGroup & {
@@ -14,8 +15,8 @@ type ColumnGroupWithColumns = ColumnGroup & {
 type TableGroupProps = {
   columnGroup: ColumnGroupWithColumns;
   followingColumnGroups: ColumnGroup[];
-  grouping: string;
-  updateGrouping: (newGrouping: string) => void;
+  grouping: Grouping;
+  updateGrouping: (newGrouping: Grouping) => void;
   updateLine: () => void;
 }
 
