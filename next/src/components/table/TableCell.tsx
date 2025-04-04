@@ -19,7 +19,6 @@ type TableCellProps = {
   tanstackColumn: TanstackColumn<Data>;
   row: TanstackRow<Data>;
   table: TanstackTable<Data>;
-
   className?: string;
 }
 
@@ -31,7 +30,7 @@ const TableCell = ({
   className,
 }: TableCellProps) => {
   const { id, projectId, columnGroupId } = row.original;
-  const { data, updateData } = useData({
+  const { data, update } = useData({
     id, projectId, columnGroupId
   });
   if (data == null) return <div>loading...</div>
@@ -41,7 +40,7 @@ const TableCell = ({
       value={data.data[column.name]}
       validation={column.type !== 'string' ? 'number' : undefined}
       debouncedOnChange={async newValue =>
-        updateData({ 
+        update({ 
           ...data,
           data: {
             ...data.data,

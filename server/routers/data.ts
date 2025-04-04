@@ -151,5 +151,29 @@ export const dataRouter = router({
         newId: undefined,
       });
     }),
+  onAdd: publicProcedure
+    .input(selectSchema.pick({ projectId: true, columnGroupId: true }))
+    .subscription(({ input }) =>
+      createSubscription({
+        eventEmitter: ee,
+        eventName: 'onAdd',
+        filter: data => (
+             data.projectId === input.projectId
+          && data.columnGroupId === input.columnGroupId
+        ),
+      })
+    ),
+  onRemove: publicProcedure
+    .input(selectSchema.pick({ projectId: true, columnGroupId: true }))
+    .subscription(({ input }) =>
+      createSubscription({
+        eventEmitter: ee,
+        eventName: 'onRemove',
+        filter: data => (
+             data.projectId === input.projectId
+          && data.columnGroupId === input.columnGroupId
+        ),
+      })
+    ),
 });
 
