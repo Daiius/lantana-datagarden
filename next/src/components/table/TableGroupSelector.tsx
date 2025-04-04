@@ -115,7 +115,13 @@ const TableGroupSelector = ({
       )}
     >
       <div tabIndex={0} className='btn' role='button'>
-        グループ化...
+        グループ化: {
+          selected?.type === 'parent'
+          ? '親'
+          : selected?.type === 'column'
+            ? selected.columnName
+            : 'なし'
+        }
       </div>
       <div 
         className={clsx(
