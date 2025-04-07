@@ -133,6 +133,7 @@ const Tables = ({
                 {cg.name}
               </div>
               <TableGroup
+                istep={igroup}
                 columnGroup={cg}
                 grouping={
                   flowWithData

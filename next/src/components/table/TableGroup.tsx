@@ -1,23 +1,26 @@
 
-import TableGroupSelector from '@/components/table/TableGroupSelector';
-import Table from '@/components/table/Table';
+import clsx from 'clsx';
 
 import { 
   ColumnGroup,
   Column,
   Grouping,
   Data,
-  groupBy,
 } from '@/types';
 
 import { useColumns } from '@/hooks/useColumns';
 import { useDataList } from '@/hooks/useDataList';
+
+import Button from '@/components/common/Button';
+import TableGroupSelector from '@/components/table/TableGroupSelector';
+import Table from '@/components/table/Table';
 
 type ColumnGroupWithColumns = ColumnGroup & {
   columns: Column[]
 };
 
 type TableGroupProps = {
+  istep: number;
   columnGroup: ColumnGroupWithColumns;
   followingColumnGroups: ColumnGroup[];
   grouping: Grouping;
@@ -26,6 +29,7 @@ type TableGroupProps = {
 }
 
 const TableGroup = ({
+  istep,
   columnGroup,
   followingColumnGroups,
   grouping,
@@ -87,6 +91,7 @@ const TableGroup = ({
       {groupedDataList.map((data, idata) =>
         <Table 
           key={idata}
+          className={clsx(istep !== 0 && 'mb-4')}
           columns={columns}
           data={data}
           addData={add}
@@ -94,6 +99,18 @@ const TableGroup = ({
           followingColumnGroups={followingColumnGroups}
         />
       )}
+      {istep === 0 &&
+        <Button 
+          className='btn-success btn-block'
+          onClick={async () => await add({
+            projectId, columnGroupId,
+            parentId: null,
+            data: {}
+          })}
+        >
+          データ追加
+        </Button>
+      }
     </>
   );
 };

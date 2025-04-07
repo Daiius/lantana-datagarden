@@ -17,9 +17,7 @@ import {
 
 import type { Data, Column } from '@/types';
 
-import Button from '@/components/common/Button';
 import Row from '@/components/table/Row';
-
 
 import TableCell from '@/components/table/TableCell';
 import TableHeader from '@/components/table/TableHeader';
@@ -120,16 +118,6 @@ const Table = ({
           )}
         </tbody>
       </table>
-      <Button 
-        className='btn-success btn-block'
-        //onClick={async () => await add({
-        //  projectId, columnGroupId,
-        //  parentId: null,
-        //  data: {}
-        //})}
-      >
-        データ追加
-      </Button>
     </div>
   );
 };
