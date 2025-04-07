@@ -12,23 +12,25 @@ import DebouncedInput from '@/components/common/DebouncedInput';
 import Button from '@/components/common/Button';
 
 import FlowStep from '@/components/flow/FlowStep';
+import type { Grouping } from '@/types';
 
-const Flow: React.FC<
-  React.ComponentProps<'div'>
-  & {
-    initialFlow: FlowColumnGroups;
-  }
-> = ({
+
+type FlowProps = {
+  initialFlow: FlowColumnGroups;
+  
+  className?: string;
+}
+
+const Flow = ({
   initialFlow,
   className,
-  ...props
-}) => {
+}: FlowProps) => {
   const { projectId, id } = initialFlow;
   
   const {
     flow,
-    updateFlow,
-    removeFlow,
+    update,
+    remove,
   } = useFlow({ 
     initialFlow, 
     projectId: initialFlow.projectId,
@@ -43,33 +45,37 @@ const Flow: React.FC<
     if (flow == null) return;
 
     const defaultColumnGroupId = columnGroups?.[0]?.id ?? 0;
-    const newColumnGroupIds = [
-      ...flow.columnGroupIds,
-      [defaultColumnGroupId],
+
+    const newColumnGroupWithGroupings = [
+      ...flow.columnGroupWithGroupings,
+      [{ id: defaultColumnGroupId, grouping: { type: 'parent' as const} }],
     ];
-    await updateFlow({ ...flow, columnGroupIds: newColumnGroupIds });
+    await update({ 
+      ...flow, 
+      columnGroupWithGroupings: newColumnGroupWithGroupings 
+    });
   };
 
   const handleUpdateStep = async ({ 
     istep,
-    newColumnGroupIds,
+    newColumnGroupWithGroupings,
   }: {
     istep: number;
-    newColumnGroupIds: number[];
+    newColumnGroupWithGroupings: { id: number, grouping?: Grouping }[];
   }) => {
-    console.log('handleUpdateStep: %o', newColumnGroupIds);
+    console.log('handleUpdateStep: %o', newColumnGroupWithGroupings);
 
     if (flow == null) return;
 
     // TODO 要名前の検討
     const newColumnGroupIds_ =
-      flow.columnGroupIds.map((group, igroup) =>
+      flow.columnGroupWithGroupings.map((group, igroup) =>
         istep === igroup
-        ? newColumnGroupIds
+        ? newColumnGroupWithGroupings
         : group
       );
-    await updateFlow({ 
-      ...flow, columnGroupIds: newColumnGroupIds_ 
+    await update({ 
+      ...flow, columnGroupWithGroupings: newColumnGroupIds_ 
     });
   };
 
@@ -78,11 +84,11 @@ const Flow: React.FC<
   }: { istep: number }) => {
     if (flow == null) return;
     const newColumnGroupIds =
-      flow.columnGroupIds.filter((_, igroup) =>
+      flow.columnGroupWithGroupings.filter((_, igroup) =>
         istep !== igroup
       );
-    await updateFlow({
-      ...flow, columnGroupIds: newColumnGroupIds
+    await update({
+      ...flow, columnGroupWithGroupings: newColumnGroupIds
     });
   };
 
@@ -97,7 +103,6 @@ const Flow: React.FC<
         'p-4',
         className,
       )} 
-      {...props}
     >
       <div className='flex flex-row'>
         <fieldset className='fieldset'>
@@ -107,7 +112,7 @@ const Flow: React.FC<
           <DebouncedInput
             value={flow.name}
             debouncedOnChange={async newValue => {
-              await updateFlow({
+              await update({
                 ...flow,
                 name: newValue as string,
               })
@@ -116,7 +121,7 @@ const Flow: React.FC<
         </fieldset>
         <Button 
           className='text-error ms-auto'
-          onClick={async () => { await removeFlow({ projectId, id }); }}
+          onClick={async () => { await remove({ projectId, id }); }}
         >
           <IconTrash />
         </Button>
@@ -137,7 +142,10 @@ const Flow: React.FC<
             key={igroup}
             projectId={flow.projectId}
             columnGroups={group}
-            columnGroupIds={group.map(g => g.id)}
+            columnGroupWithGroupings={
+              flow.columnGroupWithGroupings[igroup] 
+              ?? []
+            }
             istep={igroup}
             updateStep={handleUpdateStep}
             deleteStep={handleDeleteStep}

@@ -7,21 +7,20 @@ import Flow from '@/components/flow/Flow';
 import Button from '@/components/common/Button';
 
 import { useFlows } from '@/hooks/useFlows';
-import { useColumnGroups } from '@/hooks/useColumnGroups';
+
+type FlowsProps = {
+  projectId: string;
+
+  className?: string;
+};
 
 /**
  * データ表示方法を規定するflow表示用のコンポーネント
  */
-const Flows: React.FC<
-  React.ComponentProps<'div'>
-  & {
-    projectId: string;
-  }
-> = ({
+const Flows = ({
   projectId,
   className,
-  ...props
-}) => {
+}: FlowsProps) => {
   const { 
     flows,
     addFlow,
@@ -32,7 +31,7 @@ const Flows: React.FC<
   );
 
   return (
-    <div className='flex flex-col gap-4'>
+    <div className={clsx('flex flex-col gap-4', className)}>
       {flows.map(flow =>
         <Flow 
           key={flow.id} 
@@ -45,7 +44,7 @@ const Flows: React.FC<
         onClick={async () => {
           await addFlow({ 
             projectId,
-            columnGroupIds: [[]],
+            columnGroupWithGroupings: [[]],
             name: '新しいフロー',
           })
         }}

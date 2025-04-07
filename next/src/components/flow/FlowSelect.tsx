@@ -5,10 +5,17 @@ import clsx from 'clsx';
 
 import { useRouter } from 'next/navigation';
 
-import { trpc } from '@/providers/TrpcProvider';
-
 import { useFlows } from '@/hooks/useFlows';
 import { useProject } from '@/hooks/useProject';
+
+
+type FlowSelectProps = {
+  projectId: string; 
+  initialId?: number;
+
+  className?: string;
+  value?: string;
+};
 
 /**
  * Flowを選択するためのコンポーネント
@@ -18,23 +25,16 @@ import { useProject } from '@/hooks/useProject';
  * クライアント側の一時的な状態を書き換える場合とで
  * 使い方が大分異なり、両方に対応できているか微妙かもしれない
  */
-const FlowSelect: React.FC<
-  React.ComponentProps<'select'>
-  & { 
-    projectId: string; 
-    initialId?: number;
-  }
-> = ({
+const FlowSelect = ({
   projectId,
   value,
   initialId,
   className,
-  ...props
-}) => {
+}: FlowSelectProps) => {
   const { flows } = useFlows({ projectId });
   const { 
     project,
-    updateProject,
+    update,
   } = useProject({ id: projectId });
 
   const router = useRouter();
@@ -45,7 +45,6 @@ const FlowSelect: React.FC<
 
   return (
     <select
-      {...props}
       className={clsx('select', className)}
       onChange={async e => {
         const newName = e.currentTarget.value;
@@ -54,7 +53,7 @@ const FlowSelect: React.FC<
           if (selectedFlow == null) return;
           if (project == null) return;
 
-          await updateProject({ 
+          await update({ 
             ...project, 
             lastSelectedFlow: selectedFlow.id
           });

@@ -3,34 +3,32 @@
 import React from 'react';
 import clsx from 'clsx';
 
-import type { Flow } from '@/types';
+import type { Flow, Grouping } from '@/types';
 
 import { useTables } from '@/hooks/useTables';
 import { useLines, Connection } from '@/hooks/useLines';
 
-import Table from '@/components/table/Table';
-import TableGroupSelector from '@/components/table/TableGroupSelector';
+import TableGroup from '@/components/table/TableGroup';
 
 import Line from '@/components/line/Line';
 
-const Tables: React.FC<
-  React.ComponentProps<'div'>
-  & {
-    projectId: string;
-    flowId: Flow['id'];
-  }
-> = ({
+type TablesProps = {
+  projectId: string;
+  flowId: Flow['id'];
+  className?: string;
+}
+
+const Tables = ({
   projectId,
   flowId,
   className,
-  ...props
-}) => {
+}: TablesProps) => {
 
   const [mounted, setMounted] = React.useState<boolean>(false);
   const [connections, setConnections] = React.useState<Connection[]>([]);
   const [updateLineCount, setUpdateLineCount] = React.useState<number>(0);
 
-  const { flowWithData, invalidate } = useTables({
+  const { flowWithData, invalidate, update } = useTables({
     projectId, flowId
   });
 
@@ -67,6 +65,54 @@ const Tables: React.FC<
     <div className='skeleton h-32 w-full'/>
   );
 
+  const handleUpdateGrouping = async (
+    {
+      flow,
+      newGrouping,
+      igroup,
+      icolumnGroup,
+    }: {
+      flow: Flow;
+      newGrouping: Grouping;
+      igroup: number;
+      icolumnGroup: number;
+    }
+  ) => {
+    await update({ 
+      ...flow, 
+      columnGroupWithGroupings:
+      flowWithData
+      .columnGroupWithGroupings
+      .map((step, istep) =>
+        istep === igroup
+        ? step.map((v, iv) => 
+            iv === icolumnGroup
+            ? { ...v, grouping: newGrouping } 
+            : v
+          )
+        : step
+      ),
+    })
+  };
+
+  const calcFollowingColumnGroups = ({
+    flowWithData,
+    igroup,
+  }: {
+    flowWithData: ReturnType<typeof useTables>['flowWithData'],
+    igroup: number
+  }) => Array.from(
+    new Map(
+      flowWithData
+        ?.columnGroups
+        .filter((_, ig) => ig > igroup)
+        .flatMap(group => group.map(g => g))
+        .map(g => [g.id, g])
+    )
+    .entries()
+    .map(([_,v]) => v)
+  );
+
   return (
     <div
       id='tables-container'
@@ -75,7 +121,6 @@ const Tables: React.FC<
         'relative',
         className,
       )}
-      {...props}
     >
       {/* flowのstep毎に横向きに表示する部分 */}
       {flowWithData.columnGroups?.map((group, igroup) =>
@@ -87,29 +132,26 @@ const Tables: React.FC<
               <div className='font-bold text-lg'>
                 {cg.name}
               </div>
-              {/* TODO : グループ分けの選択 */}
-              <TableGroupSelector 
-                columnNames={cg.columns.map(c => c.name)}
-                selected={[]}
-                setSelected={newSelected => console.log(newSelected)}
-              />
-              {/* tableの表示、ここをグループ分けしたい */}
-              <Table 
-                projectId={cg.projectId}
-                columnGroupId={cg.id}
-                followingColumnGroups={
-                  Array.from(
-                    new Map(
-                      flowWithData
-                        .columnGroups
-                        .filter((_, ig) => ig > igroup)
-                        .flatMap(group => group.map(g => g))
-                        .map(g => [g.id, g])
-                    )
-                    .entries()
-                    .map(([_,v]) => v)
-                  )
+              <TableGroup
+                istep={igroup}
+                columnGroup={cg}
+                grouping={
+                  flowWithData
+                  .columnGroupWithGroupings[igroup]?.[icg]
+                  ?.grouping
                 }
+                updateGrouping={async (newGrouping) => 
+                  await handleUpdateGrouping({
+                    flow: flowWithData,
+                    igroup: igroup,
+                    icolumnGroup: icg,
+                    newGrouping,
+                  })
+                }
+                followingColumnGroups={calcFollowingColumnGroups({
+                  flowWithData,
+                  igroup,
+                })}
                 updateLine={updateLine}
               />
             </div>

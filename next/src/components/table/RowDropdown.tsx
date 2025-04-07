@@ -5,28 +5,29 @@ import clsx from 'clsx';
 
 import type { ColumnGroup } from '@/types';
 
-import Button from '@/components/common/Button';
 import { IconTrash } from '@tabler/icons-react';
 
-const RowDropdown: React.FC<
-  React.ComponentProps<'div'>
-  & { 
-    projectId: string;
-    dataId: number;
-    columnGroupId: number;
-    followingColumnGroups: ColumnGroup[];
-    removeData: () => Promise<void>;
-    addData: (params: { columnGroupId: number }) => Promise<void>;
-  }
-> = ({
+type RowDropdownProps = {
+  projectId: string;
+  dataId: number;
+  columnGroupId: number;
+  followingColumnGroups: ColumnGroup[];
+  removeData: () => Promise<void>;
+  addData: (params: { columnGroupId: number }) => Promise<void>;
+
+  className?: string;
+}
+
+const RowDropdown = ({
   followingColumnGroups,
   removeData,
   addData,
-}) => {
+  className,
+}: RowDropdownProps) => {
   const menuRef = React.useRef<HTMLUListElement>(null);
   return (
     <div
-      className='dropdown'
+      className={clsx('dropdown', className)}
     >
       <div 
         tabIndex={0} 
@@ -41,6 +42,11 @@ const RowDropdown: React.FC<
         className='dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm'
       >
         <li className='text-base-content/50'>データ追加...</li>
+        {followingColumnGroups.length === 0 &&
+          <li className='text-base-content/50'>
+            Flowsで次ステップを追加して下さい...
+          </li>
+        }
         {followingColumnGroups.map(columnGroup =>
           <li key={columnGroup.id}>
             <a

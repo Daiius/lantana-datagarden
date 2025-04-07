@@ -9,14 +9,17 @@ import Button from '@/components/common/Button';
 
 import { useColumnGroups } from '@/hooks/useColumnGroups';
 
-const ColumnGroups: React.FC<
-  React.ComponentProps<'div'>
-  & { projectId: string }
-> = ({
+type ColumnGroupsProps = {
+  projectId: string;
+
+  className?: string;
+};
+
+
+const ColumnGroups = ({
   projectId,
   className,
-  ...props
-}) => {
+}: ColumnGroupsProps) => {
 
   const {
     columnGroups,
@@ -36,7 +39,6 @@ const ColumnGroups: React.FC<
         'flex flex-col gap-4',
         className,
       )}
-      {...props}
     >
       <div className='text-xl font-bold'>
         列グループ

@@ -1,19 +1,20 @@
 import React from 'react';
 import clsx from 'clsx';
 
-const Tooltip: React.FC<
-  React.ComponentProps<'div'>
-  & { 
-    tip: string;
-    direction?: 'top' | 'right' | 'bottom' | 'left';
-  }
-> = ({
+type TooltipProps = {
+  tip: string;
+  direction?: 'top' | 'right' | 'bottom' | 'left';
+  
+  className?: string;
+  children: React.ReactNode;
+};
+
+const Tooltip = ({
   tip,
   direction = 'top',
   className,
   children,
-  ...props
-}) => (
+}: TooltipProps) => (
   <div 
     className={clsx(
       'tooltip',
@@ -24,7 +25,6 @@ const Tooltip: React.FC<
       className,
     )}
     data-tip={tip}
-    {...props}
   >
     {children}
   </div>

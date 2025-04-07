@@ -13,20 +13,20 @@ import Button from '@/components/common/Button';
 
 import { useColumns } from '@/hooks/useColumns';
 
-const Columns: React.FC<
-  React.ComponentProps<'div'>
-  & { 
-    projectId: string;
-    columnGroupId: number;
-    initialColumns: ColumnType[]; 
-  }
-> = ({
+type ColumnsProps = {
+  projectId: string;
+  columnGroupId: number;
+  initialColumns: ColumnType[]; 
+
+  className?: string;
+};
+
+const Columns = ({
   columnGroupId,
   projectId,
   initialColumns,
   className,
-  ...props
-}) => {
+}: ColumnsProps) => {
 
   const {
     columns,
@@ -45,7 +45,6 @@ const Columns: React.FC<
         'flex flex-col gap-2',
         className,
       )}
-      {...props}
     >
       {columns?.map(c =>
         <Column key={c.id} initialColumn={c} />
