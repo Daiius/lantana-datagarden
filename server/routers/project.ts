@@ -31,7 +31,7 @@ export const projectRouter = router({
     .query(async ({ input }) => await get(input)),
   list: publicProcedure.query(async () => await list()),
   update: publicProcedure
-    .input(selectSchema.omit({ lastSelectedFlow: true }))
+    .input(selectSchema)
     .mutation(async ({ input }) => {
       const newProject = await update(input);
       ee.emit('onUpdate', newProject);

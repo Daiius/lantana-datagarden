@@ -11,9 +11,9 @@ export const useColumn = ({
 }) => {
   const { projectId, columnGroupId, id } = initialColumn;
   const utils = trpc.useUtils();
-  const { mutateAsync: updateColumn } = 
+  const { mutateAsync: update } = 
     trpc.column.update.useMutation();
-  const { mutateAsync: deleteColumn } =
+  const { mutateAsync: remove } =
     trpc.column.remove.useMutation();
   trpc.column.onUpdate.useSubscription(
     { id, projectId, columnGroupId }, 
@@ -33,8 +33,8 @@ export const useColumn = ({
 
   return {
     column,
-    updateColumn,
-    deleteColumn,
+    update,
+    remove,
   }
 };
 

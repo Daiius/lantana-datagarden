@@ -8,6 +8,12 @@ import { trpc } from '@/providers/TrpcProvider';
 import Skeleton from '@/components/common/Skeleton';
 import DebouncedInput from '@/components/common/DebouncedInput';
 
+type ProjectProps = {
+  projectId: string;
+
+  className?: string;
+};
+
 /**
  * リアルタイム更新を行うProjectコンポーネント
  *
@@ -15,14 +21,10 @@ import DebouncedInput from '@/components/common/DebouncedInput';
  * TODO
  * Categoriesの数が変わったことを検出する方法が無い...
  */
-const Project: React.FC<
-  React.ComponentProps<'div'>
-  & { projectId: string }
-> = ({
+const Project = ({
   projectId,
   className,
-  ...props
-}) => { 
+}: ProjectProps) => { 
   
   const utils = trpc.useUtils();
   const { mutateAsync } = trpc.project.update.useMutation();
@@ -49,7 +51,6 @@ const Project: React.FC<
         'px-2 pb-2',
         className,
       )}
-      {...props}
     >
       <div className='flex flex-row items-center'>
         <div 

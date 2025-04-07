@@ -1,11 +1,18 @@
 import {
   flows,
   columnGroups,
+  columns,
+  data,
 } from 'database/db/schema';
 
 type ColumnGroup = typeof columnGroups.$inferSelect;
 type Flow = typeof flows.$inferSelect;
+type Data = typeof data.$inferSelect;
+type Column = typeof columns.$inferSelect;
 type FlowWithColumnGroup = Flow & { columnGroups: ColumnGroup[][] };
+type FlowWithData = Flow & { 
+  columnGroups: (ColumnGroup & { data: Data[], columns: Column[] })[][];
+};
 
 import { z } from 'zod';
 
@@ -23,16 +30,36 @@ import {
   listNested,
 } from '../lib/flow';
 
+import { createSubscription } from '../lib/common';
+
+const groupingSchema = z.union([
+  z.object({
+    type: z.literal('parent')
+  }),
+  z.object({
+    type: z.literal('column'),
+    columnName: z.string(),
+  }),
+  z.undefined(),
+]);
+
+const columnGroupingSchema = z.object({
+  id: z.number(),
+  grouping: groupingSchema,
+});
+
 // TODO 型推論が上手くいかないので手動で設定、注意
 const selectSchema = createSelectSchema(flows)
   .extend({
-    columnGroupIds: z.array(z.array(z.number())),
+    columnGroupWithGroupings: z.array(z.array(
+      columnGroupingSchema
+    )),
   });
-
 
 import mitt from 'mitt';
 type FlowEvents = {
   onUpdate: FlowWithColumnGroup,
+  onUpdateNested: FlowWithData,
   onAdd: FlowWithColumnGroup,
   onRemove: Pick<Flow, 'id' | 'projectId'>,
   onUpdateList: Pick<Flow, 'projectId'> & {
@@ -100,6 +127,9 @@ export const flowRouter = router({
     .mutation(async ({ input }) => {
       const newFlow = await update(input);
       ee.emit('onUpdate', newFlow);
+
+      const newFlowNested = await getNestedWithData(input);
+      ee.emit('onUpdateNested', newFlowNested);
     }),
   add: publicProcedure
     .input(selectSchema.omit({ id: true}))
@@ -125,23 +155,23 @@ export const flowRouter = router({
   onAdd: publicProcedure
     .input(selectSchema.pick({ projectId: true }))
     .subscription(({ input }) =>
-      observable<FlowEvents['onAdd']>(emit => {
-        const handler = (e: FlowEvents['onAdd']) => {
-          if (e.projectId === input.projectId) { emit.next(e); }
-        };
-        ee.on('onAdd', handler);
-        return () => ee.off('onAdd', handler);
+      createSubscription({
+        eventEmitter: ee,
+        eventName: 'onAdd',
+        filter: data => (
+          data.projectId === input.projectId
+        ),
       })
     ),
   onRemove: publicProcedure
     .input(selectSchema.pick({ projectId: true }))
     .subscription(({ input }) =>
-      observable<FlowEvents['onRemove']>(emit => {
-        const handler = (e: FlowEvents['onRemove']) => {
-          if (e.projectId === input.projectId) { emit.next(e) }
-        };
-        ee.on('onRemove', handler);
-        return () => ee.off('onRemove', handler);
+      createSubscription({
+        eventEmitter: ee,
+        eventName: 'onRemove',
+        filter: data => (
+          data.projectId === input.projectId
+        ),
       })
     ),
   onUpdate: publicProcedure
@@ -150,16 +180,28 @@ export const flowRouter = router({
       id: true 
     }))
     .subscription(({ input }) =>
-      observable<FlowEvents['onUpdate']>(emit => {
-        const handler = (flow: FlowEvents['onUpdate']) => {
-          if ( flow.id        === input.id
-            && flow.projectId === input.projectId
-          ) {
-            emit.next(flow);
-          }
-        };
-        ee.on('onUpdate', handler);
-        return () => ee.off('onUpdate', handler);
+      createSubscription({
+        eventEmitter: ee,
+        eventName: 'onUpdate',
+        filter: data => (
+             data.id === input.id
+          && data.projectId === input.projectId
+        ),
+      })
+    ),
+  onUpdateNested: publicProcedure
+    .input(selectSchema.pick({
+      projectId: true,
+      id: true
+    }))
+    .subscription(({ input }) =>
+      createSubscription({
+        eventEmitter: ee,
+        eventName: 'onUpdateNested',
+        filter: data => (
+             data.id === input.id
+          && data.projectId === input.projectId
+        ),
       })
     ),
   onUpdateList: publicProcedure

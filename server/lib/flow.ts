@@ -29,7 +29,9 @@ export const list = async ({
     where: eq(flows.projectId, projectId)
   });
 
-
+/*
+ * 指定したidのflowを、columnGroupまでネストして返します
+ */
 export const getNested = async ({
   projectId,
   id,
@@ -48,7 +50,8 @@ export const getNested = async ({
       eq(columnGroups.projectId, projectId),
       inArray(
         columnGroups.id,
-        relatedFlow.columnGroupIds.flatMap(s => s),
+        relatedFlow.columnGroupWithGroupings
+          .flatMap(v => v.map(vv => vv.id)),
       ),
     ),
   });
@@ -56,9 +59,11 @@ export const getNested = async ({
   return {
     ...relatedFlow,
     columnGroups:
-      relatedFlow.columnGroupIds.map(group =>
-        group.flatMap(id =>
-          relatedColumnGroups.find(columnGroup => columnGroup.id === id)
+      relatedFlow.columnGroupWithGroupings.map(group =>
+        group.flatMap(gg =>
+          relatedColumnGroups.find(columnGroup => 
+            columnGroup.id === gg.id
+          )
           ?? []
         )
       ),
@@ -83,7 +88,9 @@ export const getNestedWithData = async ({
       eq(columnGroups.projectId, projectId),
       inArray(
         columnGroups.id,
-        relatedFlow.columnGroupIds.flatMap(s => s),
+        relatedFlow.columnGroupWithGroupings.flatMap(v => 
+          v.map(vv => vv.id)
+        ),
       ),
     ),
     with: { 
@@ -97,9 +104,11 @@ export const getNestedWithData = async ({
   return {
     ...relatedFlow,
     columnGroups:
-      relatedFlow.columnGroupIds.map(group =>
-        group.flatMap(id =>
-          relatedColumnGroups.find(columnGroup => columnGroup.id === id)
+      relatedFlow.columnGroupWithGroupings.map(group =>
+        group.flatMap(g =>
+          relatedColumnGroups.find(columnGroup => 
+            columnGroup.id === g.id
+          )
           ?? []
         )
       ),
@@ -126,9 +135,9 @@ export const listNested = async ({
     .map(flow => ({
       ...flow,
       columnGroups:
-        flow.columnGroupIds.map(group =>
-          group.flatMap(id =>
-            relatedColumnGroups.find(cg => cg.id === id)
+        flow.columnGroupWithGroupings.map(group =>
+          group.flatMap(g =>
+            relatedColumnGroups.find(cg => cg.id === g.id)
             ?? []
           ) // undefined を値からも型からも取り除くイディオム
         )
@@ -147,8 +156,8 @@ export const update = async (flow: Flow) => {
       })
     ).map(cg => cg.id);
 
-    const invalidIds = flow.columnGroupIds
-      .flatMap(group => group)
+    const invalidIds = flow.columnGroupWithGroupings
+      .flatMap(group => group.map(cg => cg.id))
       .filter(id => !existingColumnGroupIds.includes(id));
     if (invalidIds.length > 0) throw new Error(
       `these flow.columnGroupIds does not exist in db: ${invalidIds.map(s => `'${s}'`).toString()}`

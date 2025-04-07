@@ -1,6 +1,5 @@
 'use client'
 
-import React from 'react';
 import { trpc } from '@/providers/TrpcProvider';
 
 import type { Data } from '@/types';
@@ -30,13 +29,13 @@ export const useData = ({
       onError: err => console.error(err),
     }
   );
-  const { mutateAsync: updateData } = trpc.data.update.useMutation();
-  const { mutateAsync: deleteData } = trpc.data.remove.useMutation();
+  const { mutateAsync: update } = trpc.data.update.useMutation();
+  const { mutateAsync: remove } = trpc.data.remove.useMutation();
 
   return {
     data,
-    updateData,
-    deleteData,
+    update,
+    remove,
     isLoading,
     error,
   };

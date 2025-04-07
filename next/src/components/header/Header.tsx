@@ -21,14 +21,16 @@ const laBelleAurore = La_Belle_Aurore({
   subsets: ['latin'],
 });
 
-const Header: React.FC<
-  React.ComponentProps<'div'>
-  & { projectId?: string }
-> = async ({
+type HeaderProps = {
+  projectId?: string;
+
+  className?: string;
+};
+
+const Header = async ({
   projectId,
   className,
-  ...props
-}) => {
+}: HeaderProps) => {
 
   const createCaller = t.createCallerFactory(appRouter);
   const caller = createCaller({});
@@ -44,7 +46,6 @@ const Header: React.FC<
         'bg-base-100',
         className,
       )}
-      {...props}
     >
       <Link href='/' className='flex-none'>
         <div className={clsx(

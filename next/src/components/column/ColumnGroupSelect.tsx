@@ -5,21 +5,21 @@ import DebouncedSelect from '@/components/common/DebouncedSelect';
 
 import { useColumnGroups } from '@/hooks/useColumnGroups';
 
-
-const ColumnGroupSelect: React.FC<
+type ColumnGroupSelectProps =
   Omit<
     React.ComponentProps<typeof DebouncedSelect>,
     'options' | 'debouncedOnChange'
-  > & { 
+  > & {
     projectId: string;
     debouncedOnChange: (newValue: { id: number; name: string }) => Promise<void>;
-  }
-> = ({
+};
+
+const ColumnGroupSelect = ({
   projectId,
   className,
   debouncedOnChange,
   ...props
-}) => {
+}: ColumnGroupSelectProps) => {
   // TODO columnsまで取得する豪華バージョンなので
   // 簡易化しても良いかも
   const {

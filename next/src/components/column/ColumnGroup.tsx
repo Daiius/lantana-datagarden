@@ -15,14 +15,16 @@ import { useColumnGroup } from '@/hooks/useColumnGroup';
 
 type ColumnGroupWithColumns = ColumnGroup & { columns: Column[] };
 
-const ColumnGroup: React.FC<
-  React.ComponentProps<'div'>
-  & { columnGroup: ColumnGroupWithColumns }
-> = ({
+type ColumnGroupProps = {
+  columnGroup: ColumnGroupWithColumns
+
+  className?: string;
+};
+
+const ColumnGroup = ({
   columnGroup: initialColumnGroup,
   className,
-  ...props
-}) => {
+}: ColumnGroupProps) => {
 
   const { id, projectId } = initialColumnGroup;
   const {
@@ -41,7 +43,6 @@ const ColumnGroup: React.FC<
         'bg-base-200',
         className,
       )} 
-      {...props}
     >
       <div className='flex flex-row'>
         <fieldset className='fieldset'>
