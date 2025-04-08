@@ -9,7 +9,7 @@ import {
   AnyMySqlColumn,
 } from 'drizzle-orm/mysql-core';
 
-import { relations } from 'drizzle-orm';
+import { Column, relations } from 'drizzle-orm';
 
 import { 
   v4 as uuidv4,
@@ -213,6 +213,17 @@ export type Grouping =
   | { type: 'column'; columnName: string; }
   | undefined;
 
+
+export type ColumnGroupWithGrouping = {
+  id: number;
+  grouping?: Grouping;
+}
+
+export type FlowStep = {
+  columnGroupWithGroupings: ColumnGroupWithGrouping[];
+  mode: 'list' | 'merge';
+}
+
 /**
  * FlowはColumnGroupの繋がり・順番を規定します
  */
@@ -233,10 +244,10 @@ export const flows = mysqlTable(
     name:
       varchar('name', { length: FLOW_NAME_LENGTH })
         .notNull(),
-    columnGroupWithGroupings:
-      json('column_groups')
+    flowSteps:
+      json('flow_steps')
         .notNull()
-        .$type<{ id: number; grouping?: Grouping }[][]>()
+        .$type<FlowStep[]>()
         .default([]),
   }
 );

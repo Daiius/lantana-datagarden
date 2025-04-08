@@ -1,9 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 
-import type { FlowColumnGroups } from '@/types';
-
-import { useFlow } from '@/hooks/useFlow';
+import { useFlow, NestedFlow } from '@/hooks/useFlow';
 import { useColumnGroups } from '@/hooks/useColumnGroups';
 
 import { IconTrash } from '@tabler/icons-react';
@@ -12,11 +10,14 @@ import DebouncedInput from '@/components/common/DebouncedInput';
 import Button from '@/components/common/Button';
 
 import FlowStep from '@/components/flow/FlowStep';
-import type { Grouping } from '@/types';
+import type { 
+  Grouping,
+  Flow,
+} from '@/types';
 
 
 type FlowProps = {
-  initialFlow: FlowColumnGroups;
+  initialFlow: NestedFlow;
   
   className?: string;
 }
@@ -32,64 +33,58 @@ const Flow = ({
     update,
     remove,
   } = useFlow({ 
-    initialFlow, 
     projectId: initialFlow.projectId,
     id: initialFlow.id,
+    initialFlow, 
   });
   const {
     columnGroups
   } = useColumnGroups({ projectId });
 
   const handleAddFlowStep = async () => {
-
     if (flow == null) return;
-
     const defaultColumnGroupId = columnGroups?.[0]?.id ?? 0;
-
-    const newColumnGroupWithGroupings = [
-      ...flow.columnGroupWithGroupings,
-      [{ id: defaultColumnGroupId, grouping: { type: 'parent' as const} }],
+    const newFlowSteps = [
+      ...flow.flowSteps,
+      {
+        columnGroupWithGroupings: [
+          { 
+            id: defaultColumnGroupId, 
+            grouping: { type: 'parent' } as Grouping, 
+          }
+        ],
+        mode: 'list' as const,
+      },
     ];
-    await update({ 
-      ...flow, 
-      columnGroupWithGroupings: newColumnGroupWithGroupings 
-    });
+    await update({ ...flow, flowSteps: newFlowSteps });
   };
 
-  const handleUpdateStep = async ({ 
+  const handleUpdateFlowSteps = async ({ 
     istep,
-    newColumnGroupWithGroupings,
+    newFlowStep,
   }: {
     istep: number;
-    newColumnGroupWithGroupings: { id: number, grouping?: Grouping }[];
+    newFlowStep: FlowStep;
   }) => {
-    console.log('handleUpdateStep: %o', newColumnGroupWithGroupings);
-
     if (flow == null) return;
-
-    // TODO 要名前の検討
-    const newColumnGroupIds_ =
-      flow.columnGroupWithGroupings.map((group, igroup) =>
-        istep === igroup
-        ? newColumnGroupWithGroupings
-        : group
+    const newFlowSteps =
+      flow.flowSteps.map((flowStep, iflowStep) =>
+        istep === iflowStep
+        ? newFlowStep
+        : flowStep
       );
-    await update({ 
-      ...flow, columnGroupWithGroupings: newColumnGroupIds_ 
-    });
+    await update({ ...flow, flowSteps: newFlowSteps });
   };
 
   const handleDeleteStep = async ({
     istep
   }: { istep: number }) => {
     if (flow == null) return;
-    const newColumnGroupIds =
-      flow.columnGroupWithGroupings.filter((_, igroup) =>
-        istep !== igroup
+    const newFlowSteps =
+      flow.flowSteps.filter((_, iflowStep) =>
+        istep !== iflowStep
       );
-    await update({
-      ...flow, columnGroupWithGroupings: newColumnGroupIds
-    });
+    await update({ ...flow, flowSteps: newFlowSteps });
   };
 
   if (flow == null) return (
@@ -137,19 +132,15 @@ const Flow = ({
           'p-4 bg-base-300'
         )}
       >
-        {flow.columnGroups.map((group, igroup) =>
+        {flow.flowSteps.map((flowStep, iflowStep) =>
           <FlowStep
-            key={igroup}
+            key={iflowStep}
             projectId={flow.projectId}
-            columnGroups={group}
-            columnGroupWithGroupings={
-              flow.columnGroupWithGroupings[igroup] 
-              ?? []
-            }
-            istep={igroup}
-            updateStep={handleUpdateStep}
+            istep={iflowStep}
+            flowStep={flowStep}
+            updateStep={handleUpdateFlowSteps}
             deleteStep={handleDeleteStep}
-            deletable={flow.columnGroups.length > 1}
+            deletable={flow.flowSteps.length > 1}
           />
         )}
         <Button 

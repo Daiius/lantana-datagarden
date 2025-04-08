@@ -50,23 +50,24 @@ export const getNested = async ({
       eq(columnGroups.projectId, projectId),
       inArray(
         columnGroups.id,
-        relatedFlow.columnGroupWithGroupings
-          .flatMap(v => v.map(vv => vv.id)),
+        relatedFlow.flowSteps
+          .flatMap(v => v.columnGroupWithGroupings.map(cg => cg.id)),
       ),
     ),
   });
 
   return {
     ...relatedFlow,
-    columnGroups:
-      relatedFlow.columnGroupWithGroupings.map(group =>
-        group.flatMap(gg =>
-          relatedColumnGroups.find(columnGroup => 
-            columnGroup.id === gg.id
-          )
-          ?? []
-        )
-      ),
+    flowSteps:
+      relatedFlow.flowSteps.map(flowStep => ({
+        ...flowStep,
+        columnGroups:
+          flowStep.columnGroupWithGroupings
+            .flatMap(cg =>
+              relatedColumnGroups.find(rc => rc.id === cg.id)
+              ?? []
+            ),
+      })),
   };
 };
 
@@ -88,8 +89,8 @@ export const getNestedWithData = async ({
       eq(columnGroups.projectId, projectId),
       inArray(
         columnGroups.id,
-        relatedFlow.columnGroupWithGroupings.flatMap(v => 
-          v.map(vv => vv.id)
+        relatedFlow.flowSteps.flatMap(flowStep => 
+          flowStep.columnGroupWithGroupings.map(cg => cg.id)
         ),
       ),
     ),
@@ -103,15 +104,15 @@ export const getNestedWithData = async ({
 
   return {
     ...relatedFlow,
-    columnGroups:
-      relatedFlow.columnGroupWithGroupings.map(group =>
-        group.flatMap(g =>
-          relatedColumnGroups.find(columnGroup => 
-            columnGroup.id === g.id
-          )
-          ?? []
-        )
-      ),
+    flowSteps:
+      relatedFlow.flowSteps.map(flowStep => ({
+        ...flowStep,
+        columnGroups:
+          flowStep.columnGroupWithGroupings.flatMap(cg =>
+            relatedColumnGroups.find(rc => rc.id === cg.id)
+            ?? []
+          ),
+      })),
   };
 }
 
@@ -134,13 +135,15 @@ export const listNested = async ({
   const nestedRelatedFlows = relatedFlows
     .map(flow => ({
       ...flow,
-      columnGroups:
-        flow.columnGroupWithGroupings.map(group =>
-          group.flatMap(g =>
-            relatedColumnGroups.find(cg => cg.id === g.id)
-            ?? []
-          ) // undefined を値からも型からも取り除くイディオム
-        )
+      flowSteps:
+        flow.flowSteps.map(flowStep => ({
+          ...flowStep,
+          columnGroups:
+            flowStep.columnGroupWithGroupings.flatMap(cg =>
+              relatedColumnGroups.find(rc => rc.id === cg.id)
+              ?? []
+            ),
+      })),
     }));
   return nestedRelatedFlows;
 };
@@ -156,8 +159,10 @@ export const update = async (flow: Flow) => {
       })
     ).map(cg => cg.id);
 
-    const invalidIds = flow.columnGroupWithGroupings
-      .flatMap(group => group.map(cg => cg.id))
+    const invalidIds = flow.flowSteps
+      .flatMap(flowStep =>
+        flowStep.columnGroupWithGroupings.map(group => group.id)
+      )
       .filter(id => !existingColumnGroupIds.includes(id));
     if (invalidIds.length > 0) throw new Error(
       `these flow.columnGroupIds does not exist in db: ${invalidIds.map(s => `'${s}'`).toString()}`
