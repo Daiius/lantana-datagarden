@@ -44,7 +44,7 @@ const Flows = ({
         onClick={async () => {
           await addFlow({ 
             projectId,
-            columnGroupWithGroupings: [[]],
+            flowSteps: [],
             name: '新しいフロー',
           })
         }}

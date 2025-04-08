@@ -3,14 +3,38 @@
 import React from 'react';
 import clsx from 'clsx';
 
-import type { Flow, Grouping } from '@/types';
+import type { 
+  Flow,
+  FlowWithData,
+  FlowStep as FlowStepType
+} from '@/types';
 
 import { useTables } from '@/hooks/useTables';
 import { useLines, Connection } from '@/hooks/useLines';
 
-import TableGroup from '@/components/table/TableGroup';
+import FlowStep from '@/components/table/FlowStep';
 
 import Line from '@/components/line/Line';
+
+export const calcFollowingColumnGroups = ({
+  flowWithData,
+  iflowStep,
+}: {
+  flowWithData: FlowWithData,
+  iflowStep: number
+}) => Array.from(
+  new Map(
+    flowWithData
+      ?.flowSteps
+      .filter((_, iflowStep_) => iflowStep_ > iflowStep)
+      .flatMap(flowStep => 
+        flowStep.columnGroups
+      )
+      .map(cgs => [cgs.id, cgs])
+  )
+  .entries()
+  .map(([_,v]) => v)
+);
 
 type TablesProps = {
   projectId: string;
@@ -39,8 +63,10 @@ const Tables = ({
     await invalidate();
   }
   const allData = flowWithData
-    ?.columnGroups
-    .flatMap(cgs => cgs.flatMap(cg => cg.data)) ?? [];
+    ?.flowSteps
+    .flatMap(flowStep => 
+      flowStep.columnGroups.flatMap(columnGroup => columnGroup.data)
+    ) ?? [];
 
   React.useEffect(() => {
     if (!mounted) {
@@ -65,53 +91,24 @@ const Tables = ({
     <div className='skeleton h-32 w-full'/>
   );
 
-  const handleUpdateGrouping = async (
-    {
-      flow,
-      newGrouping,
-      igroup,
-      icolumnGroup,
-    }: {
-      flow: Flow;
-      newGrouping: Grouping;
-      igroup: number;
-      icolumnGroup: number;
-    }
-  ) => {
+  const handleUpdateSteps = async ({
+    newFlowStep,
+    iflowStep,
+  }: {
+    newFlowStep: FlowStepType;
+    iflowStep: number;
+  }) => {
     await update({ 
-      ...flow, 
-      columnGroupWithGroupings:
-      flowWithData
-      .columnGroupWithGroupings
-      .map((step, istep) =>
-        istep === igroup
-        ? step.map((v, iv) => 
-            iv === icolumnGroup
-            ? { ...v, grouping: newGrouping } 
-            : v
-          )
-        : step
-      ),
+      ...flowWithData, 
+      flowSteps:
+        flowWithData.flowSteps.map((flowStep, iflowStep_) =>
+          iflowStep === iflowStep_
+          ? newFlowStep
+          : flowStep
+        ),
     })
   };
 
-  const calcFollowingColumnGroups = ({
-    flowWithData,
-    igroup,
-  }: {
-    flowWithData: ReturnType<typeof useTables>['flowWithData'],
-    igroup: number
-  }) => Array.from(
-    new Map(
-      flowWithData
-        ?.columnGroups
-        .filter((_, ig) => ig > igroup)
-        .flatMap(group => group.map(g => g))
-        .map(g => [g.id, g])
-    )
-    .entries()
-    .map(([_,v]) => v)
-  );
 
   return (
     <div
@@ -123,39 +120,21 @@ const Tables = ({
       )}
     >
       {/* flowのstep毎に横向きに表示する部分 */}
-      {flowWithData.columnGroups?.map((group, igroup) =>
-        <div key={igroup} className='flex flex-col gap-8'>
+      {flowWithData.flowSteps.map((flowStep, iflowStep) =>
+        <div key={iflowStep} className='flex flex-col gap-8'>
           {/* 同じstepに属するcolumnGroupを縦に重ねて表示する部分 */}
-          {group.map((cg, icg) =>
-            <div key={`${cg.id}-${icg}`}>
-              {/* columnGroup名の表示 */}
-              <div className='font-bold text-lg'>
-                {cg.name}
-              </div>
-              <TableGroup
-                istep={igroup}
-                columnGroup={cg}
-                grouping={
-                  flowWithData
-                  .columnGroupWithGroupings[igroup]?.[icg]
-                  ?.grouping
-                }
-                updateGrouping={async (newGrouping) => 
-                  await handleUpdateGrouping({
-                    flow: flowWithData,
-                    igroup: igroup,
-                    icolumnGroup: icg,
-                    newGrouping,
-                  })
-                }
-                followingColumnGroups={calcFollowingColumnGroups({
-                  flowWithData,
-                  igroup,
-                })}
-                updateLine={updateLine}
-              />
-            </div>
-          )}
+          <FlowStep
+            flowStep={flowStep}
+            iflowStep={iflowStep}
+            updateFlowStep={async (newFlowStep) => 
+              await handleUpdateSteps({ newFlowStep, iflowStep })
+            }
+            followingColumnGroups={calcFollowingColumnGroups({
+              flowWithData,
+              iflowStep,
+            })}
+            updateLine={updateLine}
+          />
         </div>
       )}
       {connections.map((c,ic) =>

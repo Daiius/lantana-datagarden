@@ -22,6 +22,31 @@ Next.js Web アプリケーション
   - 複数人で編集している場合、変更内容を反映・通知して知らせる
   - 複雑な履歴機能や元に戻す機能はきびしいかも
 
+## Flow, FlowStep, ColumnGroup の処理について...
+同じColumnGroupを、同じFlow内で何度も使用するのは意味が無い
+（ただの重複になる）ので、これを防止したい
+
+クライアント側で素朴にこれを実現する方法をChatGPTに聞いてみたが、
+FlowStep間では重複が無いのだが、FlowStep内では重複してしまう......
+
+ちょっと真面目に考えたい
+
+- 同じColumnGroupは1度のみFlow内に指定できるようにしたい
+  - これ、異なる使用方法はあり得ないだろうか？
+    例えば複数回同じ種類の工程を経る必要があるデータについて、
+    1回目も2回目も同じ工程だから同じColumnGroupに入れるという使い方は
+    あり得るのではないだろうか？
+  - 現在のデータ取得方法はどうなっていたっけ......
+    上記の様な使い方をする場合、親子関係を絞って取得しないと
+    データが重複する（工程に含まれるデータがすべて表示されてしまう）
+    - Flowに含まれるColumnGroupに属するデータを全て取得している
+      つまり、2025/04/08現在のコードではこの使い方はできない
+
+WRITING...
+
+
+<details>
+<summary>以前のメモ</summary>
 ## データ表示方法の整理
 - データを表示する方法の制御についてまとめる
 - 他ユーザと表示方法を共有する方法も考える
@@ -88,7 +113,6 @@ flowchart TD
     tables --have--> tableRows((tableRows))
     tables --have--> tableColumns((tableColumns))
 ```
-
 ## どうやってtableのグループ化を行うか
 単一のcolumnGroup in Step in Flowを、親や列の値でグループ化して
 表示したいのだが...
@@ -99,13 +123,8 @@ columnGroup in step in flow は number[][] で表現されているので...
 
 - 単純なidでなく、グループ化方法も記録できるオブジェクトとする?
   - ColumnGroupWithGroupingMethod: { id: number, grouping: string }
-
-
-WRITING...
-
-
-<details>
-<summary>以前のメモ</summary>
+  - 2025/04/08 現在、groupingをより詳細な情報を記述できるオブジェクト
+    としてこの案を採用している
 ## バックエンドの階層分け
 tRPCのルート、プロシージャを、現在のデータベース構造よりのものから
 アプリケーション寄りに変えたい。
