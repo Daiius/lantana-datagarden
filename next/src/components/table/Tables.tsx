@@ -126,6 +126,7 @@ const Tables = ({
           <FlowStep
             flowStep={flowStep}
             iflowStep={iflowStep}
+            projectId={projectId}
             updateFlowStep={async (newFlowStep) => 
               await handleUpdateSteps({ newFlowStep, iflowStep })
             }

@@ -8,20 +8,17 @@ import {
   Data,
 } from '@/types';
 
-import { useColumns } from '@/hooks/useColumns';
-import { useDataList } from '@/hooks/useDataList';
-
 import Button from '@/components/common/Button';
 import TableGroupSelector from '@/components/table/TableGroupSelector';
 import Table from '@/components/table/Table';
 
-type ColumnGroupWithColumns = ColumnGroup & {
-  columns: Column[]
-};
 
 type TableGroupProps = {
   istep: number;
-  columnGroup: ColumnGroupWithColumns;
+  projectId: string;
+  columns: Column[];
+  dataList: Data[];
+  add: (args: Omit<Data, 'id'>) => Promise<void>;
   followingColumnGroups: ColumnGroup[];
   grouping: Grouping;
   updateGrouping: (newGrouping: Grouping) => void;
@@ -30,22 +27,15 @@ type TableGroupProps = {
 
 const TableGroup = ({
   istep,
-  columnGroup,
+  projectId,
+  columns,
+  dataList,
+  add,
   followingColumnGroups,
   grouping,
   updateGrouping,
   updateLine,
 }: TableGroupProps) => {
-
-  const { projectId, id: columnGroupId } = columnGroup;
-
-  const { columns } = useColumns({
-    projectId, columnGroupId
-  });
-  const { dataList, add } = useDataList({
-    projectId,
-    columnGroupId,
-  });
 
   if (columns == null || dataList == null) {
     return <div className='skeleton w-full h-32' />
@@ -80,7 +70,7 @@ const TableGroup = ({
   return (
     <>
       <TableGroupSelector 
-        columnNames={columnGroup.columns.map(c => c.name)}
+        columnNames={columns.map(c => c.name)}
         selected={grouping}
         setSelected={async newSelected => {
           console.log(newSelected);
@@ -99,11 +89,12 @@ const TableGroup = ({
           followingColumnGroups={followingColumnGroups}
         />
       )}
-      {istep === 0 &&
+      {istep === 0 && columns.length > 0 &&
         <Button 
           className='btn-success btn-block'
           onClick={async () => await add({
-            projectId, columnGroupId,
+            projectId,
+            columnGroupId: columns[0]?.columnGroupId ?? 0,
             parentId: null,
             data: {}
           })}
