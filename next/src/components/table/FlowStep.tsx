@@ -10,6 +10,7 @@ import type {
 import ListedTable from '@/components/table/ListedTable';
 
 export type FlowStepProps = {
+  projectId: string;
   flowStep: FlowStepWithData;
   iflowStep: number;
   updateFlowStep: (newFlowStep: FlowStepType) => Promise<void>;
