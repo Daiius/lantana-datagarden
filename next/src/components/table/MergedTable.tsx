@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 
-import { ColumnGroupWithData } from '@/types';
+//import { ColumnGroupWithData } from '@/types';
 
 import { FlowStepProps } from '@/components/table/FlowStep';
 import TableGroup from '@/components/table/TableGroup';
@@ -25,16 +25,19 @@ const MergedTable = ({
       ).map(column => [column.id, column])
     ).values()
   );
-  const mergedColumnGroup: ColumnGroupWithData
+  //const mergedColumnGroup: ColumnGroupWithData
   return (
     <>
       <div className='font-bold text-lg'>
         {mergedTableGroupName}
       </div>
+      {/*
       <TableGroup
         istep={iflowStep}
         columnGroup={}
       />
+      */}
+      {mergedTableGroupName}
     </>
   );
 };

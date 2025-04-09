@@ -30,6 +30,7 @@ export type ArrayElement<T> = T extends (infer U)[] ? U : never;
 
 export type FlowWithData = inferRouterOutputs<AppRouter>['flow']['getNestedWithData'];
 export type FlowStepWithData = ArrayElement<FlowWithData['flowSteps']>;
+export type ColumnGroupWithGrouping = ArrayElement<FlowStepWithData['columnGroupWithGroupings']>;
 
 export { 
   COLUMNS_DATA_TYPES as DataTypes,

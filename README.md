@@ -42,6 +42,25 @@ FlowStep間では重複が無いのだが、FlowStep内では重複してしま�
     - Flowに含まれるColumnGroupに属するデータを全て取得している
       つまり、2025/04/08現在のコードではこの使い方はできない
 
+## Grouping の更新処理の書き方
+GroupingはFlow -> FlowStep -> ColumnGroupWithGrouping -> Grouping
+に記録されており、これを更新するには flow の update を呼ぶ必要がある
+
+UI的には Tables -> FlowStep -> Listed/MergedTable -> TableGroup
+となっており、ちょっと遠い.....
+
+いっそ一発で Flow 中の columnGroup を指定する方法が有ればよいのだが
+
+- Tables は Flow に対応する
+  - update はここにあり、データベース側にテーブルを持たず
+    JSON型で記録されるFlowStepは全体を一括でupdateするしかない...
+- FlowStep は UI 上の FlowStep に対応
+  - 特定の FlowStep のみの更新を担当するべき
+  - Listed/MergedTableへの橋渡しもここで行われる
+
+  - flowStep.columnGroups が、Listed/MergedTableに渡される
+
+
 WRITING...
 
 
