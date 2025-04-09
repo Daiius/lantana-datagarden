@@ -68,7 +68,7 @@ const TableGroup = ({
 
 
   return (
-    <>
+    <div>
       <TableGroupSelector 
         columnNames={columns.map(c => c.name)}
         selected={grouping}
@@ -102,7 +102,7 @@ const TableGroup = ({
           データ追加
         </Button>
       }
-    </>
+    </div>
   );
 };
 

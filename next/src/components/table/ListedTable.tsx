@@ -1,9 +1,8 @@
-import clsx from 'clsx';
+//import clsx from 'clsx';
 
 import { 
   ColumnGroup,
-  Grouping,
-  FlowStep,
+  ColumnGroupWithGrouping,
 } from '@/types';
 
 import { useColumns } from '@/hooks/useColumns';
@@ -17,9 +16,9 @@ type ListedTablePrivateProps = {
   projectId: string;
   columnGroup: ColumnGroup;
   iflowStep: number;
-  grouping: Grouping;
+  columnGroupWithGrouping: ColumnGroupWithGrouping;
   followingColumnGroups: ColumnGroup[];
-  updateFlowStep: (newFlowStep: FlowStep) => Promise<void>;
+  updateColumnGroupWithGrouping: (newColumnGroupWithGrouping: ColumnGroupWithGrouping) => Promise<void>;
   updateLine: () => Promise<void>;
 };
 
@@ -27,16 +26,14 @@ const ListedTablePrivate = ({
   projectId,
   columnGroup,
   iflowStep,
-  grouping,
+  columnGroupWithGrouping,
   followingColumnGroups,
-  updateFlowStep,
+  updateColumnGroupWithGrouping,
   updateLine,
 }: ListedTablePrivateProps) => {
 
   const { id: columnGroupId } = columnGroup;
-
   const { columns } = useColumns({ projectId, columnGroupId });
-
   const {  dataList, add } = useDataList({ projectId, columnGroupId });
 
   if (columns == null || dataList == null) return (
@@ -52,19 +49,13 @@ const ListedTablePrivate = ({
       <TableGroup
         istep={iflowStep}
         projectId={projectId}
-        grouping={grouping}
+        grouping={columnGroupWithGrouping.grouping}
         columns={columns}
         dataList={dataList}
         add={add}
-        updateGrouping={async (newGrouping) => 
-          await updateFlowStep({
-            ...flowStep,
-            columnGroupWithGroupings:
-              flowStep.columnGroupWithGroupings.map((cg, icg) =>
-                icg === icolumnGroup
-                ? { ...cg, grouping: newGrouping }
-                : cg
-              )
+        updateGrouping={ async newGrouping => 
+          await updateColumnGroupWithGrouping({ 
+            ...columnGroupWithGrouping, grouping: newGrouping
           })
         }
         followingColumnGroups={followingColumnGroups}
@@ -86,7 +77,7 @@ const ListedTable = ({
   updateFlowStep,
   followingColumnGroups,
   updateLine,
-  className,
+  //className,
 }: ListedTableProps) => {
   return (
     <>
@@ -96,8 +87,21 @@ const ListedTable = ({
           columnGroup={columnGroup}
           projectId={projectId}
           iflowStep={iflowStep}
-          updateFlowStep={updateFlowStep}
+          updateColumnGroupWithGrouping={async newColumnGroupWithGrouping =>
+            await updateFlowStep({
+              ...flowStep,
+              columnGroupWithGroupings:
+                flowStep.columnGroupWithGroupings.map((cg, icg) =>
+                  icg === icolumnGroup
+                  ? newColumnGroupWithGrouping
+                  : cg
+                )
+            })
+          }
           followingColumnGroups={followingColumnGroups}
+          columnGroupWithGrouping={
+            flowStep.columnGroupWithGroupings[icolumnGroup]!
+          }
           updateLine={updateLine}
         />
       )}
