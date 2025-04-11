@@ -10,11 +10,14 @@ import type {
   getProjectData
 } from '@/lib';
 
-export type Project  = typeof projects.$inferSelect;
-export type Flow = typeof flows.$inferSelect;
+import { inferRouterOutputs } from '@trpc/server';
+import type { AppRouter } from '@/providers/TrpcProvider';
+
+export type Project     = typeof projects.$inferSelect;
+export type Flow        = typeof flows.$inferSelect;
 export type ColumnGroup = typeof columnGroups.$inferSelect;
-export type Column   = typeof columns.$inferSelect;
-export type Data     = typeof data.$inferSelect;
+export type Column      = typeof columns.$inferSelect;
+export type Data        = typeof data.$inferSelect;
 
 export type ProjectCategoriesColumns = NonNullable<
   Awaited<ReturnType<typeof getProjectData>>
@@ -25,6 +28,9 @@ export type FlowColumnGroups =
 
 export type ArrayElement<T> = T extends (infer U)[] ? U : never;
 
+export type FlowWithData = inferRouterOutputs<AppRouter>['flow']['getNestedWithData'];
+export type FlowStepWithData = ArrayElement<FlowWithData['flowSteps']>;
+export type ColumnGroupWithGrouping = ArrayElement<FlowStepWithData['columnGroupWithGroupings']>;
 
 export { 
   COLUMNS_DATA_TYPES as DataTypes,
@@ -35,5 +41,6 @@ export {
 export type { 
   JsonData,
   Grouping,
+  FlowStep,
 } from 'database/db/schema';
 

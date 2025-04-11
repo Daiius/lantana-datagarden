@@ -61,7 +61,7 @@ const updateName = async ({
             .map(([k, v]) => 
               ({ [k === oldName ? newName : k]: v })
             )
-            .reduce((acc, curr) => ({ ...acc, ...curr }))
+            .reduce((acc, curr) => ({ ...acc, ...curr }), {}) as JsonData
       }));
 
       //console.log('dataToUpdate:\n%o', dataToUpdate);

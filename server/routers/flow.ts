@@ -51,19 +51,28 @@ const columnGroupingSchema = z.object({
 // TODO 型推論が上手くいかないので手動で設定、注意
 const selectSchema = createSelectSchema(flows)
   .extend({
-    columnGroupWithGroupings: z.array(z.array(
-      columnGroupingSchema
-    )),
+    flowSteps: z.array(
+      z.object({
+        columnGroupWithGroupings: z.array(columnGroupingSchema),
+        mode: z.enum(['list', 'merge']),
+      }),
+    ),
   });
+
+type TestSelectSchema = z.infer<typeof selectSchema>;
+
+type GetType = NonNullable<Awaited<ReturnType<typeof get>>>;
+type GetNestedType = NonNullable<Awaited<ReturnType<typeof getNested>>>;
+type GetNestedWithDataType = NonNullable<Awaited<ReturnType<typeof getNestedWithData>>>;
 
 import mitt from 'mitt';
 type FlowEvents = {
-  onUpdate: FlowWithColumnGroup,
-  onUpdateNested: FlowWithData,
-  onAdd: FlowWithColumnGroup,
+  onUpdate: GetNestedType,
+  onUpdateNested: GetNestedWithDataType,
+  onAdd: GetNestedType,
   onRemove: Pick<Flow, 'id' | 'projectId'>,
   onUpdateList: Pick<Flow, 'projectId'> & {
-    flows: FlowWithColumnGroup[];
+    flows: GetNestedType[];
   }
 }
 

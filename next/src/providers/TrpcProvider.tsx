@@ -39,4 +39,5 @@ const TrpcProvider: React.FC<
 };
  
 export default TrpcProvider;
+export { AppRouter };
 

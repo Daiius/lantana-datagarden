@@ -1,14 +1,14 @@
 'use client'
 
-import { trpc } from '@/providers/TrpcProvider';
+import { inferRouterInputs } from '@trpc/server';
+import { trpc, AppRouter } from '@/providers/TrpcProvider';
 
 import type { Data } from '@/types';
 
-type UseDataListArgs = {
-  projectId: string;
-  columnGroupId: number;
-  initialDataList?: Data[];
-}
+type DataListInputs = inferRouterInputs<AppRouter>['data']['list'];
+
+type UseDataListArgs = DataListInputs
+  & { initialDataList?: Data[]; };
 
 export const useDataList = ({
   projectId,
