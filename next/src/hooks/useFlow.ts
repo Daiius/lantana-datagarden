@@ -1,19 +1,19 @@
-import { trpc } from '@/providers/TrpcProvider';
+import { trpc, AppRouter } from '@/providers/TrpcProvider';
+import { inferRouterOutputs } from '@trpc/server';
 import type {
   Flow,
-  ColumnGroup,
 } from '@/types';
 
-type FlowColumnGroups = Flow & { columnGroups: ColumnGroup[][] };
+export type NestedFlow = inferRouterOutputs<AppRouter>['flow']['getNested'];
 
 export const useFlow = ({
   projectId,
   id,
-  initialFlow
+  initialFlow,
 }: {
   projectId: string;
   id: Flow['id'];
-  initialFlow?: FlowColumnGroups;
+  initialFlow?: NestedFlow;
 }) => {
   const utils = trpc.useUtils();
   const { data: flow, error } = trpc.flow.getNested.useQuery(
@@ -24,7 +24,7 @@ export const useFlow = ({
   );
   const { mutateAsync: update } = trpc.flow.update.useMutation();
   const { mutateAsync: remove } = trpc.flow.remove.useMutation();
-  trpc.flow.onUpdate.useSubscription(
+  trpc.flow.onUpdateNested.useSubscription(
     { id, projectId },
     {
       onData: data => {

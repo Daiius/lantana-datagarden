@@ -5,7 +5,7 @@ import {
   validate,
 } from 'database/db/schema';
 
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 
 type Data = typeof data.$inferSelect;
 
@@ -23,12 +23,17 @@ export const get = async (
 
 export const list = async (
   { projectId, columnGroupId }
-  : Pick<Data, 'projectId'|'columnGroupId'>
+  : {
+    projectId: string;
+    columnGroupId: number | number[];
+  }
 ) =>
   await db.query.data.findMany({
     where: and(
       eq(data.projectId, projectId),
-      eq(data.columnGroupId, columnGroupId),
+      Array.isArray(columnGroupId)
+      ? inArray(data.columnGroupId, columnGroupId)
+      : eq(data.columnGroupId, columnGroupId),
     ),
     orderBy: data.id,
   });
