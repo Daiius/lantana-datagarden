@@ -15,6 +15,7 @@ const MergedTable = ({
   projectId,
   iflowStep,
   followingColumnGroups,
+  updateFlowStep,
   updateLine,
 }: MergedTableProps) => {
   const mergedTableGroupName = 
@@ -44,30 +45,33 @@ const MergedTable = ({
       <TableGroup
         istep={iflowStep}
         projectId={projectId}
-        grouping={undefined}
+        grouping={
+          // 最初のcolumnGroupWithGroupingsに保存された
+          // グループ化情報を、MergedTableのグループ化情報として
+          // 利用します
+          flowStep.columnGroupWithGroupings[0]?.grouping
+        }
         // TODO MergedTableのgrouping処理については要件等
-        updateGrouping={async newGrouping => {/* do nothing... */}}
+        updateGrouping={async newGrouping => {
+          // MergedTableのgroupingを変更する際は、
+          // (最初のcolumnGroupWithGroupingsの値のみ変更すれば
+          //  事足りるかもしれませんが)
+          // columnGroupWithGroupings全体のgroupingを新規の値に
+          // 一括で更新します、挙動に少し注意が必要です
+          await updateFlowStep({
+            ...flowStep,
+            columnGroupWithGroupings:
+              flowStep.columnGroupWithGroupings.map(cg => ({
+                ...cg, grouping: newGrouping,
+              })),
+          });
+        }}
         columns={mergedColumns}
         dataList={mergedDataList}
         followingColumnGroups={followingColumnGroups}
         updateLine={updateLine}
         add={add}
       />
-      {mergedColumns.map(column =>
-        <div key={column.id}>{column.name}</div>
-      )}
-      {mergedDataList.map((data, idata) =>
-        <div key={idata}>
-          データ{idata}
-          {Object.entries(data.data)
-            .map(([k, v], ientry) =>
-              <div key={ientry}>
-                key: {k}, value: {v}
-              </div>
-            )
-          }
-        </div>
-      )}
     </>
   );
 };

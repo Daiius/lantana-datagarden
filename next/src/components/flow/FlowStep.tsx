@@ -141,6 +141,32 @@ const FlowStep = ({
         }
         {/* MEMO padding と margin がdividerに設定されている*/}
         <div className='divider my-0'/>
+        <fieldset className='flex flex-row gap-4 justify-evenly'>
+          {['list', 'merge'].map(mode =>
+            <React.Fragment key={mode}>
+              <label 
+                className='fieldset-label' 
+              >
+                <input 
+                  type='radio' 
+                  name={`flowstep-mode-radio-${istep}`}
+                  onChange={() => {
+                    updateStep({
+                      newFlowStep: { 
+                        ...flowStep, 
+                        mode: mode as FlowStep['mode']
+                      },
+                      istep,
+                    });
+                  }}
+                  checked={mode === flowStep.mode}
+                />
+                {mode}
+              </label> 
+            </React.Fragment>
+          )}
+        </fieldset>
+        <div className='divider my-0'/>
         <Button 
           className='btn-success'
           onClick={async () => await handleAddColumnGroup()}
