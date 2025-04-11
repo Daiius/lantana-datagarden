@@ -8,6 +8,9 @@ import {
   Column as TanstackColumn,
   Row as TanstackRow,
 } from '@tanstack/react-table';
+import {
+  IconMinus
+} from '@tabler/icons-react';
 
 import type { Data, Column } from '@/types';
 
@@ -34,6 +37,9 @@ const TableCell = ({
     id, projectId, columnGroupId
   });
   if (data == null) return <div>loading...</div>
+  if (!Object.keys(data.data).includes(column.name)) {
+    return <IconMinus className='size-3 ml-auto mr-auto'/>
+  }
   return (
     <DebouncedInput
       className={clsx('input-ghost', className)}
