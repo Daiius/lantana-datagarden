@@ -22,6 +22,24 @@ Next.js Web アプリケーション
   - 複数人で編集している場合、変更内容を反映・通知して知らせる
   - 複雑な履歴機能や元に戻す機能はきびしいかも
 
+## MergedTable と Grouping の処理...
+ListedTable では、columnGroupWithGroupings に対して
+それぞれに Grouping を設定する
+
+だが、MergedTable では複数の異なる複数のcolumnGroupを
+仮想的に一つとして扱うので、指定先が難しい
+
+- 仮にマージした全てのcolumnGroupWithGroupingsを一括で更新すると...
+  - 存在しない列がgroupingに指定された際の挙動を確認する必要あり
+- useState\<Grouping\>()をする手もあるが、それでは表示方法を
+  共有、保存できない
+
+
+WRITING...
+
+
+<details>
+<summary>以前のメモ</summary>
 ## Flow, FlowStep, ColumnGroup の処理について...
 同じColumnGroupを、同じFlow内で何度も使用するのは意味が無い
 （ただの重複になる）ので、これを防止したい
@@ -42,6 +60,7 @@ FlowStep間では重複が無いのだが、FlowStep内では重複してしま�
     - Flowに含まれるColumnGroupに属するデータを全て取得している
       つまり、2025/04/08現在のコードではこの使い方はできない
 
+
 ## Grouping の更新処理の書き方
 GroupingはFlow -> FlowStep -> ColumnGroupWithGrouping -> Grouping
 に記録されており、これを更新するには flow の update を呼ぶ必要がある
@@ -59,13 +78,6 @@ UI的には Tables -> FlowStep -> Listed/MergedTable -> TableGroup
   - Listed/MergedTableへの橋渡しもここで行われる
 
   - flowStep.columnGroups が、Listed/MergedTableに渡される
-
-
-WRITING...
-
-
-<details>
-<summary>以前のメモ</summary>
 ## データ表示方法の整理
 - データを表示する方法の制御についてまとめる
 - 他ユーザと表示方法を共有する方法も考える
