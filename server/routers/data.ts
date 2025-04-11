@@ -3,6 +3,7 @@ import {
   data,
 } from 'database/db/schema';
 
+import { z } from 'zod';
 import {
   createSelectSchema,
 } from 'drizzle-zod';
@@ -24,7 +25,11 @@ type Data = typeof data.$inferSelect;
 
 type DataEvents = {
   onAdd: Data;
-  onRemove: Pick<Data, 'id' | 'projectId' | 'columnGroupId'>;
+  onRemove: { 
+    id: number; 
+    projectId: string;
+    columnGroupId: number | number[]; 
+  };
   onUpdate: Data;
   onUpdateList: Pick<Data, 'projectId' | 'columnGroupId'> & {
     newList: Data[];
@@ -45,48 +50,23 @@ export const dataRouter = router({
     }))
     .query(async ({ input }) => await get(input)),
   list: publicProcedure
-    .input(selectSchema.pick({ 
-      projectId: true,
-      columnGroupId: true,
-    }))
+    .input(
+      z.object({ 
+        projectId: z.string(), 
+        columnGroupId: z.union([
+          z.number(),
+          z.array(z.number()),
+        ])
+      })
+    )
     .query(async ({ input }) => await list(input)),
-
-  /**
-   * 特定のフローに関連付けられたdataを取得します
-   *
-   * TODO これはtable表示時に必要になる動作なので
-   * tablesルートに移動したい
-   * 2025-03-23 時点で不使用なので一旦コメントアウト
-   */
-  //listByFlow: publicProcedure
-  //  .input(z.object({
-  //    projectId: z.string(),
-  //    flowId: z.number(),
-  //  }))
-  //  .query(async ({ input }) => {
-  //    const flow = await db.query.flows.findFirst({
-  //      where: and(
-  //        eq(flows.projectId, input.projectId), 
-  //        eq(flows.id, input.flowId),
-  //      )
-  //    });
-  //    if (flow == null) throw new Error(
-  //      `cannot find flow with id ${input.flowId}`
-  //    );
-  //    const flatColumnGroupIds = flow.columnGroupIds.flatMap(g => g);
-  //    return await db.query.data.findMany({
-  //      where: and(
-  //        eq(data.projectId, input.projectId),
-  //        inArray(data.columnGroupId, flatColumnGroupIds),
-  //      ),
-  //    });
-  //  }),
   update: publicProcedure
     .input(selectSchema)
     .mutation(async ({ input }) => {
       const newData = await update(input);
       ee.emit('onUpdate', newData);
     }),
+  // 特定 id のデータが更新されたことを通知するイベント
   onUpdate: publicProcedure
     .input(selectSchema.pick({ 
       id: true, 
@@ -152,19 +132,37 @@ export const dataRouter = router({
       });
     }),
   onAdd: publicProcedure
-    .input(selectSchema.pick({ projectId: true, columnGroupId: true }))
+    .input(
+      z.object({
+        projectId: z.string(),
+        columnGroupId: z.union([
+          z.number(),
+          z.array(z.number()),
+        ]),
+      })
+    )
     .subscription(({ input }) =>
       createSubscription({
         eventEmitter: ee,
         eventName: 'onAdd',
         filter: data => (
              data.projectId === input.projectId
-          && data.columnGroupId === input.columnGroupId
+          && Array.isArray(input.columnGroupId)
+             ? input.columnGroupId.includes(data.columnGroupId)
+             : data.columnGroupId === input.columnGroupId
         ),
       })
     ),
   onRemove: publicProcedure
-    .input(selectSchema.pick({ projectId: true, columnGroupId: true }))
+    .input(
+      z.object({
+        projectId: z.string(),
+        columnGroupId: z.union([
+          z.number(),
+          z.array(z.number())
+        ]),
+      })
+    )
     .subscription(({ input }) =>
       createSubscription({
         eventEmitter: ee,
