@@ -34,7 +34,7 @@ const ListedTablePrivate = ({
 
   const { id: columnGroupId } = columnGroup;
   const { columns } = useColumns({ projectId, columnGroupId });
-  const {  dataList, add } = useDataList({ projectId, columnGroupId });
+  const { dataList, add } = useDataList({ projectId, columnGroupId });
 
   if (columns == null || dataList == null) return (
     <div className='skeleteon w-full h-32' />

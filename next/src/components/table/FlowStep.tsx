@@ -6,7 +6,7 @@ import type {
   ColumnGroup,
 } from '@/types';
 
-//import MergedTable from '@/components/table/MergedTable';
+import MergedTable from '@/components/table/MergedTable';
 import ListedTable from '@/components/table/ListedTable';
 
 export type FlowStepProps = {
@@ -20,8 +20,7 @@ export type FlowStepProps = {
 
 const FlowStep = (props: FlowStepProps) => {
   if (props.flowStep.mode === 'merge') return (
-    //<MergedTable {...props} />
-    <ListedTable {...props} />
+    <MergedTable {...props} />
   );
 
   return (
