@@ -1,18 +1,8 @@
 import {
   flows,
-  columnGroups,
-  columns,
-  data,
 } from 'database/db/schema';
 
-type ColumnGroup = typeof columnGroups.$inferSelect;
 type Flow = typeof flows.$inferSelect;
-type Data = typeof data.$inferSelect;
-type Column = typeof columns.$inferSelect;
-type FlowWithColumnGroup = Flow & { columnGroups: ColumnGroup[][] };
-type FlowWithData = Flow & { 
-  columnGroups: (ColumnGroup & { data: Data[], columns: Column[] })[][];
-};
 
 import { z } from 'zod';
 
@@ -59,9 +49,7 @@ const selectSchema = createSelectSchema(flows)
     ),
   });
 
-type TestSelectSchema = z.infer<typeof selectSchema>;
 
-type GetType = NonNullable<Awaited<ReturnType<typeof get>>>;
 type GetNestedType = NonNullable<Awaited<ReturnType<typeof getNested>>>;
 type GetNestedWithDataType = NonNullable<Awaited<ReturnType<typeof getNestedWithData>>>;
 

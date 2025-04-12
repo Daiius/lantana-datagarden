@@ -57,6 +57,7 @@ const Columns = ({
             name: '',
             projectId,
             columnGroupId,
+            isOptional: false,
             type: 'string',
             sort: null,
           });
