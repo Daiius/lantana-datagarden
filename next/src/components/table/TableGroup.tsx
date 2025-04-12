@@ -14,6 +14,10 @@ import Table from '@/components/table/Table';
 
 
 type TableGroupProps = {
+  /**
+   * flowStepのインデックス
+   * 最初のflowStepかどうかで一部の表示/非表示を切り替えるため使用します
+   */
   istep: number;
   projectId: string;
   columns: Column[];
@@ -23,6 +27,12 @@ type TableGroupProps = {
   grouping: Grouping;
   updateGrouping: (newGrouping: Grouping) => void;
   updateLine: () => void;
+  /**
+   * 複数columnGroupがマージされたテーブルならtrue
+   * 「同じ親のデータ追加」ボタンはmergedの場合どのcolumnGroupに
+   * 属するデータを追加するべきか判断できないので非表示にします
+   */
+  isMerged: boolean;
 
   className?: string;
 }
@@ -37,6 +47,7 @@ const TableGroup = ({
   grouping,
   updateGrouping,
   updateLine,
+  isMerged,
   className,
 }: TableGroupProps) => {
 
@@ -68,7 +79,10 @@ const TableGroup = ({
 
   const groupedDataList = groupData(dataList, grouping);
 
-  const isShowingAddDataButton = (
+  const isShowingAddDataButton = 
+    // マージされたテーブルであれば絶対に表示しない
+    !isMerged 
+    && (
        // 最初のステップなら必ず表示す 
        // (恐らくルートデータなので...)      
        istep === 0  

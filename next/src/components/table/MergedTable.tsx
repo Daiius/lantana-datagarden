@@ -70,6 +70,7 @@ const MergedTable = ({
         dataList={mergedDataList}
         followingColumnGroups={followingColumnGroups}
         updateLine={updateLine}
+        isMerged
         add={add}
       />
     </>
