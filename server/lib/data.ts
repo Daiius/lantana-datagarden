@@ -3,9 +3,12 @@ import {
   data,
   columns,
   validate,
+  JsonData,
 } from 'database/db/schema';
 
 import { eq, and, inArray } from 'drizzle-orm';
+
+import { getNested as getColumnGroup } from './columnGroup';
 
 type Data = typeof data.$inferSelect;
 
@@ -74,10 +77,51 @@ export const update = async (newData: Data) => {
   );
   return updatedData;
 };
-
+/**
+ * 指定された引数を元に、dataを追加します
+ *
+ * - columnGroupId からどのcolumnが含まれるべきか取得
+ * - 関連するcolumnを取得してデータと照らし合わせる
+ *   - 不足columnが有れば他もnullで追加、不適なcolumn名なら例外
+ * - column関連のチェック・補完をしたデータを記録しnewIdを得る
+ * - newIdでもってDataを取得、返却
+ */
 export const add = async (newData: Omit<Data, 'id'>) => {
+
+  const relatedColumnGroup = await getColumnGroup({
+    projectId: newData.projectId,
+    id: newData.columnGroupId,
+  });
+  if (relatedColumnGroup == null) throw new Error(
+    `cannot find related columnGroup: ${newData.columnGroupId}`
+  );
+
+  Object.keys(newData.data).forEach(columnName => {
+    if (
+      !(columnName in relatedColumnGroup.columns.map(c => c.name))
+    ) {
+      throw new Error(
+        `column ${columnName} is not defined in columnGroup ${relatedColumnGroup.id}`
+      );
+    }
+  });
+
+  const newDataWithCompletion = Object.fromEntries(
+    relatedColumnGroup.columns.map(column => {
+      const givenValue = newData.data[column.name];
+      const v = givenValue === undefined
+        ? null
+        : givenValue;
+      return [column.name, v];
+    })
+  );
+  console.log(newDataWithCompletion);
+
   const newId = (
-    await db.insert(data).values(newData).$returningId()
+    await db.insert(data).values({
+      ...newData,
+      data: newDataWithCompletion,
+    }).$returningId()
   )[0]?.id;
   if (newId == null) throw new Error(
     `cannot get new data id`

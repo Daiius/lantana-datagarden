@@ -2,6 +2,7 @@ import clsx from 'clsx';
 
 import type {
   Data,
+  Column,
   ColumnGroup,
 } from '@/types';
 
@@ -15,12 +16,14 @@ import { useData } from '@/hooks/useData';
 
 
 type RowProps = {
+  columns: Column[];
   row: TanstackRow<Data>;
   followingColumnGroups: ColumnGroup[];
   addData: (args: Omit<Data, 'id'>) => Promise<void>;
 }
 
 const Row = ({
+  columns,
   row,
   followingColumnGroups,
   addData,
@@ -59,9 +62,6 @@ const Row = ({
         </td>
       )}
       <td className='border border-gray-300' >
-        {/* 削除ボタン */}
-        {/*
-        */}
         <RowDropdown
           projectId={projectId}
           dataId={row.original.id}
@@ -73,7 +73,8 @@ const Row = ({
           addData={async params => await addData({
             ...params,
             parentId: row.original.id,
-            projectId, data: {},
+            projectId, 
+            data: {},
           })}
         />
       </td>
