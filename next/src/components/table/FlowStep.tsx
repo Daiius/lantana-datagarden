@@ -16,6 +16,8 @@ export type FlowStepProps = {
   updateFlowStep: (newFlowStep: FlowStepType) => Promise<void>;
   followingColumnGroups: ColumnGroup[];
   updateLine: () => Promise<void>;
+
+  className?: string;
 }
 
 const FlowStep = (props: FlowStepProps) => {
