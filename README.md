@@ -22,6 +22,21 @@ Next.js Web アプリケーション
   - 複数人で編集している場合、変更内容を反映・通知して知らせる
   - 複雑な履歴機能や元に戻す機能はきびしいかも
 
+## オプショナルな値に対応させる
+Column設定で、空欄を認めるか設定出来る様にする
+
+isOptionalフラグを用意し、trueであればundefinedが入るのを許容する
+
+isOptional == falseであれば、その欄が空でない値で埋まるまで
+書き込みさせない様にしたい
+
+validate 関数を拡張する必要がありそう
+
+WRITING...
+
+
+<details>
+<summary>以前のメモ</summary>
 ## MergedTable と Grouping の処理...
 ListedTable では、columnGroupWithGroupings に対して
 それぞれに Grouping を設定する
@@ -31,15 +46,10 @@ ListedTable では、columnGroupWithGroupings に対して
 
 - 仮にマージした全てのcolumnGroupWithGroupingsを一括で更新すると...
   - 存在しない列がgroupingに指定された際の挙動を確認する必要あり
+  - 大丈夫そうなので採用
 - useState\<Grouping\>()をする手もあるが、それでは表示方法を
   共有、保存できない
 
-
-WRITING...
-
-
-<details>
-<summary>以前のメモ</summary>
 ## Flow, FlowStep, ColumnGroup の処理について...
 同じColumnGroupを、同じFlow内で何度も使用するのは意味が無い
 （ただの重複になる）ので、これを防止したい

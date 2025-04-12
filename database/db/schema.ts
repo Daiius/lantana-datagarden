@@ -6,10 +6,11 @@ import {
   int,
   bigint,
   json,
+  boolean,
   AnyMySqlColumn,
 } from 'drizzle-orm/mysql-core';
 
-import { Column, relations } from 'drizzle-orm';
+import { relations } from 'drizzle-orm';
 
 import { 
   v4 as uuidv4,
@@ -136,23 +137,31 @@ export const columns = mysqlTable('Columns', {
     })
     .notNull()
     .default('string'),
+  isOptional:
+    boolean('is_optional')
+      .notNull()
+      .default(false),
   sort:
     int('sort', { unsigned: true })
 }, (table) => [
     unique().on(table.columnGroupId, table.name),
 ]);
 
-export type JsonData = Record<string, string | number>;
+export type JsonData = Record<string, string | number | null>;
 
 export const validate = ({
   type,
+  isOptional = false,
   v,
 }: {
   type: typeof COLUMNS_DATA_TYPES[number],
-  v: string | number,
+  isOptional?: boolean,
+  v: JsonData[number],
 }): boolean => {
 
-  //console.log('v: ', v, typeof v);
+  if (v === null) {
+    return isOptional;
+  }
 
   switch (type) {
     case "string":
