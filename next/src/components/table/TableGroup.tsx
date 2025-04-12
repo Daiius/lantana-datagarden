@@ -1,6 +1,5 @@
 
 import clsx from 'clsx';
-import { Fragment } from 'react';
 
 import { 
   ColumnGroup,
@@ -68,8 +67,6 @@ const TableGroup = ({
   };
 
   const groupedDataList = groupData(dataList, grouping);
-  console.log('groupedDataList: ', groupedDataList);
-
 
   const isShowingAddDataButton = (
        // 最初のステップなら必ず表示す 
@@ -80,6 +77,27 @@ const TableGroup = ({
        // データを追加出来る
     || grouping?.type === 'parent' 
   );
+
+  const handleAddData = async ({ 
+    data, 
+    columns,
+  }: {
+    data: Data[];
+    columns: Column[];
+  }) => {
+    await add({
+      projectId,
+      columnGroupId: columns[0]?.columnGroupId ?? 0,
+      parentId: 
+        grouping?.type === 'parent' 
+        ? data[0]?.parentId ?? null 
+        : null,
+      // TODO データ追加について要件等、undefinedデータは-表示される
+      data: {}/*Object.fromEntries(
+        columns.map(c => [c.name, undefined])
+      )*/,
+    })
+  };
                  
   return (
     <div>
@@ -93,12 +111,9 @@ const TableGroup = ({
       />
       {/* tableの表示、ここをグループ分けしたい */}
       {groupedDataList.map((data, idata) =>
-        <div key={idata} className='w-fit'>
+        <div key={idata} className='w-fit mb-4'>
           <Table 
-            className={clsx(
-              !isShowingAddDataButton && 'mb-4', 
-              className
-            )}
+            className={clsx(className)}
             key={idata}
             columns={columns}
             data={data}
@@ -112,20 +127,15 @@ const TableGroup = ({
             <Button 
               className={clsx(
                 'btn-block btn-success',
-                isShowingAddDataButton && 'mb-4',
-                istep !== 0 && grouping?.type === 'parent' && 'btn-soft'
+                // 最初でないステップのデータ追加ボタンは
+                // btn-soft スタイルにする
+                istep !== 0 
+                && isShowingAddDataButton 
+                && 'btn-soft'
               )}
-              onClick={async () => await add({
-                projectId,
-                columnGroupId: columns[0]?.columnGroupId ?? 0,
-                parentId: 
-                  grouping?.type === 'parent' 
-                  ? data[0]?.parentId ?? null 
-                  : null,
-                data: Object.fromEntries(
-                  columns.map(c => [c.name, undefined])
-                ),
-              })}
+              onClick={async () => 
+                await handleAddData({ data, columns })
+              }
             >
               {grouping?.type === 'parent'
                  ? `同じ親のデータ追加`
