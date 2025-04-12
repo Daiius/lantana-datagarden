@@ -1,5 +1,6 @@
 
 import clsx from 'clsx';
+import { Fragment } from 'react';
 
 import { 
   ColumnGroup,
@@ -23,6 +24,8 @@ type TableGroupProps = {
   grouping: Grouping;
   updateGrouping: (newGrouping: Grouping) => void;
   updateLine: () => void;
+
+  className?: string;
 }
 
 const TableGroup = ({
@@ -35,6 +38,7 @@ const TableGroup = ({
   grouping,
   updateGrouping,
   updateLine,
+  className,
 }: TableGroupProps) => {
 
   if (columns == null || dataList == null) {
@@ -67,6 +71,16 @@ const TableGroup = ({
   console.log('groupedDataList: ', groupedDataList);
 
 
+  const isShowingAddDataButton = (
+       // 最初のステップなら必ず表示す 
+       // (恐らくルートデータなので...)      
+       istep === 0  
+       // 親でグループ化されていたら
+       // テーブル内で親が共通なので
+       // データを追加出来る
+    || grouping?.type === 'parent' 
+  );
+                 
   return (
     <div>
       <TableGroupSelector 
@@ -79,29 +93,48 @@ const TableGroup = ({
       />
       {/* tableの表示、ここをグループ分けしたい */}
       {groupedDataList.map((data, idata) =>
-        <Table 
-          key={idata}
-          className={clsx(istep !== 0 && 'mb-4')}
-          columns={columns}
-          data={data}
-          addData={add}
-          updateLine={updateLine}
-          followingColumnGroups={followingColumnGroups}
-        />
+        <div key={idata} className='w-fit'>
+          <Table 
+            className={clsx(
+              !isShowingAddDataButton && 'mb-4', 
+              className
+            )}
+            key={idata}
+            columns={columns}
+            data={data}
+            addData={add}
+            updateLine={updateLine}
+            followingColumnGroups={followingColumnGroups}
+          />
+          {isShowingAddDataButton
+           && columns.length > 0
+           &&
+            <Button 
+              className={clsx(
+                'btn-block btn-success',
+                isShowingAddDataButton && 'mb-4',
+                istep !== 0 && grouping?.type === 'parent' && 'btn-soft'
+              )}
+              onClick={async () => await add({
+                projectId,
+                columnGroupId: columns[0]?.columnGroupId ?? 0,
+                parentId: 
+                  grouping?.type === 'parent' 
+                  ? data[0]?.parentId ?? null 
+                  : null,
+                data: Object.fromEntries(
+                  columns.map(c => [c.name, undefined])
+                ),
+              })}
+            >
+              {grouping?.type === 'parent'
+                 ? `同じ親のデータ追加`
+                 : `データ追加`
+              }
+            </Button>
+          }
+        </div>
       )}
-      {istep === 0 && columns.length > 0 &&
-        <Button 
-          className='btn-success btn-block'
-          onClick={async () => await add({
-            projectId,
-            columnGroupId: columns[0]?.columnGroupId ?? 0,
-            parentId: null,
-            data: {}
-          })}
-        >
-          データ追加
-        </Button>
-      }
     </div>
   );
 };

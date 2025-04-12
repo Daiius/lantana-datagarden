@@ -141,6 +141,7 @@ const FlowStep = ({
         }
         {/* MEMO padding と margin がdividerに設定されている*/}
         <div className='divider my-0'/>
+        {/* TODO コンポーネントを分割*/}
         <fieldset className='flex flex-row gap-4 justify-evenly'>
           {['list', 'merge'].map(mode =>
             <React.Fragment key={mode}>

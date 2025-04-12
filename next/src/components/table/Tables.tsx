@@ -124,6 +124,7 @@ const Tables = ({
         <div key={iflowStep} className='flex flex-col gap-8'>
           {/* 同じstepに属するcolumnGroupを縦に重ねて表示する部分 */}
           <FlowStep
+            className='last:mr-8'
             flowStep={flowStep}
             iflowStep={iflowStep}
             projectId={projectId}
