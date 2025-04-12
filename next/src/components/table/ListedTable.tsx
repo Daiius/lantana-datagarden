@@ -64,6 +64,7 @@ const ListedTablePrivate = ({
         }
         followingColumnGroups={followingColumnGroups}
         updateLine={updateLine}
+        isMerged={false}
       />
     </>
   );
