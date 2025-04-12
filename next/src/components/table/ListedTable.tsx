@@ -20,6 +20,8 @@ type ListedTablePrivateProps = {
   followingColumnGroups: ColumnGroup[];
   updateColumnGroupWithGrouping: (newColumnGroupWithGrouping: ColumnGroupWithGrouping) => Promise<void>;
   updateLine: () => Promise<void>;
+
+  className?: string;
 };
 
 const ListedTablePrivate = ({
@@ -30,6 +32,7 @@ const ListedTablePrivate = ({
   followingColumnGroups,
   updateColumnGroupWithGrouping,
   updateLine,
+  className,
 }: ListedTablePrivateProps) => {
 
   const { id: columnGroupId } = columnGroup;
@@ -47,6 +50,7 @@ const ListedTablePrivate = ({
         {columnGroup.name}
       </div>
       <TableGroup
+        className={className}
         istep={iflowStep}
         projectId={projectId}
         grouping={columnGroupWithGrouping.grouping}
@@ -77,12 +81,13 @@ const ListedTable = ({
   updateFlowStep,
   followingColumnGroups,
   updateLine,
-  //className,
+  className,
 }: ListedTableProps) => {
   return (
     <>
       {flowStep.columnGroups.map((columnGroup, icolumnGroup) =>
         <ListedTablePrivate
+          className={className}
           key={`${columnGroup.id}-${icolumnGroup}`}
           columnGroup={columnGroup}
           projectId={projectId}
