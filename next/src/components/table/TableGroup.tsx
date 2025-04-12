@@ -107,10 +107,9 @@ const TableGroup = ({
         ? data[0]?.parentId ?? null 
         : null,
       // TODO データ追加について要件等、undefinedデータは-表示される
-      data: Object.fromEntries(
-        columns.map(c => [c.name, null])
-      ),
-    })
+      data: {},
+    });
+    console.log(`handleAddData called!`);
   };
                  
   return (

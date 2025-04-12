@@ -111,6 +111,7 @@ const Table = ({
           {table.getRowModel().rows.map(row =>
             <Row
               key={row.original.id}
+              columns={columns}
               row={row}
               followingColumnGroups={followingColumnGroups}
               addData={addData}
