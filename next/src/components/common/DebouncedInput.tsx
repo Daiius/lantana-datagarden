@@ -12,9 +12,10 @@ type DebouncedInputProps = {
   debouncedOnChange: (newValue: string | number) => Promise<void>,
   wait?: number,
   validation?: Column['type'],
+  isOptional?: Column['isOptional'],
 
   className?: string;
-  value: string | number | readonly string[] | undefined;
+  value: string | number | readonly string[] | undefined | null;
 }
 
 /**
@@ -23,6 +24,7 @@ type DebouncedInputProps = {
 const DebouncedInput = ({
   className,
   debouncedOnChange,
+  isOptional = false,
   wait = 1_000,
   validation,
   value,
@@ -62,12 +64,16 @@ const DebouncedInput = ({
         setValuePrivate(e.target.value);
         if (validation) {
           setValid(
-            validate({ type: validation, v: e.target.value })
+            validate({ 
+              type: validation, 
+              isOptional,
+              v: e.target.value 
+            })
           );
         }
         await debouncedUpdate(e.target.value);
       }}
-      value={valuePrivate}
+      value={valuePrivate ?? ''}
     />
   )
 };

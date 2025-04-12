@@ -37,7 +37,7 @@ const TableCell = ({
     id, projectId, columnGroupId
   });
   if (data == null) return <div>loading...</div>
-  if (!Object.keys(data.data).includes(column.name)) {
+  if (!(column.name in data.data)) {
     return <IconMinus className='size-3 ml-auto mr-auto'/>
   }
   return (
