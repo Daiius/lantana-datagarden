@@ -55,17 +55,12 @@ export const projects = mysqlTable(
 
 const COLUMN_GROUP_NAME_LENGTH = 127 as const;
 export const COLUMN_GROUP_TYPES = [
-  'sequence', 
-  'option', 
+  'condition', 
   'measurement',
 ] as const;
 
 /**
  * ユーザが自由に設定できる列グループです
- *
- * 1対1と1対多対応のデータを分割するinnterColumnGroupsとは
- * 役割が異なります
- * TODO 名前変えた方が良いかも
  */
 export const columnGroups = mysqlTable('ColumnGroups', {
   id:
@@ -261,13 +256,43 @@ export const flows = mysqlTable(
   }
 );
 
+export const measurements = mysqlTable(
+  'Measurements', 
+  { 
+    id: 
+      bigint('id', { mode: 'number', unsigned: true })
+        .autoincrement()
+        .notNull()
+        .primaryKey(),
+    columnGroupId:
+      bigint('column_group_id', { mode: 'number', unsigned: true })
+        .notNull()
+        .references(() => columnGroups.id, {
+          onDelete: 'cascade', onUpdate: 'cascade',
+        }),
+    projectId:
+      varchar('project_id', { length: PROJECT_ID_LENGTH })
+        .notNull()
+        .references(() => projects.id, {
+          onDelete: 'cascade', onUpdate: 'cascade',
+        }),
+    data:
+      json('data').$type<JsonData>().notNull(),
+    dataId:
+      bigint('data_id', { mode: 'number', unsigned: true })
+        .references(() => data.id, {
+          onDelete: 'set null', onUpdate: 'cascade',
+        }),
+  }
+);
+
 export const projectRelations = 
   relations(projects, ({ many }) => ({ 
     categories: many(columnGroups),
   }));
-// TODO
-// 本当は flows と columnGroups のrelationも定義したいが、
-// flowの中のcolumnGroupIdsはJSON型なのでちょっと無理
+// NOTE
+// 本当は flow 関連でもrelationsを使用したいが、
+// JSON型で記録しているためにちょっと無理
 
 export const columnGroupRelations =
   relations(columnGroups, ({ one, many }) => ({
@@ -298,5 +323,14 @@ export const dataRelations =
       fields: [data.columnGroupId],
       references: [columnGroups.id],
     }),
+    measurements: many(measurements),
+  }));
+
+export const measurementRelations =
+  relations(measurements, ({ one }) => ({
+    data: one(data, {
+      fields: [measurements.dataId],
+      references: [data.id],
+    })
   }));
 

@@ -34,7 +34,7 @@ export type ColumnGroupWithGrouping = ArrayElement<FlowStepWithData['columnGroup
 
 export { 
   COLUMNS_DATA_TYPES as DataTypes,
-  COLUMN_GROUP_TYPES as CategoryTypes,
+  COLUMN_GROUP_TYPES as ColumnGroupTypes,
   validate,
 } from 'database/db/schema';
 

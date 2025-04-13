@@ -38,11 +38,11 @@ await db.insert(projects).values({ id: testProjectId });
 
 await db.insert(columnGroups).values([{
   projectId: testProjectId,
-  type: 'sequence',
+  type: 'condition',
 }, {
   projectId: testProjectId,
   name: '2番目の列グループ',
-  type: 'sequence',
+  type: 'condition',
 }]);
 
 
