@@ -51,7 +51,7 @@ const ColumnGroups = ({
         className='btn-success'
         onClick={async () => await addColumnGroup({
           name: '新しい列グループ',
-          type: 'sequence',
+          type: 'condition',
           sort: null,
           projectId,
         })}

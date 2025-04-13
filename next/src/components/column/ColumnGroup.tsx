@@ -6,12 +6,17 @@ import type {
   Column,
 } from '@/types';
 
-import Columns from '@/components/column/Columns';
-import DebouncedInput from '@/components/common/DebouncedInput';
-import Button from '@/components/common/Button';
+import { ColumnGroupTypes } from '@/types';
+
 import { IconTrash } from '@tabler/icons-react';
 
 import { useColumnGroup } from '@/hooks/useColumnGroup';
+
+import Button from '@/components/common/Button';
+import Columns from '@/components/column/Columns';
+import DebouncedInput from '@/components/common/DebouncedInput';
+import DebouncedSelect from '@/components/common/DebouncedSelect';
+
 
 type ColumnGroupWithColumns = ColumnGroup & { columns: Column[] };
 
@@ -72,6 +77,21 @@ const ColumnGroup = ({
         columnGroupId={id}
         initialColumns={columnGroup.columns} 
       />
+      <fieldset className='fieldset'>
+        <label className='fieldset-label'>
+          種類：
+        </label>
+        <DebouncedSelect
+          debouncedOnChange={async (newValue) =>
+            await updateColumnGroup({
+              ...columnGroup,
+              type: newValue,
+            })
+          }
+          options={ColumnGroupTypes}
+          value={columnGroup.type}
+        />
+      </fieldset>
     </div>
   );
 };
