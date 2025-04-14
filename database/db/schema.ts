@@ -79,12 +79,6 @@ export const columnGroups = mysqlTable('ColumnGroups', {
       .notNull()
       .default('新しいカテゴリ')
       .unique(), 
-  type:
-    varchar('type', { 
-      length: 24, 
-      enum: COLUMN_GROUP_TYPES,
-    })
-    .notNull(),
   sort:
     int('sort', { unsigned: true })
 });
@@ -254,6 +248,79 @@ export const flows = mysqlTable(
         .$type<FlowStep[]>()
         .default([]),
   }
+);
+
+export const measurementColumnGroups = mysqlTable(
+  'MeasurementColumnGroups',
+  {
+    id:
+      bigint('id', { mode: 'number', unsigned: true })
+        .notNull()
+        .autoincrement()
+        .primaryKey(),
+    projectId:
+      varchar('project_id', { length: PROJECT_ID_LENGTH })
+        .notNull()
+        .references(() => projects.id, { 
+          onDelete: 'restrict', onUpdate: 'cascade',
+        }),
+    name:
+      varchar('name', { length: COLUMN_GROUP_NAME_LENGTH })
+        .notNull()
+        .default('新しいカテゴリ')
+        .unique(), 
+    type:
+      varchar('type', { 
+        length: 24, 
+        enum: COLUMN_GROUP_TYPES,
+      })
+      .notNull(),
+    sort:
+      int('sort', { unsigned: true })
+  }
+);
+
+export const measurementColumns = mysqlTable(
+  'MeasurementColumns',
+  {
+    id:
+      bigint('id', { mode: 'number', unsigned: true })
+        .notNull()
+        .autoincrement()
+        .primaryKey(),
+    columnGroupId:
+      bigint('column_group_id', { mode: 'number', unsigned: true })
+        .notNull()
+        .references(() => columnGroups.id, {
+          onDelete: 'restrict', onUpdate: 'cascade' 
+        }),
+    projectId:
+      varchar('project_id', { length: PROJECT_ID_LENGTH })
+        .notNull()
+        .references(() => projects.id, { 
+          onDelete: 'restrict', onUpdate: 'cascade',
+        }),
+    name:
+      varchar('name', { length: COLUMNS_NAME_LENGTH })
+        .notNull()
+        .default('新しい列名'),
+    type:
+      varchar( 'type', { 
+        length: 32,
+        enum: COLUMNS_DATA_TYPES,
+      })
+      .notNull()
+      .default('string'),
+    isOptional:
+      boolean('is_optional')
+        .notNull()
+        .default(false),
+    sort:
+      int('sort', { unsigned: true })
+  },
+  (table) => [
+    unique().on( table.columnGroupId, table.name),
+  ],
 );
 
 export const measurements = mysqlTable(
