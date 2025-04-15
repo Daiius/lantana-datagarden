@@ -9,6 +9,7 @@ import { columnRouter } from './routers/column';
 import { dataRouter } from './routers/data';
 import { tableRouter } from './routers/table';
 import { flowRouter } from './routers/flow';
+import { measurementRouter } from './measurement';
 
 export const appRouter = router({ 
   greeting: publicProcedure
@@ -20,7 +21,11 @@ export const appRouter = router({
   data: dataRouter,
   table: tableRouter,
   flow: flowRouter,
+  measurement: measurementRouter,
 });
 
 export type AppRouter = typeof appRouter;
+
+//import {inferRouterOutputs} from '@trpc/server';
+//type Test = inferRouterOutputs<AppRouter>['measurement']['columnGroup']['list'];
 
