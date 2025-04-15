@@ -34,8 +34,8 @@ const ConditionsDropdown = ({
       <Link 
         href={
           project?.lastSelectedFlow
-          ? `/projects/${project.id}/tables/${project?.lastSelectedFlow}` 
-          : `/projects/${project.id}/tables`
+          ? `/projects/${project.id}/conditions/tables/${project?.lastSelectedFlow}` 
+          : `/projects/${project.id}/conditions/tables`
         } 
         className='flex flex-row items-center'
       >
@@ -43,14 +43,14 @@ const ConditionsDropdown = ({
         Tables
       </Link>
       <Link 
-        href={`/projects/${project.id}/flows`} 
+        href={`/projects/${project.id}/conditions/flows`} 
         className='flex flex-row items-center'
       >
         <IconSortDescending2 stroke={1} className='-rotate-90' />
         Flows
       </Link>
       <Link 
-        href={`/projects/${project.id}/columns`} 
+        href={`/projects/${project.id}/conditions/columns`} 
         className='flex flex-row items-center'
       >
         <IconColumnInsertRight stroke={1} />

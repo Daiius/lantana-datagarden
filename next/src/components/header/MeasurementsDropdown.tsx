@@ -30,14 +30,14 @@ const MeasurementsDropdown = ({
       )}
     >
       <Link 
-        href={`/projects/${project.id}/measurements`} 
+        href={`/projects/${project.id}/measurements/tables`} 
         className='flex flex-row items-center'
       >
         <IconTable stroke={1}/>
         Tables
       </Link>
       <Link 
-        href={`/projects/${project.id}/mcolumns`} 
+        href={`/projects/${project.id}/measurements/columns`} 
         className='flex flex-row items-center'
       >
         <IconColumnInsertRight stroke={1} />
