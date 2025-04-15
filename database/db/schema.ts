@@ -54,10 +54,10 @@ export const projects = mysqlTable(
 
 
 const COLUMN_GROUP_NAME_LENGTH = 127 as const;
-export const COLUMN_GROUP_TYPES = [
-  'condition', 
-  'measurement',
-] as const;
+//export const COLUMN_GROUP_TYPES = [
+//  'condition', 
+//  'measurement',
+//] as const;
 
 /**
  * ユーザが自由に設定できる列グループです
@@ -269,12 +269,6 @@ export const measurementColumnGroups = mysqlTable(
         .notNull()
         .default('新しいカテゴリ')
         .unique(), 
-    type:
-      varchar('type', { 
-        length: 24, 
-        enum: COLUMN_GROUP_TYPES,
-      })
-      .notNull(),
     sort:
       int('sort', { unsigned: true })
   }
@@ -391,6 +385,23 @@ export const dataRelations =
       references: [columnGroups.id],
     }),
     measurements: many(measurements),
+  }));
+
+export const measurementColumnGroupRelations =
+  relations(measurementColumnGroups, ({ one, many }) => ({
+    project: one(projects, {
+      fields: [measurementColumnGroups.projectId],
+      references: [projects.id],
+    }),
+    columns: many(measurementColumns),
+  }));
+
+export const measurementColumnRelations =
+  relations(measurementColumns, ({ one }) => ({
+    columnGroup: one(measurementColumnGroups, {
+      fields: [measurementColumns.columnGroupId],
+      references: [measurementColumnGroups.id],
+    }),
   }));
 
 export const measurementRelations =
