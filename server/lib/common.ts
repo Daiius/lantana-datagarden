@@ -28,6 +28,11 @@ export const createSubscription = <
       }
     };
     eventEmitter.on(eventName, handler);
+    console.log(
+      `number of onUpdate: ${
+        eventEmitter.all.get('onUpdate')?.length
+      }`
+    );
     return () => eventEmitter.off(eventName, handler);
   });
 
