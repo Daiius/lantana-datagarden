@@ -285,7 +285,7 @@ export const measurementColumns = mysqlTable(
     columnGroupId:
       bigint('column_group_id', { mode: 'number', unsigned: true })
         .notNull()
-        .references(() => columnGroups.id, {
+        .references(() => measurementColumnGroups.id, {
           onDelete: 'restrict', onUpdate: 'cascade' 
         }),
     projectId:
@@ -328,7 +328,7 @@ export const measurements = mysqlTable(
     columnGroupId:
       bigint('column_group_id', { mode: 'number', unsigned: true })
         .notNull()
-        .references(() => columnGroups.id, {
+        .references(() => measurementColumnGroups.id, {
           onDelete: 'cascade', onUpdate: 'cascade',
         }),
     projectId:
