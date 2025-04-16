@@ -1,3 +1,5 @@
+'use client'
+
 import { Column, ColumnGroup } from '@/types';
 import { trpc } from '@/providers/TrpcProvider';
 
@@ -11,26 +13,38 @@ export const useColumns = ({
   columnGroupId: ColumnGroup['id'];
 }) => {
   const utils = trpc.useUtils();
-  const { data: columns } = trpc.column.list.useQuery(
+  const { data } = trpc.column.list.useQuery(
     { projectId, columnGroupId },
     initialColumns
     ? { enabled: false, initialData: initialColumns }
     : { enabled: true }
   );
-  trpc.column.onUpdateList.useSubscription(
+  trpc.column.onAdd.useSubscription(
     { projectId, columnGroupId },
     {
-      onData: data => utils.column.list.setData(
+      onData: newData => utils.column.list.setData(
         { projectId, columnGroupId },
-        data
+        data == null
+        ? [newData]
+        : [...data, newData],
       ),
-      onError: err => console.error(err),
+    }
+  );
+  trpc.column.onRemove.useSubscription(
+    { projectId, columnGroupId },
+    {
+      onData: newData => utils.column.list.setData(
+        { projectId, columnGroupId },
+        data == null
+        ? []
+        : data.filter(d => d.id !== newData.id)
+      )
     }
   );
   const { mutateAsync: addColumn } = trpc.column.add.useMutation();
 
   return {
-    columns,
+    columns: data,
     addColumn,
   };
 };
