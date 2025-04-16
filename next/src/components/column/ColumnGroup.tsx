@@ -6,12 +6,13 @@ import type {
   Column,
 } from '@/types';
 
-import Columns from '@/components/column/Columns';
-import DebouncedInput from '@/components/common/DebouncedInput';
-import Button from '@/components/common/Button';
 import { IconTrash } from '@tabler/icons-react';
 
 import { useColumnGroup } from '@/hooks/useColumnGroup';
+
+import Button from '@/components/common/Button';
+import Columns from '@/components/column/Columns';
+import DebouncedInput from '@/components/common/DebouncedInput';
 
 type ColumnGroupWithColumns = ColumnGroup & { columns: Column[] };
 

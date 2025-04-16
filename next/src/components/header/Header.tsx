@@ -6,15 +6,14 @@ import Link from 'next/link';
 import { La_Belle_Aurore } from 'next/font/google';
 import { 
   IconBrandGithub,
-  IconTable,
-  IconSortDescending2,
-  IconColumnInsertRight,
 } from '@tabler/icons-react';
 
 import Button from '@/components/common/Button';
 
 import { t } from 'server/trpc';
 import { appRouter } from 'server/router';
+import ConditionsDropdown from './ConditionsDropdown';
+import MeasurementsDropdown from './MeasurementsDropdown';
 
 const laBelleAurore = La_Belle_Aurore({
   weight: '400',
@@ -57,37 +56,11 @@ const Header = async ({
         </div>
       </Link>
 
-      {projectId &&
-        <div className={clsx(
-          'flex flex-row gap-4 align-middle justify-center',
-          'flex-grow',
-        )}>
-          <Link 
-            href={
-              projectId && project?.lastSelectedFlow
-              ? `/projects/${projectId}/tables/${project?.lastSelectedFlow}` 
-              : `/projects/${projectId}/tables`
-            } 
-            className='flex flex-row items-center'
-          >
-            <IconTable stroke={1}/>
-            Tables
-          </Link>
-          <Link 
-            href={`/projects/${projectId}/flows`} 
-            className='flex flex-row items-center'
-          >
-            <IconSortDescending2 stroke={1} className='-rotate-90' />
-            Flows
-          </Link>
-          <Link 
-            href={`/projects/${projectId}/columns`} 
-            className='flex flex-row items-center'
-          >
-            <IconColumnInsertRight stroke={1} />
-            Columns
-          </Link>
-        </div>
+      {project && 
+        <>
+          <ConditionsDropdown project={project} />
+          <MeasurementsDropdown project={project} />
+        </>
       }
 
       <Link 
