@@ -1,5 +1,4 @@
 import { router, publicProcedure } from '../trpc';
-import { z } from 'zod';
 
 import mitt from 'mitt';
 
@@ -9,56 +8,52 @@ import {
   update,
   add,
   remove,
-  MeasurementColumn,
-  measurementColumnSchema,
-} from '../lib/measurement/column';
+  Measurement,
+  measurementSchema,
+} from '../lib/measurement/data';
 
 import { createSubscription } from '../lib/common';
 
-type MeasurementColumnEvents = {
-  onUpdate: MeasurementColumn;
-  onAdd: MeasurementColumn;
-  onRemove: Pick<MeasurementColumn, 'id'|'projectId'|'columnGroupId'>;
-};
+type MeasurementEvents = {
+  onUpdate: Measurement;
+  onAdd: Measurement;
+  onRemove: Pick<Measurement, 'id'|'projectId'|'columnGroupId'>;
+}
 
-const ee = mitt<MeasurementColumnEvents>();
+const ee = mitt<MeasurementEvents>();
 
-export const columnRouter = router({
+export const dataRouter = router({
   get: publicProcedure
     .input(
-      z.object({
-        projectId: z.string(),
-        columnGroupId: z.number(),
-        id: z.number(),
+      measurementSchema.pick({
+        id: true,
+        projectId: true,
+        columnGroupId: true,
       })
     )
-    .query(async ({ input }) => {
-      const value = await get(input);
-      if (value == null) throw new Error (
-        `cannot find column ${input.id}`
-      );
-      return value;
-    }),
+    .query(async ({ input }) => await get(input)),
   list: publicProcedure
     .input(
-      z.object({
-        projectId: z.string(),
-        columnGroupId: z.number(),
+      measurementSchema.pick({
+        projectId: true,
+        columnGroupId: true,
       })
     )
     .query(async ({ input }) => await list(input)),
   update: publicProcedure
-    .input(measurementColumnSchema)
+    .input(
+      measurementSchema
+    )
     .mutation(async ({ input }) => {
       const newValue = await update(input);
       ee.emit('onUpdate', newValue);
     }),
   onUpdate: publicProcedure
     .input(
-      z.object({
-        projectId: z.string(),
-        columnGroupId: z.number(),
-        id: z.number(),
+      measurementSchema.pick({
+        projectId: true,
+        id: true,
+        columnGroupId: true,
       })
     )
     .subscription(({ input }) => createSubscription({
@@ -71,14 +66,16 @@ export const columnRouter = router({
       ),
     })),
   add: publicProcedure
-    .input(measurementColumnSchema.omit({ id: true }))
+    .input(
+      measurementSchema.omit({ id: true })
+    )
     .mutation(async ({ input }) => {
       const newValue = await add(input);
       ee.emit('onAdd', newValue);
     }),
   onAdd: publicProcedure
     .input(
-      measurementColumnSchema.pick({
+      measurementSchema.pick({
         projectId: true,
         columnGroupId: true,
       })
@@ -87,13 +84,13 @@ export const columnRouter = router({
       eventEmitter: ee,
       eventName: 'onAdd',
       filter: data => (
-        data.projectId === input.projectId
+           data.projectId === input.projectId
         && data.columnGroupId === input.columnGroupId
       ),
     })),
   remove: publicProcedure
     .input(
-      measurementColumnSchema.pick({
+      measurementSchema.pick({
         projectId: true,
         columnGroupId: true,
         id: true,
@@ -105,7 +102,7 @@ export const columnRouter = router({
     }),
   onRemove: publicProcedure
     .input(
-      measurementColumnSchema.pick({
+      measurementSchema.pick({
         projectId: true,
         columnGroupId: true,
       })
