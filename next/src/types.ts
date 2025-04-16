@@ -32,6 +32,8 @@ export type Measurement = typeof measurements.$inferSelect;
 export type MeasurementColumnGroupWithColumns =
   MeasurementColumnGroup & { columns: MeasurementColumn[] };
 
+export type MeasurementColumnGroupWithColumnsAndData =
+  MeasurementColumnGroupWithColumns & { data: Measurement[] };
 
 export type ProjectCategoriesColumns = NonNullable<
   Awaited<ReturnType<typeof getProjectData>>

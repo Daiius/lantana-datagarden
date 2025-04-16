@@ -1,44 +1,43 @@
 'use client'
 
-import React from 'react';
 import clsx from 'clsx';
 
+import type {
+  MeasurementColumn,
+  Measurement,
+} from '@/types';
+
 import {
-  Table as TanstackTable,
-  Column as TanstackColumn,
-  Row as TanstackRow,
+  Row,
+  Table,
 } from '@tanstack/react-table';
-import {
-  IconMinus
-} from '@tabler/icons-react';
 
-import type { Data, Column } from '@/types';
+import  { IconMinus } from '@tabler/icons-react';
 
-import { useData } from '@/hooks/useData';
+import { useMeasurement } from '@/hooks/useMeasurement';
+import { useMeasurementMutations } from '@/hooks/useMeasurementMutations';
 import DebouncedInput from '@/components/common/DebouncedInput';
 
-type TableCellProps = {
-  column: Column;
-  tanstackColumn: TanstackColumn<Data>;
-  row: TanstackRow<Data>;
-  table: TanstackTable<Data>;
+
+export type MeasurementTableCellProps = {
+  column: MeasurementColumn;
+  row: Row<Measurement>;
+  table: Table<Measurement>;
+
   className?: string;
 }
 
-const TableCell = ({
-  row,
+const MeasurementTableCell = ({
   column,
-  tanstackColumn,
+  row,
   table,
   className,
-}: TableCellProps) => {
-  const { id, projectId, columnGroupId } = row.original;
-  // 参照のみ
-  const { data, update } = useData({
-    id, projectId, columnGroupId,
+}: MeasurementTableCellProps) => {
+  const { data } = useMeasurement({
+    initialData: row.original,
     useSubscription: false,
   });
-  if (data == null) return <div>loading...</div>
+  const { update } = useMeasurementMutations();
   if (!(column.name in data.data)) {
     return <IconMinus className='size-3 ml-auto mr-auto'/>
   }
@@ -57,8 +56,9 @@ const TableCell = ({
         })
       }
     />
+    
   );
 };
 
-export default TableCell;
+export default MeasurementTableCell;
 
