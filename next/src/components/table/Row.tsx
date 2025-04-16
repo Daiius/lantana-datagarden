@@ -23,7 +23,6 @@ type RowProps = {
 }
 
 const Row = ({
-  columns,
   row,
   followingColumnGroups,
   addData,
