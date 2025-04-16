@@ -96,7 +96,10 @@ export const columnRouter = router({
         id: true,
       })
     )
-    .mutation(async ({ input }) => await remove(input)),
+    .mutation(async ({ input }) => {
+      await remove(input);
+      ee.emit('onRemove', input);
+    }),
   onRemove: publicProcedure
     .input(
       measurementColumnSchema.pick({

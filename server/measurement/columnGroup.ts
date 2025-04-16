@@ -5,7 +5,7 @@ import mitt from 'mitt';
 
 import { 
   get,
-  //getWithColumns,
+  getWithColumns,
   list,
   listWithColumns,
   update,
@@ -75,6 +75,12 @@ export const columnGroupRouter = router({
     .mutation(async ({ input }) => {
       const newValue = await add(input);
       ee.emit('onAdd', newValue);
+
+      const newValueWithColumns = await getWithColumns({
+        projectId: newValue.projectId,
+        id: newValue.id,
+      });
+      ee.emit('onAddWithColumns', newValueWithColumns);
     }),
   onAdd: publicProcedure
     .input(
@@ -109,7 +115,10 @@ export const columnGroupRouter = router({
         id: true,
       })
     )
-    .mutation(async ({ input }) => await remove(input)),
+    .mutation(async ({ input }) => {
+      await remove(input);
+      ee.emit('onRemove', input);
+    }),
   onRemove: publicProcedure
     .input(
       z.object({ projectId: z.string() })
