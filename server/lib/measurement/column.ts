@@ -73,6 +73,9 @@ export const update = async (params: MeasurementColumn) => {
     columnGroupId: params.columnGroupId,
     id: params.id,
   });
+  if (newValue == null) throw new Error(
+    `cannot get updated measurementColumn ${params.id}`
+  );
 
   return newValue;
 };

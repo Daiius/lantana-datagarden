@@ -46,7 +46,10 @@ export const columnRouter = router({
     .query(async ({ input }) => await list(input)),
   update: publicProcedure
     .input(measurementColumnSchema)
-    .mutation(async ({ input }) => await update(input)),
+    .mutation(async ({ input }) => {
+      const newValue = await update(input);
+      ee.emit('onUpdate', newValue);
+    }),
   onUpdate: publicProcedure
     .input(
       z.object({

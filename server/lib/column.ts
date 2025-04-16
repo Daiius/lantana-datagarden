@@ -267,6 +267,9 @@ export const list = async ({
   });
 
 export const update = async (column: Column) => {
+
+  console.log('column.update() called!');
+
   const lastData = await db.query.columns.findFirst({
     where: and(
       eq(columns.id, column.id),
@@ -288,6 +291,7 @@ export const update = async (column: Column) => {
       oldName,
       newName,
     });
+    console.log('updateName called');
   }
   
   if (lastData.type !== column.type) {
@@ -301,9 +305,14 @@ export const update = async (column: Column) => {
       oldType,
       newType,
     });
+    console.log('updateType called!');
   }
 
-  const newColumn = await get(column);
+  const newColumn = await get({
+    projectId: column.projectId,
+    columnGroupId: column.columnGroupId,
+    id: column.id,
+  });
   if (newColumn == null) throw new Error(
     `cannot get updated column, ${column.id}`
   );
