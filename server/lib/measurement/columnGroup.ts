@@ -44,26 +44,38 @@ export const get = async ({
 }: {
   projectId: string;
   id: number;
-}) => await db.query.measurementColumnGroups.findFirst({
-  where: and(
-    eq(measurementColumnGroups.projectId, projectId),
-    eq(measurementColumnGroups.id, id),
-  )
-});
+}) => {
+  const value = await db.query.measurementColumnGroups.findFirst({
+    where: and(
+      eq(measurementColumnGroups.projectId, projectId),
+      eq(measurementColumnGroups.id, id),
+    )
+  });
+  if (value == null) throw new Error(
+    `cannot find columnGroup ${id}`
+  );
+  return value;
+}
 
 export const getWithColumns = async ({
   projectId,
   id,
-}: Pick<MeasurementColumnGroup, 'projectId'|'id'>) =>
-await db.query.measurementColumnGroups.findFirst({
-  where: and(
-    eq(measurementColumnGroups.projectId, projectId),
-    eq(measurementColumnGroups.id, id),
-  ),
-  with: {
-    columns: true
-  }
-});
+}: Pick<MeasurementColumnGroup, 'projectId'|'id'>) => {
+  const value = await db.query.measurementColumnGroups.findFirst({
+    where: and(
+      eq(measurementColumnGroups.projectId, projectId),
+      eq(measurementColumnGroups.id, id),
+    ),
+    with: {
+      columns: true
+    }
+  });
+  if (value == null) throw new Error(
+    `cannot find columnGroup ${id}`
+  );
+
+  return value;
+}
 
 export const update = async (
   params: MeasurementColumnGroup
