@@ -12,6 +12,8 @@ export const useMeasurementColumnGroupsWithColumns = ({
   const { data } = 
     trpc.measurement.columnGroup.listWithColumns.useQuery({ projectId });
 
+  const { mutateAsync: add } = 
+    trpc.measurement.columnGroup.add.useMutation();
   trpc.measurement.columnGroup.onAddWithColumns.useSubscription(
     { projectId },
     {
@@ -36,7 +38,6 @@ export const useMeasurementColumnGroupsWithColumns = ({
     }
   );
 
-  const { mutateAsync: add } = trpc.measurement.columnGroup.add.useMutation();
 
   return {
     data,
