@@ -148,8 +148,9 @@ export const validate = ({
   v: JsonData[number],
 }): boolean => {
 
+  // TODO 空欄も書き込むが、チェック時には検出するようにしたい
   if (v === null) {
-    return isOptional;
+    return true;//isOptional;
   }
 
   switch (type) {
