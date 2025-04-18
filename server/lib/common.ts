@@ -21,18 +21,11 @@ export const createSubscription = <
 }) =>
   observable<TEvents[typeof eventName]>(emit => {
     const handler = (data: TEvents[typeof eventName]) => {
-      console.log('handler called! %o', data);
       if (filter(data)) {
         emit.next(data);
-        console.log('emitted!');
       }
     };
     eventEmitter.on(eventName, handler);
-    console.log(
-      `number of onUpdate: ${
-        eventEmitter.all.get('onUpdate')?.length
-      }`
-    );
     return () => eventEmitter.off(eventName, handler);
   });
 
