@@ -4,7 +4,7 @@ import clsx from 'clsx';
 
 import type { Column } from '@/types';
 import { DataTypes } from '@/types';
-import DebouncedInput from '@/components/common/DebouncedInput';
+import Input from '@/components/common/Input';
 import DebouncedSelect from '@/components/common/DebouncedSelect';
 import Skeleton from '../common/Skeleton';
 import Button from '@/components/common/Button';
@@ -23,7 +23,7 @@ const Column = ({
   className,
 }: ColumnProps) => { 
   const {
-    column,
+    data: column,
     update,
     remove,
   } = useColumn({ initialColumn });
@@ -40,9 +40,9 @@ const Column = ({
         <label className='fieldset-label'>
           列名：
         </label>
-        <DebouncedInput
+        <Input
           value={column.name}
-          debouncedOnChange={async newValue =>
+          onChange={async newValue =>
             await update({ ...column, name: newValue as string })
           }
         />

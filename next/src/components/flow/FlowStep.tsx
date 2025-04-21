@@ -43,7 +43,7 @@ const FlowStep = ({
 }: FlowStepProps) => {
 
   const {
-    columnGroups: allColumnGroups,
+    data: allColumnGroups,
   } = useColumnGroups({
     projectId
   });
