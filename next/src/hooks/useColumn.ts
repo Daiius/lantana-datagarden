@@ -1,7 +1,12 @@
+import { useState, useEffect } from 'react';
+
 import {
   Column
 } from '@/types';
 import { trpc } from '@/providers/TrpcProvider';
+
+import { useColumnMutations } from '@/hooks/useColumnMutations';
+import { useDebouncedCallback } from 'use-debounce';
 
 
 export const useColumn = ({
@@ -9,32 +14,36 @@ export const useColumn = ({
 }: {
   initialColumn: Column
 }) => {
+
+  const [localData, setLocalData] = useState<Column>(initialColumn);
+  useEffect(() => setLocalData(initialColumn), [initialColumn]);
+
   const { projectId, columnGroupId, id } = initialColumn;
-  const utils = trpc.useUtils();
-  const { data: column } = trpc.column.get.useQuery(
-    { id, projectId, columnGroupId },
-    { enabled: false, initialData: initialColumn }
-  );
-  trpc.column.onUpdate.useSubscription(
+  trpc.condition.column.onUpdate.useSubscription(
     { id, projectId, columnGroupId }, 
     {
-      onData: data => {
-        utils.column.get.setData(
-          { id, projectId, columnGroupId },
-          data
-        );
-        console.log('useColumn update called! %o', data);
-      },
+      onData: data => setLocalData(data),
       onError: err => console.log(err),
     },
   );
-  const { mutateAsync: update } = 
-    trpc.column.update.useMutation();
-  const { mutateAsync: remove } =
-    trpc.column.remove.useMutation();
+
+  const {
+    update: updateDb,
+    remove,
+  } = useColumnMutations();
+
+  const debouncedUpdateDb = useDebouncedCallback(
+    async (newColumn: Column) => await updateDb(newColumn),
+    1_000,
+  );
+
+  const update = async (newColumn: Column) => {
+    setLocalData(newColumn);
+    await debouncedUpdateDb(newColumn);
+  };
 
   return {
-    column,
+    data: localData,
     update,
     remove,
   }

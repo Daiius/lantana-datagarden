@@ -13,16 +13,16 @@ export const useColumns = ({
   columnGroupId: ColumnGroup['id'];
 }) => {
   const utils = trpc.useUtils();
-  const { data } = trpc.column.list.useQuery(
+  const { data } = trpc.condition.column.list.useQuery(
     { projectId, columnGroupId },
     initialColumns
     ? { enabled: false, initialData: initialColumns }
     : { enabled: true }
   );
-  trpc.column.onAdd.useSubscription(
+  trpc.condition.column.onAdd.useSubscription(
     { projectId, columnGroupId },
     {
-      onData: newData => utils.column.list.setData(
+      onData: newData => utils.condition.column.list.setData(
         { projectId, columnGroupId },
         data == null
         ? [newData]
@@ -30,10 +30,10 @@ export const useColumns = ({
       ),
     }
   );
-  trpc.column.onRemove.useSubscription(
+  trpc.condition.column.onRemove.useSubscription(
     { projectId, columnGroupId },
     {
-      onData: newData => utils.column.list.setData(
+      onData: newData => utils.condition.column.list.setData(
         { projectId, columnGroupId },
         data == null
         ? []
@@ -41,7 +41,7 @@ export const useColumns = ({
       )
     }
   );
-  const { mutateAsync: addColumn } = trpc.column.add.useMutation();
+  const { mutateAsync: addColumn } = trpc.condition.column.add.useMutation();
 
   return {
     columns: data,

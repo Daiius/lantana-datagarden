@@ -7,22 +7,21 @@ export const useColumnGroups = ({
 }) => {
   // column関連のトップレベルのデータ取得
   // まとめてネストしたcolumnGroups, columns を取得する
-  const { data: columnGroups } = 
-    trpc.columnGroup.listNested.useQuery({ projectId });
+  const { data } = 
+    trpc.condition.columnGroup.listNested.useQuery({ projectId });
+  
   const utils = trpc.useUtils();
   // 数の変更や削除時に全読み込みしなおす
-  trpc.columnGroup.onUpdateList.useSubscription(
+  trpc.condition.columnGroup.onUpdateList.useSubscription(
     { projectId }, {
-      onData: data =>
-        utils.columnGroup.listNested.setData({ projectId }, data),
+      onData: newData =>
+        utils.condition.columnGroup.listNested.setData({ projectId }, newData),
       onError: err => console.error(err),
     }
   ); 
-  const { mutateAsync: addColumnGroup } = trpc.columnGroup.add.useMutation();
 
   return {
-    columnGroups,
-    addColumnGroup,
+    data,
   };
 };
 
