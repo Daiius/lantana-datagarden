@@ -54,13 +54,12 @@ export const projects = mysqlTable(
 
 
 const COLUMN_GROUP_NAME_LENGTH = 127 as const;
-//export const COLUMN_GROUP_TYPES = [
-//  'condition', 
-//  'measurement',
-//] as const;
 
 /**
  * ユーザが自由に設定できる列グループです
+ *
+ * 複数の列の集まりで、1つの工程や測定に相当し、
+ * 関連するデータ(Data)は主に表として表示されます
  */
 export const columnGroups = mysqlTable('ColumnGroups', {
   id:
@@ -82,6 +81,77 @@ export const columnGroups = mysqlTable('ColumnGroups', {
   sort:
     int('sort', { unsigned: true })
 });
+
+const MEASUREMENT_VISUAL_TYPES = [
+  'presence',
+  'statistics',
+  'full',
+] as const;
+
+/**
+ * ColumnGroup毎にどの測定をどう関連付けるか記録します
+ *
+ * あるColumnGroupに対して、
+ * - どの測定を関連付けるかmeasurementColumnGroupを指定
+ * - 表示方法（有/無、全部表示、統計データ...等々）
+ * を規定します
+ */
+export const columnGroupToMeasurements = mysqlTable(
+  'ColumnGroupToMeasurements',
+  {
+    id:
+      bigint('id', { mode: 'number', unsigned: true })
+        .notNull()
+        .autoincrement()
+        .primaryKey(),
+    projectId:
+      varchar('project_id', { length: PROJECT_ID_LENGTH })
+        .notNull()
+        .references(() => projects.id, { 
+          onDelete: 'restrict', onUpdate: 'cascade',
+        }),
+    /**
+     * condition と measurement を結びつける、
+     * condition側のcolumnGroupIdです
+     */
+    columnGroupId:
+      bigint('column_group_id', { mode: 'number', unsigned: true })
+        .notNull()
+        .references(() => columnGroups.id, {
+          onDelete: 'restrict', onUpdate: 'cascade' 
+        }),
+    /**
+     * condition と measurement を結びつける、
+     * measurement側のcolumnGroupIdです
+     */
+    measurementColumnGroupId:
+      bigint(
+        'measurement_column_group_id', 
+        { mode: 'number', unsigned: true }
+      )
+      .notNull()
+      //.references(() => measurementColumnGroups.id, {
+      //  onDelete: 'restrict', onUpdate: 'cascade' 
+      //})
+      ,
+    visual:
+      varchar(
+        'visual', 
+        { length: 16, enum: MEASUREMENT_VISUAL_TYPES },
+      )
+      .notNull()
+      .default('presence'),
+  },
+  (table) => [
+    unique('cg_to_m_unique_key')
+      .on(table.columnGroupId, table.measurementColumnGroupId),
+    foreignKey({
+      name: 'cg_to_m_to_mcg_fk',
+      columns: [table.measurementColumnGroupId],
+      foreignColumns: [measurementColumnGroups.id],
+    }),
+  ],
+);
 
 const COLUMNS_NAME_LENGTH = 64 as const;
 export const COLUMNS_DATA_TYPES = [
@@ -356,15 +426,32 @@ export const projectRelations =
 // 本当は flow 関連でもrelationsを使用したいが、
 // JSON型で記録しているためにちょっと無理
 
-export const columnGroupRelations =
-  relations(columnGroups, ({ one, many }) => ({
+export const columnGroupRelations = relations(
+  columnGroups, 
+  ({ one, many }) => ({
     project: one(projects, {
       fields: [columnGroups.projectId],
       references: [projects.id],
     }),
     columns: many(columns),
     data: many(data),
-  }));
+    measurements: many(columnGroupToMeasurements), 
+  })
+);
+
+export const columnGroupToMeasurementRelations = relations(
+  columnGroupToMeasurements,
+  ({ one }) => ({
+    columnGroup: one(columnGroups, {
+      fields: [columnGroupToMeasurements.columnGroupId],
+      references: [columnGroups.id],
+    }),
+    measurements: one(measurementColumnGroups, {
+      fields: [columnGroupToMeasurements.measurementColumnGroupId],
+      references: [measurementColumnGroups.id],
+    }),
+  }),
+);
 
 export const columnRelations =
   relations(columns, ({ one }) => ({
@@ -388,14 +475,18 @@ export const dataRelations =
     measurements: many(measurements),
   }));
 
-export const measurementColumnGroupRelations =
-  relations(measurementColumnGroups, ({ one, many }) => ({
+export const measurementColumnGroupRelations = relations(
+  measurementColumnGroups, 
+  ({ one, many }) => ({
     project: one(projects, {
       fields: [measurementColumnGroups.projectId],
       references: [projects.id],
     }),
     columns: many(measurementColumns),
-  }));
+    data: many(measurements),
+    columnGroupToMeasurements: many(columnGroupToMeasurements)
+  })
+);
 
 export const measurementColumnRelations =
   relations(measurementColumns, ({ one }) => ({
@@ -410,6 +501,10 @@ export const measurementRelations =
     data: one(data, {
       fields: [measurements.dataId],
       references: [data.id],
-    })
+    }),
+    columnGroup: one(measurementColumnGroups, {
+      fields: [measurements.columnGroupId],
+      references: [measurementColumnGroups.id],
+    }),
   }));
 
