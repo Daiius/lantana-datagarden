@@ -8,6 +8,7 @@ import ColumnGroup from '@/components/column/ColumnGroup';
 import Button from '@/components/common/Button';
 
 import { useColumnGroups } from '@/hooks/useColumnGroups';
+import { useColumnGroupMutations } from '@/hooks/useColumnGroupMutations';
 
 type ColumnGroupsProps = {
   projectId: string;
@@ -21,12 +22,8 @@ const ColumnGroups = ({
   className,
 }: ColumnGroupsProps) => {
 
-  const {
-    columnGroups,
-    addColumnGroup,
-  } = useColumnGroups({
-    projectId
-  });
+  const { data: columnGroups } = useColumnGroups({ projectId });
+  const { add } = useColumnGroupMutations();
 
   if (columnGroups == null) return (
     <Skeleton />
@@ -49,7 +46,7 @@ const ColumnGroups = ({
       <div className='divider'></div>
       <Button 
         className='btn-success'
-        onClick={async () => await addColumnGroup({
+        onClick={async () => await add({
           name: '新しい列グループ',
           sort: null,
           projectId,

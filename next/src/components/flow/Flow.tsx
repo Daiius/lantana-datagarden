@@ -38,7 +38,7 @@ const Flow = ({
     initialFlow, 
   });
   const {
-    columnGroups
+    data: columnGroups
   } = useColumnGroups({ projectId });
 
   const handleAddFlowStep = async () => {

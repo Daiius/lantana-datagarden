@@ -12,12 +12,11 @@ import { useColumnGroup } from '@/hooks/useColumnGroup';
 
 import Button from '@/components/common/Button';
 import Columns from '@/components/column/Columns';
-import DebouncedInput from '@/components/common/DebouncedInput';
+import Input from '@/components/common/Input';
 
-type ColumnGroupWithColumns = ColumnGroup & { columns: Column[] };
 
 type ColumnGroupProps = {
-  columnGroup: ColumnGroupWithColumns
+  columnGroup: ColumnGroup
 
   className?: string;
 };
@@ -29,11 +28,11 @@ const ColumnGroup = ({
 
   const { id, projectId } = initialColumnGroup;
   const {
-    columnGroup,
-    updateColumnGroup,
-    deleteColumnGroup,
+    data: columnGroup,
+    update,
+    remove,
   } = useColumnGroup({
-    initialColumnGroup
+    initialData: initialColumnGroup
   });
 
   return (
@@ -50,10 +49,10 @@ const ColumnGroup = ({
           <label className='fieldset-label'>
             列グループ名:
           </label>
-          <DebouncedInput
+          <Input
             value={columnGroup.name}
-            debouncedOnChange={async newValue =>
-              await updateColumnGroup(
+            onChange={async newValue =>
+              await update(
                 { ...columnGroup, name: newValue as string }
               )
             }
@@ -61,9 +60,10 @@ const ColumnGroup = ({
         </fieldset>
         <Button 
           className='text-error ms-auto'
-          onClick={async () => await deleteColumnGroup(
-            { ...columnGroup }
-          )}
+          onClick={async () => await remove({ 
+            id: columnGroup.id,
+            projectId: columnGroup.projectId,
+          })}
         >
           <IconTrash />
         </Button>
@@ -73,6 +73,21 @@ const ColumnGroup = ({
         columnGroupId={id}
         initialColumns={columnGroup.columns} 
       />
+      <div className='divider'/>
+      <div>
+        {columnGroup.measurements.map(m =>
+          <div key={m.id}>
+            <pre>{JSON.stringify(m)}</pre>
+          </div>
+        )}
+        <Button 
+          className='btn-soft btn-accent'
+          onClick={async () => {
+          }}
+        >
+          測定追加
+        </Button>
+      </div>
     </div>
   );
 };
