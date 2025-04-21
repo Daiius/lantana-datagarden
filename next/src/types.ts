@@ -13,17 +13,13 @@ import type {
   getProjectData
 } from '@/lib';
 
-import { inferRouterOutputs } from '@trpc/server';
-import type { AppRouter } from '@/providers/TrpcProvider';
 
 export type ArrayElement<T> = T extends (infer U)[] ? U : never;
 
-export type Project     = inferRouterOutputs<AppRouter>['project']['get'];
-export type Flow        = inferRouterOutputs<AppRouter>['flow']['get'];
+export type Project     = typeof projects.$inferSelect;
+export type Flow        = typeof flows.$inferSelect;
 
-export type ColumnGroup = ArrayElement<
-  inferRouterOutputs<AppRouter>['condition']['columnGroup']['listNested']
->;
+export type ColumnGroup = typeof columnGroups.$inferSelect;
 export type Column      = typeof columns.$inferSelect;
 export type Data        = typeof data.$inferSelect;
 
@@ -47,12 +43,9 @@ export type FlowColumnGroups =
   & { columnGroups: ColumnGroup[][] };
 
 
-export type FlowWithData = inferRouterOutputs<AppRouter>['flow']['getNestedWithData'];
-export type FlowStepWithData = ArrayElement<FlowWithData['flowSteps']>;
-export type ColumnGroupWithGrouping = ArrayElement<FlowStepWithData['columnGroupWithGroupings']>;
-
 export { 
   COLUMNS_DATA_TYPES as DataTypes,
+  MEASUREMENT_VISUAL_TYPES as MeasurementVisuals,
   validate,
 } from 'database/db/schema';
 
