@@ -82,7 +82,7 @@ export const columnGroups = mysqlTable('ColumnGroups', {
     int('sort', { unsigned: true })
 });
 
-const MEASUREMENT_VISUAL_TYPES = [
+export const MEASUREMENT_VISUAL_TYPES = [
   'presence',
   'statistics',
   'full',
