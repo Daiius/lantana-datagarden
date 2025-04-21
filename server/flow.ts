@@ -6,7 +6,7 @@ type Flow = typeof flows.$inferSelect;
 
 import { z } from 'zod';
 
-import { router, publicProcedure } from '../trpc';
+import { router, publicProcedure } from './trpc';
 import { createSelectSchema } from 'drizzle-zod';
 import { observable, } from '@trpc/server/observable';
 import { 
@@ -18,9 +18,9 @@ import {
   getNested,
   getNestedWithData,
   listNested,
-} from '../lib/flow';
+} from './lib/flow';
 
-import { createSubscription } from '../lib/common';
+import { createSubscription } from './lib/common';
 
 const groupingSchema = z.union([
   z.object({

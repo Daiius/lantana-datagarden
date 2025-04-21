@@ -10,34 +10,51 @@ import { eq, and, asc } from 'drizzle-orm';
 import * as schema from 'database/db/schema';
 import { MySql2Database } from 'drizzle-orm/mysql2';
 
-type ColumnGroup = typeof columnGroups.$inferSelect;
+export type ColumnGroup = typeof columnGroups.$inferSelect;
 
 export const get = async (
   { id, projectId }
   : Pick<ColumnGroup, 'id' | 'projectId'>
-) =>
-  await db.query.columnGroups.findFirst({
-    where: and(
-      eq(columnGroups.id, id),
-      eq(columnGroups.projectId, projectId)
-    ),
-  });
+) => {
+  const value = await db.query.columnGroups.findFirst({
+    where: 
+      and(
+        eq(columnGroups.id, id),
+        eq(columnGroups.projectId, projectId)
+      ),
+    }
+  );
+  if (value == null) throw new Error(
+    `cannot find columnGroup ${id}`
+  );
+  return value;
+}
 
 export const getNested = async (
   { id, projectId }: Pick<ColumnGroup, 'id' | 'projectId'>
-) =>
-  await db.query.columnGroups.findFirst({
-    where: and(
-      eq(columnGroups.projectId, projectId),
-      eq(columnGroups.id, id),
-    ),
+) => {
+  const value = await db.query.columnGroups.findFirst({
+    where: 
+      and(
+        eq(columnGroups.projectId, projectId),
+        eq(columnGroups.id, id),
+      ),
     with: {
       columns: {
         orderBy: [asc(columns.id)]
-      }
+      },
+      measurements: true, /*{
+        with: {
+          measurements: true
+        }
+      },*/
     }
   });
-
+  if (value == null) throw new Error(
+    `cannot find columnGroup ${id}`
+  );
+  return value;
+}
 
 
 export const list = async (
@@ -57,7 +74,12 @@ export const listNested = async ({
     with: {
       columns: {
         orderBy: [asc(columns.id)],
-      }
+      },
+      measurements: true, /*{
+        with: {
+          measurements: true,
+        }
+      },*/
     }
   });
 

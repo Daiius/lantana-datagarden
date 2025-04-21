@@ -13,13 +13,18 @@ type Flow = typeof flows.$inferSelect;
 export const get = async ({
   projectId,
   id,
-}: Pick<Flow, 'id' | 'projectId'>) => 
-  await db.query.flows.findFirst({
+}: Pick<Flow, 'id' | 'projectId'>) => {
+  const value = await db.query.flows.findFirst({
     where: and(
       eq(flows.id, id),
       eq(flows.projectId, projectId),
     ),
   });
+  if (value == null) throw new Error(
+    `cannot find flow ${id}`
+  );
+  return value;
+}
 
 
 export const list = async ({
