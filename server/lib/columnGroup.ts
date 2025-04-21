@@ -9,8 +9,11 @@ import {
 import { eq, and, asc } from 'drizzle-orm';
 import * as schema from 'database/db/schema';
 import { MySql2Database } from 'drizzle-orm/mysql2';
+import { createSelectSchema } from 'drizzle-zod';
 
 export type ColumnGroup = typeof columnGroups.$inferSelect;
+
+export const columnGroupSchema = createSelectSchema(columnGroups);
 
 export const get = async (
   { id, projectId }
