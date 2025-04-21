@@ -13,7 +13,7 @@ import { router, publicProcedure } from '../trpc';
 import mitt from 'mitt';
 import {
   get,
-  //getNested,
+  getNested,
   list,
   listNested,
   update,
@@ -29,7 +29,8 @@ type ColumnGroup = typeof columnGroups.$inferSelect;
 type Column = typeof columns.$inferSelect;
 
 
-type NestedColumnGroup = ColumnGroup & { columns: Column[] };
+type NestedColumnGroup = Awaited<ReturnType<typeof getNested>>;
+
 
 type ColumnGroupEvents = {
   onAdd: NestedColumnGroup;

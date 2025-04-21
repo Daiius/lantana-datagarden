@@ -7,7 +7,7 @@ import { eq, and } from 'drizzle-orm';
 
 import { z } from 'zod';
 
-import { router, publicProcedure } from '../trpc';
+import { router, publicProcedure } from './trpc';
 
 import mitt from 'mitt';
 type TableEvents = {
