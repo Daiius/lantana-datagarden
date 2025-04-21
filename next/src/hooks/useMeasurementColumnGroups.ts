@@ -5,24 +5,21 @@ export type UseMeasurementColumNGroupsArgs = {
   projectId: string;
 }
 
-/**
- * TODO なぜかtRPC型伝搬が出来ない
- */
 export const useMeasurementColumnGroups = ({
   projectId
 }: UseMeasurementColumNGroupsArgs) => {
   const utils = trpc.useUtils();
-  const { data: measurementColumnGroups } = 
+  const { data } = 
     trpc.measurement.columnGroup.list.useQuery({ projectId });
 
   trpc.measurement.columnGroup.onAdd.useSubscription(
     { projectId },
     {
-      onData: data => utils.measurement.columnGroup.list.setData(
+      onData: newData => utils.measurement.columnGroup.list.setData(
         { projectId },
-        measurementColumnGroups == null
-        ? [data]
-        : [...measurementColumnGroups, data]
+        data == null
+        ? [newData]
+        : [...data, newData]
       ),
     }
   );
@@ -30,20 +27,17 @@ export const useMeasurementColumnGroups = ({
   trpc.measurement.columnGroup.onRemove.useSubscription(
     { projectId },
     {
-      onData: data => utils.measurement.columnGroup.list.setData(
+      onData: newData => utils.measurement.columnGroup.list.setData(
         { projectId },
-        measurementColumnGroups == null
+        data == null
         ? []
-        : measurementColumnGroups.filter(mcg => mcg.id !== data.id)
+        : data.filter(mcg => mcg.id !== newData.id)
       )
     }
   );
 
-  const { mutateAsync: addMeasurementColumnGroup } = trpc.measurement.columnGroup.add.useMutation();
-
   return {
-    measurementColumnGroups,
-    addMeasurementColumnGroup,
+    data,
   }
 };
 

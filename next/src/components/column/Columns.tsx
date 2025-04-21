@@ -4,10 +4,6 @@ import React from 'react';
 import clsx from 'clsx';
 
 
-import type {
-  Column as ColumnType
-} from '@/types';
-
 import Column from '@/components/column/Column';
 import Button from '@/components/common/Button';
 
@@ -16,7 +12,7 @@ import { useColumns } from '@/hooks/useColumns';
 type ColumnsProps = {
   projectId: string;
   columnGroupId: number;
-  initialColumns: ColumnType[]; 
+  //initialColumns: ColumnType[]; 
 
   className?: string;
 };
@@ -24,7 +20,7 @@ type ColumnsProps = {
 const Columns = ({
   columnGroupId,
   projectId,
-  initialColumns,
+  //initialColumns,
   className,
 }: ColumnsProps) => {
 
@@ -32,7 +28,7 @@ const Columns = ({
     columns,
     addColumn,
   } = useColumns({
-    initialColumns,
+    //initialColumns,
     projectId,
     columnGroupId,
   });

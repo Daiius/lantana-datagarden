@@ -5,20 +5,32 @@ export const useColumnGroups = ({
 }: {
   projectId: string;
 }) => {
-  // column関連のトップレベルのデータ取得
-  // まとめてネストしたcolumnGroups, columns を取得する
   const { data } = 
-    trpc.condition.columnGroup.listNested.useQuery({ projectId });
+    trpc.condition.columnGroup.list.useQuery({ projectId });
   
   const utils = trpc.useUtils();
-  // 数の変更や削除時に全読み込みしなおす
-  trpc.condition.columnGroup.onUpdateList.useSubscription(
-    { projectId }, {
-      onData: newData =>
-        utils.condition.columnGroup.listNested.setData({ projectId }, newData),
-      onError: err => console.error(err),
+  trpc.condition.columnGroup.onAdd.useSubscription(
+    { projectId },
+    {
+      onData: newData => utils.condition.columnGroup.list.setData(
+        { projectId },
+        data == null
+        ? [newData]
+        : [...data, newData]
+      ),
     }
-  ); 
+  );
+  trpc.condition.columnGroup.onRemove.useSubscription(
+    { projectId },
+    {
+      onData: info => utils.condition.columnGroup.list.setData(
+        { projectId },
+        data == null
+        ? []
+        : data.filter(d => d.id !== info.id)
+      ),
+    }
+  );
 
   return {
     data,

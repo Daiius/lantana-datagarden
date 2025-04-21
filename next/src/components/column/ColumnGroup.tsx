@@ -14,6 +14,8 @@ import Button from '@/components/common/Button';
 import Columns from '@/components/column/Columns';
 import Input from '@/components/common/Input';
 
+import { Measurements } from '@/components/column/Measurements';
+
 
 type ColumnGroupProps = {
   columnGroup: ColumnGroup
@@ -71,23 +73,13 @@ const ColumnGroup = ({
       <Columns 
         projectId={projectId}
         columnGroupId={id}
-        initialColumns={columnGroup.columns} 
+        //initialColumns={columnGroup.columns} 
       />
       <div className='divider'/>
-      <div>
-        {columnGroup.measurements.map(m =>
-          <div key={m.id}>
-            <pre>{JSON.stringify(m)}</pre>
-          </div>
-        )}
-        <Button 
-          className='btn-soft btn-accent'
-          onClick={async () => {
-          }}
-        >
-          測定追加
-        </Button>
-      </div>
+      <Measurements
+        projectId={columnGroup.projectId}
+        columnGroupId={columnGroup.id}
+      />
     </div>
   );
 };
