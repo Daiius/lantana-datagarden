@@ -16,10 +16,14 @@ import type {
 import { inferRouterOutputs } from '@trpc/server';
 import type { AppRouter } from '@/providers/TrpcProvider';
 
-export type Project     = typeof projects.$inferSelect;
-export type Flow        = typeof flows.$inferSelect;
+export type ArrayElement<T> = T extends (infer U)[] ? U : never;
 
-export type ColumnGroup = typeof columnGroups.$inferSelect;
+export type Project     = inferRouterOutputs<AppRouter>['project']['get'];
+export type Flow        = inferRouterOutputs<AppRouter>['flow']['get'];
+
+export type ColumnGroup = ArrayElement<
+  inferRouterOutputs<AppRouter>['condition']['columnGroup']['listNested']
+>;
 export type Column      = typeof columns.$inferSelect;
 export type Data        = typeof data.$inferSelect;
 
@@ -42,7 +46,6 @@ export type FlowColumnGroups =
   Omit<Flow, 'columnGroups'> 
   & { columnGroups: ColumnGroup[][] };
 
-export type ArrayElement<T> = T extends (infer U)[] ? U : never;
 
 export type FlowWithData = inferRouterOutputs<AppRouter>['flow']['getNestedWithData'];
 export type FlowStepWithData = ArrayElement<FlowWithData['flowSteps']>;
