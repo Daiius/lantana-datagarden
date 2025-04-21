@@ -5,7 +5,7 @@ import { trpc, AppRouter } from '@/providers/TrpcProvider';
 
 import type { Data } from '@/types';
 
-type DataListInputs = inferRouterInputs<AppRouter>['data']['list'];
+type DataListInputs = inferRouterInputs<AppRouter>['condition']['data']['list'];
 
 type UseDataListArgs = DataListInputs
   & { initialDataList?: Data[]; };
@@ -20,16 +20,16 @@ export const useDataList = ({
     data: dataList, 
     error,
     isLoading 
-  } = trpc.data.list.useQuery(
+  } = trpc.condition.data.list.useQuery(
     { projectId, columnGroupId },
     initialDataList == null
     ? { enabled: true }
     : { enabled: false, initialData: initialDataList }
   );
-  trpc.data.onAdd.useSubscription(
+  trpc.condition.data.onAdd.useSubscription(
     { projectId, columnGroupId },
     {
-      onData: data => utils.data.list.setData(
+      onData: data => utils.condition.data.list.setData(
         { projectId, columnGroupId },
         dataList == null
         ? [data]
@@ -38,17 +38,17 @@ export const useDataList = ({
      onError: err => console.error(err),
     } 
   );
-  trpc.data.onRemove.useSubscription(
+  trpc.condition.data.onRemove.useSubscription(
     { projectId, columnGroupId },
     {
-      onData: data => utils.data.list.setData(
+      onData: data => utils.condition.data.list.setData(
         { projectId, columnGroupId },
         dataList?.filter(x => x.id !== data.id) ?? []
       ),
       onError: err => console.error(err),
     }
   );
-  const { mutateAsync: add } = trpc.data.add.useMutation();
+  const { mutateAsync: add } = trpc.condition.data.add.useMutation();
 
   return {
     dataList,

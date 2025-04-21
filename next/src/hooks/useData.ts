@@ -19,17 +19,17 @@ export const useData = ({
   useSubscription = true,
 }: UseDataArgs) => {
   const utils = trpc.useUtils();
-  const { data, error, isLoading } = trpc.data.get.useQuery(
+  const { data, error, isLoading } = trpc.condition.data.get.useQuery(
     { id, projectId, columnGroupId },
     initialData == null
     ? { enabled: true }
     : { enabled: false, initialData }
   );
   if (useSubscription) {
-  trpc.data.onUpdate.useSubscription(
+  trpc.condition.data.onUpdate.useSubscription(
     { id, projectId, columnGroupId },
     {
-      onData: data => utils.data.get.setData(
+      onData: data => utils.condition.data.get.setData(
         { id, projectId, columnGroupId },
         data
       ),
@@ -37,8 +37,8 @@ export const useData = ({
     }
   );
   }
-  const { mutateAsync: update } = trpc.data.update.useMutation();
-  const { mutateAsync: remove } = trpc.data.remove.useMutation();
+  const { mutateAsync: update } = trpc.condition.data.update.useMutation();
+  const { mutateAsync: remove } = trpc.condition.data.remove.useMutation();
 
   return {
     data,
