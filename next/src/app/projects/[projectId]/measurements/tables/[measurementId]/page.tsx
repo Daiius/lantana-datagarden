@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 
 import Header from '@/components/header/Header';
-import MeasurementTable from '@/components/measurements/MeasurementTable';
+import { MeasurementTable } from '@/components/measurements/MeasurementTable';
 import { MeasurementSelectLink } from '@/components/measurements/MeasurementColumnGroupSelectLink';
 
 export default async function MeasurementTablePage(
@@ -16,6 +16,10 @@ export default async function MeasurementTablePage(
         <MeasurementSelectLink
           projectId={projectId}
           defaultId={Number(measurementId)}
+        />
+        <MeasurementTable
+          projectId={projectId}
+          columnGroupId={Number(measurementId)}
         />
       </div>
     </div>
