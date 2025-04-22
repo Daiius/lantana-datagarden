@@ -2,27 +2,21 @@
 
 import { trpc } from '@/providers/TrpcProvider';
 
-import type {
-  Measurement
-} from '@/types';
 
 export type UseMeasurementsArgs = {
   projectId: string;
   columnGroupId: number;
-  initialData: Measurement[];
 }
 
 export const useMeasurements = ({
   projectId,
   columnGroupId,
-  initialData,
 }: UseMeasurementsArgs) => {
   
   const utils = trpc.useUtils();
 
   const { data } = trpc.measurement.data.list.useQuery(
     { projectId, columnGroupId },
-    { initialData, enabled: false },
   );
 
   trpc.measurement.data.onAdd.useSubscription(
@@ -30,7 +24,9 @@ export const useMeasurements = ({
     {
       onData: newData => utils.measurement.data.list.setData(
         { projectId, columnGroupId },
-        [...data, newData],
+        data
+        ? [...data, newData]
+        : [newData],
       )
     }
   );
@@ -40,7 +36,7 @@ export const useMeasurements = ({
     {
       onData: info => utils.measurement.data.list.setData(
         { projectId, columnGroupId },
-        data.filter(d => d.id !== info.id)
+        data?.filter(d => d.id !== info.id)
       )
     }
   );
