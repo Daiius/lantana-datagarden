@@ -1,6 +1,9 @@
 'use client' // for trpc hooks
 
 import { trpc } from '@/providers/TrpcProvider';
+import debug from 'debug';
+
+const log = debug('event');
 
 export type UseColumnGroupMeasurementsArgs = {
   projectId: string;
@@ -18,12 +21,15 @@ export const useColumnGroupMeasurements = ({
   trpc.condition.columnGroupMeasurement.onUpdate.useSubscription(
     { projectId, columnGroupId },
     {
-      onData: newData => utils.condition.columnGroupMeasurement.list.setData(
-        { projectId, columnGroupId },
-        data == null
-        ? [newData]
-        : data.map(d => d.id === newData.id ? newData : d)
-      )
+      onData: newData => {
+        log('useColumnGroupMeasurements:onUpdate:onData %o', newData);
+        utils.condition.columnGroupMeasurement.list.setData(
+          { projectId, columnGroupId },
+          data == null
+          ? [newData]
+          : data.map(d => d.id === newData.id ? newData : d)
+        );
+      }
     }
   );
 
