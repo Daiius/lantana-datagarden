@@ -23,7 +23,7 @@ const ColumnGroupSelect = ({
   // TODO columnsまで取得する豪華バージョンなので
   // 簡易化しても良いかも
   const {
-    columnGroups
+    data: columnGroups
   } = useColumnGroups({
     projectId
   });
