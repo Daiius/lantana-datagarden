@@ -5,7 +5,7 @@ import type {
 } from '@/types';
 import { DataTypes } from '@/types';
 
-import { useMeasurementColumn } from '@/hooks/useMeasurementColumn';
+import { useMeasurementColumnMutations } from '@/hooks/useMeasurementColumnMutations';
 
 import {
   IconTrash
@@ -13,26 +13,25 @@ import {
 
 import Button from '@/components/common/Button';
 import DebouncedInput from '@/components/common/DebouncedInput';
-import DebouncedSelect from '@/components/common/DebouncedSelect';
+import { Select } from '@/components/common/Select';
 import Skeleton from '@/components/common/Skeleton';
 
 export type MeasurementColumnProps = {
-  initialValue: MeasurementColumnType
+  column: MeasurementColumnType
 
   className?: string;
 }
 
 const MeasurementColumn = ({
-  initialValue,
+  column,
   className,
 }: MeasurementColumnProps) => {
-  const { 
-    data: column,
+
+  // TODO 内部でstateを保持し、debounceしてDBに同期する仕組みが必要
+  const {
     update,
     remove,
-  } = useMeasurementColumn({ 
-    initialData: initialValue
-  });
+  } = useMeasurementColumnMutations();
 
   if (column == null) return (
     <Skeleton />
@@ -57,13 +56,17 @@ const MeasurementColumn = ({
         <label className='fieldset-label'>
           型：
         </label>
-        <DebouncedSelect
+        <Select
           value={column.type}
-          options={DataTypes}
-          debouncedOnChange={async (newValue) => {
-            await update({ ...column, type: newValue })
+          onChange={async (newValue) => {
+            newValue &&
+              await update({ ...column, type: newValue as typeof DataTypes[number] });
           }}
-        />
+        >
+          {DataTypes.map(dataType =>
+            <option value={dataType}>{dataType}</option>
+          )}
+        </Select>
       </fieldset>
       {/* TODO 手動で位置を調整してしまっている...... */}
       <Button 
