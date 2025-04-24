@@ -52,6 +52,13 @@ export const projects = mysqlTable(
   },
 );
 
+const projectIdReference = 
+  varchar('project_id', { length: PROJECT_ID_LENGTH })
+    .notNull()
+    .references(() => projects.id, { 
+      onDelete: 'restrict', onUpdate: 'cascade',
+    });
+
 
 const COLUMN_GROUP_NAME_LENGTH = 127 as const;
 
@@ -67,12 +74,7 @@ export const columnGroups = mysqlTable('ColumnGroups', {
       .notNull()
       .autoincrement()
       .primaryKey(),
-  projectId:
-    varchar('project_id', { length: PROJECT_ID_LENGTH })
-      .notNull()
-      .references(() => projects.id, { 
-        onDelete: 'restrict', onUpdate: 'cascade',
-      }),
+  projectId: projectIdReference,
   name:
     varchar('name', { length: COLUMN_GROUP_NAME_LENGTH })
       .notNull()
@@ -81,6 +83,13 @@ export const columnGroups = mysqlTable('ColumnGroups', {
   sort:
     int('sort', { unsigned: true })
 });
+
+const columnGroupIdReference = 
+  bigint('column_group_id', { mode: 'number', unsigned: true })
+    .notNull()
+    .references(() => columnGroups.id, {
+      onDelete: 'restrict', onUpdate: 'cascade' 
+    });
 
 export const MEASUREMENT_VISUAL_TYPES = [
   'presence',
@@ -104,31 +113,12 @@ export const columnGroupToMeasurements = mysqlTable(
         .notNull()
         .autoincrement()
         .primaryKey(),
-    projectId:
-      varchar('project_id', { length: PROJECT_ID_LENGTH })
-        .notNull()
-        .references(() => projects.id, { 
-          onDelete: 'restrict', onUpdate: 'cascade',
-        }),
-    /**
-     * condition と measurement を結びつける、
-     * condition側のcolumnGroupIdです
-     */
-    columnGroupId:
-      bigint('column_group_id', { mode: 'number', unsigned: true })
-        .notNull()
-        .references(() => columnGroups.id, {
-          onDelete: 'restrict', onUpdate: 'cascade' 
-        }),
-    /**
-     * condition と measurement を結びつける、
-     * measurement側のcolumnGroupIdです
-     */
+    projectId: projectIdReference,
+    /** condition と measurement を結びつける、condition側のcolumnGroupIdです */
+    columnGroupId: columnGroupIdReference,
+    /** condition と measurement を結びつける、measurement側のcolumnGroupIdです */
     measurementColumnGroupId:
-      bigint(
-        'measurement_column_group_id', 
-        { mode: 'number', unsigned: true }
-      )
+      bigint('measurement_column_group_id', { mode: 'number', unsigned: true })
       .notNull()
       //.references(() => measurementColumnGroups.id, {
       //  onDelete: 'restrict', onUpdate: 'cascade' 
@@ -173,18 +163,8 @@ export const columns = mysqlTable('Columns', {
       .notNull()
       .autoincrement()
       .primaryKey(),
-  columnGroupId:
-    bigint('column_group_id', { mode: 'number', unsigned: true })
-      .notNull()
-      .references(() => columnGroups.id, {
-        onDelete: 'restrict', onUpdate: 'cascade' 
-      }),
-  projectId:
-    varchar('project_id', { length: PROJECT_ID_LENGTH })
-      .notNull()
-      .references(() => projects.id, { 
-        onDelete: 'restrict', onUpdate: 'cascade',
-      }),
+  projectId: projectIdReference,
+  columnGroupId: columnGroupIdReference,
   name:
     varchar('name', { length: COLUMNS_NAME_LENGTH })
       .notNull()
@@ -247,18 +227,8 @@ export const data = mysqlTable(
         .notNull()
         .autoincrement()
         .primaryKey(),
-    columnGroupId:
-      bigint('column_group_id', { mode: 'number', unsigned: true })
-        .notNull()
-        .references(() => columnGroups.id, {
-          onDelete: 'cascade', onUpdate: 'cascade',
-        }),
-    projectId:
-      varchar('project_id', { length: PROJECT_ID_LENGTH })
-        .notNull()
-        .references(() => projects.id, { 
-          onDelete: 'restrict', onUpdate: 'cascade',
-        }),
+    projectId: projectIdReference,
+    columnGroupId: columnGroupIdReference,
     data:
       json('data').$type<JsonData>().notNull(),
 
@@ -280,18 +250,10 @@ const FLOW_NAME_LENGTH = 36;
 export type Grouping = 
   | { type: 'parent' }
   | { type: 'column'; columnName: string; }
-  | undefined;
 
 
-export type ColumnGroupWithGrouping = {
-  id: number;
-  grouping?: Grouping;
-}
+export const FlowStepModes = ['list', 'merge'] as const;
 
-export type FlowStep = {
-  columnGroupWithGroupings: ColumnGroupWithGrouping[];
-  mode: 'list' | 'merge';
-}
 
 /**
  * FlowはColumnGroupの繋がり・順番を規定します
@@ -304,20 +266,60 @@ export const flows = mysqlTable(
         .autoincrement()
         .notNull()
         .primaryKey(),
-    projectId:
-      varchar('project_id', { length: PROJECT_ID_LENGTH })
-        .notNull()
-        .references(() => projects.id, {
-          onDelete: 'cascade', onUpdate: 'cascade',
-        }),
+    projectId: projectIdReference,
     name:
       varchar('name', { length: FLOW_NAME_LENGTH })
         .notNull(),
-    flowSteps:
-      json('flow_steps')
+  }
+);
+
+/** Flowの1段階を表します */
+export const flowSteps = mysqlTable(
+  'FlowSteps',
+  {
+    id:
+      bigint('id', { mode: 'number', unsigned: true })
+        .autoincrement()
         .notNull()
-        .$type<FlowStep[]>()
-        .default([]),
+        .primaryKey(),
+    projectId: projectIdReference,
+    flowId:
+      bigint('flow_id', { mode: 'number', unsigned: true })
+        .notNull()
+        .references(() => flows.id, {
+          onUpdate: 'cascade', onDelete: 'cascade',
+        }),
+    mode:
+      varchar('mode', { length: 8, enum: FlowStepModes })
+        .notNull()
+        .default('list'),
+    sort:
+      int('sort', { unsigned: true }),
+  },
+);
+
+/** FlowStepに含まれるColumnGroupのid, 順番, グループ化方法を記録します */
+export const flowStepColumnGroups = mysqlTable(
+  'FlowStepColumnGroups',
+  {
+    id:
+      bigint('id', { mode: 'number', unsigned: true })
+        .autoincrement()
+        .notNull()
+        .primaryKey(),
+    projectId: projectIdReference,
+    flowStepId:
+      bigint('flow_step_id', { mode: 'number', unsigned: true })
+        .notNull()
+        .references(() => flowSteps.id, {
+          onDelete: 'cascade', onUpdate: 'cascade'
+        }),
+    columnGroupId: columnGroupIdReference,
+    grouping:
+      json('grouping')
+        .$type<Grouping|null>(),
+    sort:
+      int('sort', { unsigned: true }),
   }
 );
 
@@ -329,12 +331,7 @@ export const measurementColumnGroups = mysqlTable(
         .notNull()
         .autoincrement()
         .primaryKey(),
-    projectId:
-      varchar('project_id', { length: PROJECT_ID_LENGTH })
-        .notNull()
-        .references(() => projects.id, { 
-          onDelete: 'restrict', onUpdate: 'cascade',
-        }),
+    projectId: projectIdReference,
     name:
       varchar('name', { length: COLUMN_GROUP_NAME_LENGTH })
         .notNull()
@@ -345,6 +342,13 @@ export const measurementColumnGroups = mysqlTable(
   }
 );
 
+const measurementColumnGroupIdReference = 
+  bigint('column_group_id', { mode: 'number', unsigned: true })
+    .notNull()
+    .references(() => measurementColumnGroups.id, {
+      onDelete: 'restrict', onUpdate: 'cascade' 
+    });
+
 export const measurementColumns = mysqlTable(
   'MeasurementColumns',
   {
@@ -353,18 +357,8 @@ export const measurementColumns = mysqlTable(
         .notNull()
         .autoincrement()
         .primaryKey(),
-    columnGroupId:
-      bigint('column_group_id', { mode: 'number', unsigned: true })
-        .notNull()
-        .references(() => measurementColumnGroups.id, {
-          onDelete: 'restrict', onUpdate: 'cascade' 
-        }),
-    projectId:
-      varchar('project_id', { length: PROJECT_ID_LENGTH })
-        .notNull()
-        .references(() => projects.id, { 
-          onDelete: 'restrict', onUpdate: 'cascade',
-        }),
+    projectId: projectIdReference,
+    columnGroupId: measurementColumnGroupIdReference,
     name:
       varchar('name', { length: COLUMNS_NAME_LENGTH })
         .notNull()
@@ -396,18 +390,8 @@ export const measurements = mysqlTable(
         .autoincrement()
         .notNull()
         .primaryKey(),
-    columnGroupId:
-      bigint('column_group_id', { mode: 'number', unsigned: true })
-        .notNull()
-        .references(() => measurementColumnGroups.id, {
-          onDelete: 'cascade', onUpdate: 'cascade',
-        }),
-    projectId:
-      varchar('project_id', { length: PROJECT_ID_LENGTH })
-        .notNull()
-        .references(() => projects.id, {
-          onDelete: 'cascade', onUpdate: 'cascade',
-        }),
+    columnGroupId: measurementColumnGroupIdReference,
+    projectId: projectIdReference,
     data:
       json('data').$type<JsonData>().notNull(),
     dataId:
