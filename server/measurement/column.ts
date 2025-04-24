@@ -58,7 +58,6 @@ export const columnRouter = router({
       z.object({
         projectId: z.string(),
         columnGroupId: z.number(),
-        id: z.number(),
       })
     )
     .subscription(({ input }) => createSubscription({
@@ -67,7 +66,6 @@ export const columnRouter = router({
       filter: data => (
            data.projectId === input.projectId
         && data.columnGroupId === input.columnGroupId
-        && data.id === input.id
       ),
     })),
   add: publicProcedure

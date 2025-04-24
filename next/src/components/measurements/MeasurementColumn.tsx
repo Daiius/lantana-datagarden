@@ -1,37 +1,31 @@
 import clsx from 'clsx';
 
-import type {
-  MeasurementColumn as MeasurementColumnType,
-} from '@/types';
 import { DataTypes } from '@/types';
+import type { MeasurementColumn as MeasurementColumnType } from '@/types';
 
-import { useMeasurementColumnMutations } from '@/hooks/useMeasurementColumnMutations';
 
 import {
   IconTrash
 } from '@tabler/icons-react';
 
 import Button from '@/components/common/Button';
-import DebouncedInput from '@/components/common/DebouncedInput';
+import Input from '@/components/common/Input';
 import { Select } from '@/components/common/Select';
 import Skeleton from '@/components/common/Skeleton';
 
-export type MeasurementColumnProps = {
-  column: MeasurementColumnType
+import type { useMeasurementColumns } from '@/hooks/useMeasurementColumns';
 
-  className?: string;
-}
+export type MeasurementColumnProps = 
+  & { column: MeasurementColumnType; }
+  & Pick<ReturnType<typeof useMeasurementColumns>, 'remove'|'update'>
+  & { className?: string; };
 
 const MeasurementColumn = ({
   column,
+  update,
+  remove,
   className,
 }: MeasurementColumnProps) => {
-
-  // TODO 内部でstateを保持し、debounceしてDBに同期する仕組みが必要
-  const {
-    update,
-    remove,
-  } = useMeasurementColumnMutations();
 
   if (column == null) return (
     <Skeleton />
@@ -45,9 +39,9 @@ const MeasurementColumn = ({
         <label className='fieldset-label'>
           列名：
         </label>
-        <DebouncedInput
+        <Input
           value={column.name}
-          debouncedOnChange={async newValue => {
+          onChange={async newValue => {
             await update({ ...column, name: newValue as string })
           }}
         />
@@ -64,7 +58,7 @@ const MeasurementColumn = ({
           }}
         >
           {DataTypes.map(dataType =>
-            <option value={dataType}>{dataType}</option>
+            <option key={dataType} value={dataType}>{dataType}</option>
           )}
         </Select>
       </fieldset>

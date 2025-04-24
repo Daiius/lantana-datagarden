@@ -18,7 +18,7 @@ const MeasurementColumns = ({
   columnGroupId,
 }: MeasurementColumnsProps) => {
 
-  const { data: columns, add, } = useMeasurementColumns({
+  const { data: columns, add, update, remove } = useMeasurementColumns({
     projectId,
     columnGroupId,
   });
@@ -29,6 +29,8 @@ const MeasurementColumns = ({
         <MeasurementColumn
           key={column.id}
           column={column}
+          update={update}
+          remove={remove}
         />
       )}
       <Button
