@@ -1,42 +1,44 @@
-import { router, publicProcedure } from './trpc';
-import {
+
+import { router, publicProcedure } from '../trpc';
+import { 
   get,
   list,
   update,
   add,
   remove,
-  FlowStepColumnGroup,
-  flowStepColumnGroupSchema,
+  FlowStep,
+  flowStepSchema,
   Ids,
   ParentIds,
-} from './lib/flowStepColumnGroup';
+} from '../lib/flowStep';
+
+import { createSubscription } from '../lib/common';
+
+
 import mitt from 'mitt';
-import { createSubscription } from './lib/common';
+type FlowStepEvents = {
+  onUpdate: FlowStep,
+  onAdd: FlowStep,
+  onRemove: Ids,
+}
+export const ee = mitt<FlowStepEvents>();
 
-type FlowStepColumnGroupEvents = {
-  onUpdate: FlowStepColumnGroup;
-  onAdd: FlowStepColumnGroup;
-  onRemove: Ids;
-};
-const ee = mitt<FlowStepColumnGroupEvents>();
-
-const idsSchema = flowStepColumnGroupSchema.pick({
+const idsSchema = flowStepSchema.pick({
   projectId: true,
-  flowStepId: true,
+  flowId: true,
   id: true,
 });
-
-const parentIdsSchema = flowStepColumnGroupSchema.pick({
+const parentIdsSchema = flowStepSchema.pick({
   projectId: true,
-  flowStepId: true,
+  flowId: true,
 });
 
 const filter = (data: ParentIds, input: ParentIds) => (
-     data.projectId  === input.projectId
-  && data.flowStepId === input.flowStepId
+     data.projectId === input.projectId
+  && data.flowId === input.flowId
 );
 
-export const flowStepColumnGroupRouter = router({
+export const flowStepRouter = router({
   get: publicProcedure
     .input(idsSchema)
     .query(async ({ input }) => await get(input)),
@@ -44,7 +46,7 @@ export const flowStepColumnGroupRouter = router({
     .input(parentIdsSchema)
     .query(async ({ input }) => await list(input)),
   update: publicProcedure
-    .input(flowStepColumnGroupSchema)
+    .input(flowStepSchema)
     .mutation(async ({ input }) => {
       const newValue = await update(input);
       ee.emit('onUpdate', newValue);
@@ -57,9 +59,7 @@ export const flowStepColumnGroupRouter = router({
       filter: data => filter(data, input),
     })),
   add: publicProcedure
-    .input(
-      flowStepColumnGroupSchema.omit({ id :true })
-    )
+    .input(flowStepSchema.omit({ id: true })) 
     .mutation(async ({ input }) => {
       const newValue = await add(input);
       ee.emit('onAdd', newValue);

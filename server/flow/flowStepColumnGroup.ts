@@ -1,45 +1,42 @@
-
 import { router, publicProcedure } from '../trpc';
-
-import mitt from 'mitt';
 import {
   get,
   list,
   update,
   add,
   remove,
-  Data,
-  dataSchema,
+  FlowStepColumnGroup,
+  flowStepColumnGroupSchema,
   Ids,
   ParentIds,
-} from '../lib/data';
+} from '../lib/flowStepColumnGroup';
+import mitt from 'mitt';
 import { createSubscription } from '../lib/common';
 
-type DataEvents = {
-  onAdd: Data;
+type FlowStepColumnGroupEvents = {
+  onUpdate: FlowStepColumnGroup;
+  onAdd: FlowStepColumnGroup;
   onRemove: Ids;
-  onUpdate: Data;
-}
+};
+const ee = mitt<FlowStepColumnGroupEvents>();
 
-export const ee = mitt<DataEvents>();
-
-const idsSchema = dataSchema.pick({
+const idsSchema = flowStepColumnGroupSchema.pick({
   projectId: true,
-  columnGroupId: true,
+  flowStepId: true,
   id: true,
 });
 
-const parentIdsSchema = dataSchema.pick({
+const parentIdsSchema = flowStepColumnGroupSchema.pick({
   projectId: true,
-  columnGroupId: true,
+  flowStepId: true,
 });
 
 const filter = (data: ParentIds, input: ParentIds) => (
-     data.columnGroupId === input.columnGroupId
-  && data.projectId     === input.projectId
+     data.projectId  === input.projectId
+  && data.flowStepId === input.flowStepId
 );
 
-export const dataRouter = router({
+export const flowStepColumnGroupRouter = router({
   get: publicProcedure
     .input(idsSchema)
     .query(async ({ input }) => await get(input)),
@@ -47,38 +44,39 @@ export const dataRouter = router({
     .input(parentIdsSchema)
     .query(async ({ input }) => await list(input)),
   update: publicProcedure
-    .input(dataSchema)
+    .input(flowStepColumnGroupSchema)
     .mutation(async ({ input }) => {
-      const newData = await update(input);
-      ee.emit('onUpdate', newData);
+      const newValue = await update(input);
+      ee.emit('onUpdate', newValue);
     }),
-  // 特定 id のデータが更新されたことを通知するイベント
   onUpdate: publicProcedure
     .input(parentIdsSchema)
     .subscription(({ input }) => createSubscription({
-        eventEmitter: ee,
-        eventName: 'onUpdate',
-        filter: data => filter(data, input),
+      eventEmitter: ee,
+      eventName: 'onUpdate',
+      filter: data => filter(data, input),
     })),
   add: publicProcedure
-    .input(dataSchema.omit({ id: true }))
+    .input(
+      flowStepColumnGroupSchema.omit({ id :true })
+    )
     .mutation(async ({ input }) => {
-      const newData = await add(input);
-      ee.emit('onAdd', newData);
+      const newValue = await add(input);
+      ee.emit('onAdd', newValue);
     }),
+  onAdd: publicProcedure
+    .input(parentIdsSchema)
+    .subscription(({ input }) => createSubscription({
+      eventEmitter: ee,
+      eventName: 'onAdd',
+      filter: data => filter(data, input),
+    })),
   remove: publicProcedure
     .input(idsSchema)
     .mutation(async ({ input }) => {
       await remove(input);
       ee.emit('onRemove', input);
     }),
-  onAdd: publicProcedure
-    .input(parentIdsSchema)
-    .subscription(({ input }) => createSubscription({
-        eventEmitter: ee,
-        eventName: 'onAdd',
-        filter: data => filter(data, input),
-    })),
   onRemove: publicProcedure
     .input(parentIdsSchema)
     .subscription(({ input }) => createSubscription({

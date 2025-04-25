@@ -1,107 +1,71 @@
 import { db } from 'database/db';
 import { and, eq } from 'drizzle-orm';
 import {
-  columnGroupToMeasurements
+  columnGroupMeasurements
 } from 'database/db/schema';
-import type {
-  MeasurementColumnGroup
-} from '../lib/measurement/columnGroup';
 import { createSelectSchema } from 'drizzle-zod';
 
-export type ColumnGroupToMeasurement = 
-  typeof columnGroupToMeasurements.$inferSelect;
+export type ColumnGroupMeasurement = 
+  typeof columnGroupMeasurements.$inferSelect;
 
-export type ColumnGroupToMeasurementWithMeasurements =
-  ColumnGroupToMeasurement & { measurements: MeasurementColumnGroup };
 
-export const columnGroupToMeasurementSchema = createSelectSchema(
-  columnGroupToMeasurements
+export const columnGroupMeasurementSchema = createSelectSchema(
+  columnGroupMeasurements
 );
 
-export const get = async ({
-  projectId,
-  columnGroupId,
-  id
-}: Pick<ColumnGroupToMeasurement, 'id'|'projectId'|'columnGroupId'>) => {
-  const value = await db.query.columnGroupToMeasurements.findFirst({
-    where:
-      and(
-        eq(columnGroupToMeasurements.projectId, projectId),
-        eq(columnGroupToMeasurements.columnGroupId, columnGroupId),
-        eq(columnGroupToMeasurements.id, id),
-      ),
-    with: {
-      measurements: true
-    }
+export type Ids = Pick<ColumnGroupMeasurement, 'projectId'|'columnGroupId'|'id'>;
+export type ParentIds = Pick<ColumnGroupMeasurement, 'projectId'|'columnGroupId'>;
+
+const whereIds = (ids: Ids) => and(
+  eq(columnGroupMeasurements.projectId, ids.projectId),
+  eq(columnGroupMeasurements.columnGroupId, ids.columnGroupId),
+  eq(columnGroupMeasurements.id, ids.id),
+);
+
+const whereParentIds = (parentIds: ParentIds) => and(
+  eq(columnGroupMeasurements.projectId, parentIds.projectId),
+  eq(columnGroupMeasurements.columnGroupId, parentIds.columnGroupId),
+);
+
+export const get = async (ids: Ids) => {
+  const value = await db.query.columnGroupMeasurements.findFirst({
+    where: whereIds(ids),
   });
   if (value == null) throw new Error(
-    `cannot get columnGroupMeasurement ${id}`
+    `cannot get columnGroupMeasurement ${ids.id}`
   );
   return value;
 }
 
-export const list = async ({
-  projectId,
-  columnGroupId,
-}: {
-  projectId: string;
-  columnGroupId: number;
-}) => await db.query.columnGroupToMeasurements.findMany({
-  where:
-    and(
-      eq(columnGroupToMeasurements.columnGroupId, columnGroupId),
-      eq(columnGroupToMeasurements.projectId, projectId),
-    ),
+export const list = async (parentIds: ParentIds) => 
+await db.query.columnGroupMeasurements.findMany({
+  where: whereParentIds(parentIds),
   with: {
-    measurements: true
+    measurementColumnGroup: true
   }
 });
 
 export const add = async (
-  params: Omit<ColumnGroupToMeasurement, 'id'>
+  params: Omit<ColumnGroupMeasurement, 'id'>
 ) => {
   const newId = (
-    await db.insert(columnGroupToMeasurements).values(params)
+    await db.insert(columnGroupMeasurements).values(params)
       .$returningId()
   )[0]?.id;
 
   if (newId == null) throw new Error(
-    `cannot get new columnGroupToMeasurement id`
+    `cannot get new columnGroupMeasurement id`
   );
 
-  return await get({ 
-    projectId: params.projectId, 
-    columnGroupId: params.columnGroupId, 
-    id: newId 
-  });
+  return await get({ ...params, id: newId });
 }
 
-export const remove = async ({
-  projectId,
-  columnGroupId,
-  id
-}: Pick<ColumnGroupToMeasurement, 'projectId'|'columnGroupId'|'id'>) =>
-await db.delete(columnGroupToMeasurements).where(
-  and(
-    eq(columnGroupToMeasurements.projectId, projectId),
-    eq(columnGroupToMeasurements.columnGroupId, columnGroupId),
-    eq(columnGroupToMeasurements.id, id),
-  )
-);
+export const remove = async (ids: Ids) =>
+await db.delete(columnGroupMeasurements).where(whereIds(ids));
 
-export const update = async (params: ColumnGroupToMeasurement) => {
-  await db.update(columnGroupToMeasurements).set(params).where(
-    and(
-      eq(columnGroupToMeasurements.projectId, params.projectId),
-      eq(columnGroupToMeasurements.columnGroupId, params.columnGroupId),
-      eq(columnGroupToMeasurements.id, params.id),
-    )
-  );
+export const update = async (params: ColumnGroupMeasurement) => {
+  await db.update(columnGroupMeasurements).set(params).where(whereIds(params));
 
-  return await get({
-    projectId: params.projectId,
-    columnGroupId: params.columnGroupId,
-    id: params.id,
-  });
+  return await get(params);
 };
 
