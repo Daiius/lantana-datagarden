@@ -1,8 +1,6 @@
 'use client' // for hook, useMeasurementColumnGroups
 
-import {
-  MeasurementVisuals
-} from '@/types';
+import clsx from 'clsx';
 
 import { useMeasurementColumnGroups } from '@/hooks/useMeasurementColumnGroups';
 import { useMeasurementColumnGroupMutations } from '@/hooks/useMeasurementColumnGroupMutations';
@@ -30,9 +28,15 @@ export const AddMeasurementDropdown = ({
       <div 
         tabIndex={0} 
         role='button' 
-        className='btn btn-accent btn-soft'
+        className={clsx(
+          'btn btn-accent btn-soft',
+          measurements.length === 0 && 'btn-disabled',
+        )}
       >
         測定を追加
+        {measurements.length === 0 &&
+          ': 設定が必要です...'
+        }
       </div>
       <div
         tabIndex={0}
