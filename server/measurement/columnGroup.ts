@@ -5,130 +5,84 @@ import mitt from 'mitt';
 
 import { 
   get,
-  getWithColumns,
   list,
-  listWithColumns,
   update,
   add,
   remove,
   measurementColumnGroupSchema,
   MeasurementColumnGroup,
-  MeasurementColumnGroupWithColumns,
 } from '../lib/measurement/columnGroup';
 
 import { createSubscription } from '../lib/common';
 
 type MeasurementColumnGroupEvents = {
   onAdd: MeasurementColumnGroup;
-  onAddWithColumns: MeasurementColumnGroupWithColumns;
   onRemove: { projectId: string, id: number };
   onUpdate: MeasurementColumnGroup;
 };
 
 const ee = mitt<MeasurementColumnGroupEvents>();
 
+const idsSchema = measurementColumnGroupSchema.pick({
+  projectId: true,
+  id: true,
+});
+
+const projectIdSchema = measurementColumnGroupSchema.pick({
+  projectId: true,
+});
+
+type ProjectId = z.infer<typeof projectIdSchema>;
+
+const filter = (data: ProjectId, input: ProjectId) => (
+  data.projectId === input.projectId
+);
+
 export const columnGroupRouter = router({
   get: publicProcedure
-    .input(
-      measurementColumnGroupSchema.pick({
-        projectId: true,
-        id: true,
-      })
-    )
+    .input(idsSchema)
     .query(async ({ input }) => await get(input)),
   list: publicProcedure
-    .input(measurementColumnGroupSchema.pick({
-      projectId: true
-    }))
+    .input(projectIdSchema)
     .query(async ({ input }) => await list(input)),
-  listWithColumns: publicProcedure
-    .input(
-      z.object({
-        projectId: z.string(),
-      })
-    )
-    .query(async ({ input }) => await listWithColumns(input)),
   update: publicProcedure
-    .input(
-      measurementColumnGroupSchema
-    )
-    .mutation(async ({ input }) => await update(input)),
+    .input(measurementColumnGroupSchema)
+    .mutation(async ({ input }) => {
+      const newValue = await update(input);
+      ee.emit('onUpdate', newValue);
+    }),
   onUpdate: publicProcedure
-    .input(
-      measurementColumnGroupSchema.pick({
-        projectId: true,
-        id: true,
-      })
-    )
+    .input(projectIdSchema)
     .subscription(({ input }) => createSubscription({
       eventEmitter: ee,
       eventName: 'onUpdate',
-      filter: data => (
-         data.projectId === input.projectId
-      ),
+      filter: data => filter(data, input),
     })),
   add: publicProcedure
-    .input(
-      measurementColumnGroupSchema
-        .omit({ id: true })
-    )
+    .input(measurementColumnGroupSchema.omit({ id: true }))
     .mutation(async ({ input }) => {
       const newValue = await add(input);
       ee.emit('onAdd', newValue);
-
-      const newValueWithColumns = await getWithColumns({
-        projectId: newValue.projectId,
-        id: newValue.id,
-      });
-      ee.emit('onAddWithColumns', newValueWithColumns);
     }),
   onAdd: publicProcedure
-    .input(
-      z.object({
-        projectId: z.string()
-      })
-    )
-    .subscription(({ input }) =>
-      createSubscription({
+    .input(projectIdSchema)
+    .subscription(({ input }) => createSubscription({
         eventEmitter: ee,
         eventName: 'onAdd',
-        filter: data => (
-          data.projectId === input.projectId
-        ),
-      }),
-    ),
-  onAddWithColumns: publicProcedure
-    .input(
-      measurementColumnGroupSchema.pick({ projectId: true })
-    )
-    .subscription(({ input }) => createSubscription({
-      eventEmitter: ee,
-      eventName: 'onAddWithColumns',
-      filter: data => (
-        data.projectId === input.projectId
-      ),
+        filter: data => filter(data, input),
     })),
   remove: publicProcedure
-    .input(
-      measurementColumnGroupSchema.pick({
-        projectId: true,
-        id: true,
-      })
-    )
+    .input(idsSchema)
     .mutation(async ({ input }) => {
       await remove(input);
       ee.emit('onRemove', input);
     }),
   onRemove: publicProcedure
-    .input(
-      z.object({ projectId: z.string() })
-    )
-    .subscription(({ input }) =>
-      createSubscription({
+    .input(projectIdSchema)
+    .subscription(({ input }) => createSubscription({
         eventEmitter: ee,
         eventName: 'onRemove',
-        filter: data => data.projectId === input.projectId,
-      }),
-    ),
+        filter: data => filter(data, input),
+    })),
 });
 

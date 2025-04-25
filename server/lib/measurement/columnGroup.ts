@@ -2,7 +2,6 @@
 import { db } from 'database/db';
 import {
   measurementColumnGroups,
-  measurementColumns,
 } from 'database/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { createSelectSchema } from 'drizzle-zod';
@@ -12,23 +11,6 @@ export const measurementColumnGroupSchema = createSelectSchema(
 );
 export type MeasurementColumnGroup = 
   typeof measurementColumnGroups.$inferSelect;
-
-type MeasurementColumn =
-  typeof measurementColumns.$inferSelect;
-
-export type MeasurementColumnGroupWithColumns =
-  MeasurementColumnGroup & { columns: MeasurementColumn[] };
-
-export const listWithColumns = async ({
-  projectId
-}: {
-  projectId: string;
-}) => await db.query.measurementColumnGroups.findMany({
-  where: eq(measurementColumnGroups.projectId, projectId),
-  with: {
-    columns: true
-  }
-});
 
 export const list = async ({
   projectId
@@ -54,26 +36,6 @@ export const get = async ({
   if (value == null) throw new Error(
     `cannot find columnGroup ${id}`
   );
-  return value;
-}
-
-export const getWithColumns = async ({
-  projectId,
-  id,
-}: Pick<MeasurementColumnGroup, 'projectId'|'id'>) => {
-  const value = await db.query.measurementColumnGroups.findFirst({
-    where: and(
-      eq(measurementColumnGroups.projectId, projectId),
-      eq(measurementColumnGroups.id, id),
-    ),
-    with: {
-      columns: true
-    }
-  });
-  if (value == null) throw new Error(
-    `cannot find columnGroup ${id}`
-  );
-
   return value;
 }
 
