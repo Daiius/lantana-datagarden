@@ -10,7 +10,7 @@ const Skeleton = ({
 }: SkeletonProps) => (
   <div
     className={clsx(
-      'bg-slate-500/50 rounded-md',
+      'skeleton rounded-md h-full w-full',
       className,
     )}
   >
