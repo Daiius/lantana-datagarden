@@ -8,7 +8,6 @@ import ColumnGroup from '@/components/column/ColumnGroup';
 import Button from '@/components/common/Button';
 
 import { useColumnGroups } from '@/hooks/useColumnGroups';
-import { useColumnGroupMutations } from '@/hooks/useColumnGroupMutations';
 
 type ColumnGroupsProps = {
   projectId: string;
@@ -22,10 +21,15 @@ const ColumnGroups = ({
   className,
 }: ColumnGroupsProps) => {
 
-  const { data: columnGroups } = useColumnGroups({ projectId });
-  const { add } = useColumnGroupMutations();
+  const { 
+    data: columnGroups,
+    isLoading,
+    update,
+    add,
+    remove,
+  } = useColumnGroups({ projectId });
 
-  if (columnGroups == null) return (
+  if (isLoading) return (
     <Skeleton />
   );
 
@@ -34,6 +38,7 @@ const ColumnGroups = ({
       className={clsx(
         'px-2 pb-2 m-2',
         'flex flex-col gap-4',
+        'animate-fade-in',
         className,
       )}
     >
@@ -41,7 +46,12 @@ const ColumnGroups = ({
         列グループ
       </div>
       {columnGroups.map(c =>
-        <ColumnGroup key={c.id} columnGroup={c} />
+        <ColumnGroup 
+          key={c.id} 
+          columnGroup={c} 
+          update={update}
+          remove={remove}
+        />
       )}
       <div className='divider'></div>
       <Button 

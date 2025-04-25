@@ -21,12 +21,13 @@ const MeasurementColumnGroups = ({
 }: MeasurementColumnGroupsProps) => {
   const {
     data: columnGroups,
+    isLoading,
     add,
     update,
     remove,
   } = useMeasurementColumnGroups({ projectId });
 
-  if (columnGroups == null) {
+  if (isLoading) {
     return <Skeleton />;
   }
 
@@ -35,6 +36,7 @@ const MeasurementColumnGroups = ({
       className={clsx(
         'px-2 pb-2 m-2',
         'flex flex-col gap-4',
+        'animate-fade-in',
         className,
       )}
     >
