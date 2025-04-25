@@ -1,10 +1,4 @@
 
-import { columns } from 'database/db/schema';
-
-import {
-  createSelectSchema,
-} from 'drizzle-zod';
-
 import { router, publicProcedure } from '../trpc';
 
 import { 
@@ -13,53 +7,56 @@ import {
   update,
   add,
   remove,
+  columnSchema,
+  Column,
+  Ids,
+  ParentIds,
 } from '../lib/column';
 import { createSubscription } from '../lib/common';
 
 import mitt from 'mitt';
-type Column = typeof columns.$inferSelect;
 type ColumnEvents = {
   onAdd: Column,
-  onRemove: Pick<Column, 'id' | 'projectId' | 'columnGroupId'>,
+  onRemove: Ids,
   onUpdate: Column,
 }
 
 export const ee = mitt<ColumnEvents>();
 
-const selectSchema = createSelectSchema(columns);
+const idsSchema = columnSchema.pick({
+  projectId: true,
+  columnGroupId: true,
+  id: true,
+});
+const parentIdsSchema = columnSchema.pick({
+  projectId: true,
+  columnGroupId: true,
+});
 
+const filter = (data: ParentIds, input: ParentIds) => (
+     data.projectId === input.projectId
+  && data.columnGroupId === input.columnGroupId
+);
 
 export const columnRouter = router({
   /** 単一の列データを取得します */
   get: publicProcedure
-    .input(selectSchema.pick({
-      id: true,
-      projectId: true,
-      columnGroupId: true,
-    }))
+    .input(idsSchema)
     .query(async ({ input }) => await get(input)),
   /** 指定した列グループに属する列データを取得します */
   list: publicProcedure
-    .input(selectSchema.pick({ 
-      projectId: true, 
-      columnGroupId: true,
-    }))
+    .input(parentIdsSchema)
     .query(async ({ input }) => await list(input)),
   update: publicProcedure
-    .input(selectSchema)
+    .input(columnSchema)
     .mutation(async ({ input }) => {
-      console.log('update procedure called! %o', input);
       const newColumn = await update(input);
       ee.emit('onUpdate', newColumn);
-      console.log('update event emitted! %o', newColumn);
     }),
   add: publicProcedure
-    .input(selectSchema.partial({ id: true }))
+    .input(columnSchema.partial({ id: true }))
     .mutation(async ({ input }) => {
       const newColumn = await add(input);
-      if (newColumn == null) throw new Error(
-        `cannot find added column`
-      );
       ee.emit('onAdd', newColumn);
     }),
   /**
@@ -68,63 +65,31 @@ export const columnRouter = router({
    * DataテーブルにJSON形式で記録されているデータも削除されます
    */
   remove: publicProcedure
-    .input(selectSchema.pick({
-      id: true,
-      projectId: true,
-      columnGroupId: true,
-    }))
+    .input(idsSchema)
     .mutation(async ({ input }) => {
-      // 該当する列をDataから削除します
       await remove(input);
       ee.emit('onRemove', input);
     }),
   onUpdate: publicProcedure
-    .input(selectSchema.pick({ 
-      id: true, 
-      projectId: true,
-      columnGroupId: true,
-    }))
+    .input(parentIdsSchema)
     .subscription(({ input }) => createSubscription({
       eventEmitter: ee,
       eventName: 'onUpdate',
-      filter: data => {
-        console.log('filter: %o', data);
-        return ( 
-             data.id            === input.id
-          && data.columnGroupId === input.columnGroupId
-          && data.projectId     === input.projectId
-        );
-      },
+      filter: data => filter(data, input),
     })),
   onAdd: publicProcedure
-    .input(selectSchema.pick({
-      projectId: true,
-      columnGroupId: true,
-    }))
-    .subscription(({ input }) =>
-      createSubscription({
-        filter: data => (
-             data.projectId === input.projectId
-          && data.columnGroupId === input.columnGroupId
-        ),
-        eventEmitter: ee,
-        eventName: 'onAdd',
-      })
-    ),
+    .input(parentIdsSchema)
+    .subscription(({ input }) => createSubscription({
+      eventEmitter: ee,
+      eventName: 'onAdd',
+      filter: data => filter(data, input),
+    })),
   onRemove: publicProcedure
-    .input(selectSchema.pick({
-      projectId: true,
-      columnGroupId: true,
-    }))
-    .subscription(({ input }) =>
-      createSubscription({
-        eventEmitter: ee,
-        eventName: 'onRemove',
-        filter: data => (
-             data.projectId === input.projectId
-          && data.columnGroupId === data.columnGroupId
-        ),
-      })
-    ),
+    .input(idsSchema)
+    .subscription(({ input }) => createSubscription({
+      eventEmitter: ee,
+      eventName: 'onRemove',
+      filter: data => filter(data, input),
+    })),
 });
 

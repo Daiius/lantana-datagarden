@@ -94,8 +94,8 @@ export const columnGroupRouter = router({
   remove: publicProcedure
     .input(idsSchema)
     .mutation(async ({ input }) => {
-      const removedIds = await remove(input);
-      ee.emit('onRemove', removedIds);
+      await remove(input);
+      ee.emit('onRemove', input);
     }) ,
   onRemove: publicProcedure
     .input(projectIdSchema)
