@@ -15,8 +15,10 @@ export const useMeasurementColumnGroups = ({
   projectId
 }: UseMeasurementColumnGroupsArgs) => {
 
-  const { data: fetchedData } = 
-    trpc.measurement.columnGroup.list.useQuery({ projectId });
+  const { 
+    data: fetchedData,
+    isLoading,
+  } = trpc.measurement.columnGroup.list.useQuery({ projectId });
 
   // IMEを使用する入力欄のvalueにする際、
   // React Queryキャッシュを直接設定するとおかしくなるのでstateを使う
@@ -25,7 +27,7 @@ export const useMeasurementColumnGroups = ({
     if (fetchedData != null) {
       setData(fetchedData);
     }
-  }, [data]);
+  }, [fetchedData]);
 
   const { mutateAsync: updateDb } =
     trpc.measurement.columnGroup.update.useMutation();
@@ -38,9 +40,17 @@ export const useMeasurementColumnGroups = ({
     await debouncedUpdateDb(newValue);
   };
 
+  trpc.measurement.columnGroup.onUpdate.useSubscription(
+    { projectId },
+    { onData: newData => {
+      console.log('onUpdate: %o', newData);
+      setData(data.map(d => d.id === newData.id ? newData : d)) ;
+    }}
+  );
+
   // add
   const { mutateAsync: add } =
-    trpc.condition.columnGroup.add.useMutation();
+    trpc.measurement.columnGroup.add.useMutation();
   trpc.measurement.columnGroup.onAdd.useSubscription(
     { projectId },
     {
@@ -50,7 +60,7 @@ export const useMeasurementColumnGroups = ({
 
   // remove
   const { mutateAsync: remove } =
-    trpc.condition.columnGroup.remove.useMutation();
+    trpc.measurement.columnGroup.remove.useMutation();
   trpc.measurement.columnGroup.onRemove.useSubscription(
     { projectId },
     {
@@ -60,6 +70,7 @@ export const useMeasurementColumnGroups = ({
 
   return {
     data,
+    isLoading,
     update,
     add,
     remove,
