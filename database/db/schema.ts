@@ -105,8 +105,8 @@ export const MEASUREMENT_VISUAL_TYPES = [
  * - 表示方法（有/無、全部表示、統計データ...等々）
  * を規定します
  */
-export const columnGroupToMeasurements = mysqlTable(
-  'ColumnGroupToMeasurements',
+export const columnGroupMeasurements = mysqlTable(
+  'ColumnGroupMeasurements',
   {
     id:
       bigint('id', { mode: 'number', unsigned: true })
@@ -419,19 +419,19 @@ export const columnGroupRelations = relations(
     }),
     columns: many(columns),
     data: many(data),
-    measurements: many(columnGroupToMeasurements), 
+    measurements: many(columnGroupMeasurements), 
   })
 );
 
-export const columnGroupToMeasurementRelations = relations(
-  columnGroupToMeasurements,
+export const columnGroupMeasurementRelations = relations(
+  columnGroupMeasurements,
   ({ one }) => ({
     columnGroup: one(columnGroups, {
-      fields: [columnGroupToMeasurements.columnGroupId],
+      fields: [columnGroupMeasurements.columnGroupId],
       references: [columnGroups.id],
     }),
-    measurements: one(measurementColumnGroups, {
-      fields: [columnGroupToMeasurements.measurementColumnGroupId],
+    measurementColumnGroup: one(measurementColumnGroups, {
+      fields: [columnGroupMeasurements.measurementColumnGroupId],
       references: [measurementColumnGroups.id],
     }),
   }),
@@ -468,7 +468,7 @@ export const measurementColumnGroupRelations = relations(
     }),
     columns: many(measurementColumns),
     data: many(measurements),
-    columnGroupToMeasurements: many(columnGroupToMeasurements)
+    columnGroupToMeasurements: many(columnGroupMeasurements)
   })
 );
 
