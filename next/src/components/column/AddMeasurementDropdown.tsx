@@ -3,25 +3,31 @@
 import clsx from 'clsx';
 
 import { useMeasurementColumnGroups } from '@/hooks/useMeasurementColumnGroups';
-import { useMeasurementColumnGroupMutations } from '@/hooks/useMeasurementColumnGroupMutations';
+import type { 
+  useColumnGroupMeasurements 
+} from '@/hooks/useColumnGroupMeasurements';
 
 import Button from '@/components/common/Button';
 
 export type AddMeasurementDropdownArgs = {
   projectId: string;
   columnGroupId: number;
+  addMeasurement: ReturnType<typeof useColumnGroupMeasurements>['add'];
   /** 選択肢から除外する測定名を指定します */
-  nameFilter?: string[];
+  //nameFilter?: string[];
+  /** 選択肢から除外するMeasurementColumnGroupのidを指定します */
+  idsFilter?: number[];
 };
 
 export const AddMeasurementDropdown = ({
   projectId,
   columnGroupId,
-  nameFilter = [],
+  addMeasurement,
+  //nameFilter = [],
+  idsFilter = [],
 }: AddMeasurementDropdownArgs) => {
 
   const { data: measurements } = useMeasurementColumnGroups({ projectId });
-  const { add } = useMeasurementColumnGroupMutations();
 
   return (
     <div className='dropdown'>
@@ -46,8 +52,8 @@ export const AddMeasurementDropdown = ({
           <Button
             className='text-nowrap'
             key={measurement.id}
-            disabled={nameFilter.includes(measurement.name)}
-            onClick={async () => await add({
+            disabled={idsFilter.includes(measurement.id)}
+            onClick={async () => await addMeasurement({
               projectId,
               columnGroupId,
               measurementColumnGroupId: measurement.id,
