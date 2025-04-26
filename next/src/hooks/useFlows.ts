@@ -1,45 +1,68 @@
+import { useState, useEffect } from 'react';
+
+import type { Flow } from '@/types';
 import { trpc } from '@/providers/TrpcProvider';
+import { useDebouncedCallback } from 'use-debounce';
+import { DebounceTime } from './common';
 
 export const useFlows = ({
   projectId,
 }: {
   projectId: string;
 }) => {
-  const utils = trpc.useUtils();
-  const { data: flows } = trpc.flow.listNested.useQuery({
-    projectId,
-  });
-  const { mutateAsync: addFlow } = trpc.flow.add.useMutation();
-  const { mutateAsync: removeFlow } = trpc.flow.remove.useMutation();
+  const { 
+    data: fetchedData,
+    isLoading,
+  } = trpc.flow.flow.list.useQuery({ projectId });
+  const [data, setData] = useState<Flow[]>([]);
+  useEffect(() => {
+    if (fetchedData != null) {
+      setData(fetchedData);
+    }
+  }, [fetchedData]);
 
-  trpc.flow.onAdd.useSubscription(
+  const { mutateAsync: updateDb } =
+    trpc.flow.flow.update.useMutation();
+  const debouncedUpdateDb = useDebouncedCallback(
+    async (newData: Flow) => await updateDb(newData),
+    DebounceTime,
+  );
+  const update = async (newData: Flow) => {
+    setData(data.map(d => d.id === newData.id ? newData : d));
+    await debouncedUpdateDb(newData);
+  };
+  trpc.flow.flow.onUpdate.useSubscription(
     { projectId },
     {
-      onData: data => utils.flow.listNested.setData(
-        { projectId },
-        flows == null
-        ? [data]
-        : [ ...flows, data]
+      onData: newData => setData(
+        data.map(d => d.id === newData.id ? newData : d)
       ),
     }
   );
 
-  trpc.flow.onRemove.useSubscription(
+  const { mutateAsync: add } = trpc.flow.flow.add.useMutation();
+  const { mutateAsync: remove } = trpc.flow.flow.remove.useMutation();
+
+  trpc.flow.flow.onAdd.useSubscription(
     { projectId },
     {
-      onData: data => utils.flow.listNested.setData(
-        { projectId },
-        flows == null
-        ? undefined
-        : flows.filter(f => f.id !== data.id)
-      ),
+      onData: newData => setData([ ...data, newData]),
+    }
+  );
+
+  trpc.flow.flow.onRemove.useSubscription(
+    { projectId },
+    {
+      onData: newData => setData(data.filter(d => d.id !== newData.id)),
     }
   );
 
   return {
-    flows,
-    addFlow,
-    removeFlow,
+    data, 
+    isLoading,
+    update,
+    add,
+    remove,
   };
 };
 

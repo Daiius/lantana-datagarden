@@ -11,14 +11,22 @@ export type UseMeasurementColumnGroupsArgs = {
   projectId: string;
 }
 
+/**
+ * 指定されたprojectに属するMeasurementColumnGroup[]を取得します
+ * IMEを用いた入力欄バインド用のstateと、React Queryによるキャッシュを持ちます
+ * 
+ * NOTE subscriptionは別コンポ―ネントで行います
+ */
 export const useMeasurementColumnGroups = ({
   projectId
 }: UseMeasurementColumnGroupsArgs) => {
 
+  const target = trpc.measurement.columnGroup;
+
   const { 
     data: fetchedData,
     isLoading,
-  } = trpc.measurement.columnGroup.list.useQuery({ projectId });
+  } = target.list.useQuery({ projectId });
 
   // IMEを使用する入力欄のvalueにする際、
   // React Queryキャッシュを直接設定するとおかしくなるのでstateを使う
@@ -29,8 +37,7 @@ export const useMeasurementColumnGroups = ({
     }
   }, [fetchedData]);
 
-  const { mutateAsync: updateDb } =
-    trpc.measurement.columnGroup.update.useMutation();
+  const { mutateAsync: updateDb } = target.update.useMutation();
   const debouncedUpdateDb = useDebouncedCallback(
     async (newData: MeasurementColumnGroup) => await updateDb(newData),
     DebounceTime,
@@ -40,33 +47,9 @@ export const useMeasurementColumnGroups = ({
     await debouncedUpdateDb(newValue);
   };
 
-  trpc.measurement.columnGroup.onUpdate.useSubscription(
-    { projectId },
-    { onData: newData => {
-      console.log('onUpdate: %o', newData);
-      setData(data.map(d => d.id === newData.id ? newData : d)) ;
-    }}
-  );
+  const { mutateAsync: add } = target.add.useMutation();
 
-  // add
-  const { mutateAsync: add } =
-    trpc.measurement.columnGroup.add.useMutation();
-  trpc.measurement.columnGroup.onAdd.useSubscription(
-    { projectId },
-    {
-      onData: newData => setData([...data, newData]),
-    }
-  );
-
-  // remove
-  const { mutateAsync: remove } =
-    trpc.measurement.columnGroup.remove.useMutation();
-  trpc.measurement.columnGroup.onRemove.useSubscription(
-    { projectId },
-    {
-      onData: newData => setData(data.filter(mcg => mcg.id !== newData.id))
-    }
-  );
+  const { mutateAsync: remove } = target.remove.useMutation();
 
   return {
     data,
