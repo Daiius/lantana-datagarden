@@ -5,6 +5,7 @@ import clsx from 'clsx';
 
 import Flow from '@/components/flow/Flow';
 import Button from '@/components/common/Button';
+import Skeleton from '@/components/common/Skeleton';
 
 import { useFlows } from '@/hooks/useFlows';
 
@@ -22,40 +23,37 @@ const Flows = ({
   className,
 }: FlowsProps) => {
   const { 
-    flows,
-    addFlow,
+    data: flows,
+    isLoading,
+    add,
+    remove,
+    update,
   } = useFlows({ projectId });
 
-  if (flows == null) return (
-    <div className='skeleton h-32 w-full'></div>
-  );
+  if (isLoading) return <Skeleton />;
 
   return (
     <div className={clsx('flex flex-col gap-4', className)}>
       {flows.map(flow =>
         <Flow 
           key={flow.id} 
-          initialFlow={flow} 
+          flow={flow} 
+          remove={remove}
+          update={update}
         />
       )}
       <div className='divider'/>
       <Button 
         className='btn-success btn-block'
         onClick={async () => {
-          await addFlow({ 
+          await add({ 
             projectId,
-            flowSteps: [],
             name: '新しいフロー',
           })
         }}
       >
         フローを追加
       </Button>
-      {/*
-      <pre>
-        {JSON.stringify(flows, undefined, 2)}
-      </pre>
-      */}
     </div>
   );
 };
