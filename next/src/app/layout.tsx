@@ -3,7 +3,6 @@ import './global.css';
 
 import TrpcProvider from '@/providers/TrpcProvider';
 
-
 export const metadata = {
   title: 'Lantana Datagarden',
   description: 'Scientific data input form by Next.js',
