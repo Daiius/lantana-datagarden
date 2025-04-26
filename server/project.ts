@@ -7,7 +7,7 @@ import {
 
 import { z } from 'zod';
 
-import { router, publicProcedure } from '../trpc';
+import { router, publicProcedure } from './trpc';
 import { observable, } from '@trpc/server/observable';
 
 import mitt from 'mitt';
@@ -19,7 +19,7 @@ import {
   get,
   list,
   update,
-} from '../lib/project';
+} from './lib/project';
 
 export const ee = mitt<ProjectEvents>();
 

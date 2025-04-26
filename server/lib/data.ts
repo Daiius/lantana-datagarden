@@ -1,45 +1,44 @@
+import { eq, and } from 'drizzle-orm';
+import { createSelectSchema } from 'drizzle-zod';
+
 import { db } from 'database/db';
 import {
   data,
   columns,
   validate,
-  JsonData,
 } from 'database/db/schema';
 
-import { eq, and, inArray } from 'drizzle-orm';
+import { list as listColumns } from './column';
 
-import { getNested as getColumnGroup } from './columnGroup';
+export type Data = typeof data.$inferSelect;
 
-type Data = typeof data.$inferSelect;
+export type Ids = Pick<Data, 'projectId'|'columnGroupId'|'id'>;
+export type ParentIds = Pick<Data, 'projectId'|'columnGroupId'>;
 
-export const get = async (
-  { id, projectId, columnGroupId }
-  : Pick<Data, 'id'|'projectId'|'columnGroupId'>
-) =>
-  await db.query.data.findFirst({
-    where: and(
-      eq(data.projectId, projectId),
-      eq(data.columnGroupId, columnGroupId),
-      eq(data.id, id),
-    )
-  });
+export const dataSchema = createSelectSchema(data);
 
-export const list = async (
-  { projectId, columnGroupId }
-  : {
-    projectId: string;
-    columnGroupId: number | number[];
-  }
-) =>
-  await db.query.data.findMany({
-    where: and(
-      eq(data.projectId, projectId),
-      Array.isArray(columnGroupId)
-      ? inArray(data.columnGroupId, columnGroupId)
-      : eq(data.columnGroupId, columnGroupId),
-    ),
-    orderBy: data.id,
-  });
+const whereIds = (ids: Ids) => and(
+  eq(data.projectId, ids.projectId),
+  eq(data.columnGroupId, ids.columnGroupId),
+  eq(data.id, ids.id),
+);
+
+const whereParentIds = (parentIds: ParentIds) => and(
+  eq(data.projectId, parentIds.projectId),
+  eq(data.columnGroupId, parentIds.columnGroupId),
+);
+
+export const get = async (ids: Ids) => {
+  const value = await db.query.data.findFirst({ where: whereIds(ids) });
+  if (value == null) throw new Error(`cannot find data ${ids.id}`);
+  return value;
+}
+
+export const list = async (parentIds: ParentIds) =>
+await db.query.data.findMany({
+  where: whereParentIds(parentIds),
+  orderBy: data.id,
+});
 
 export const update = async (newData: Data) => {
   // 列名や型データの取得
@@ -62,20 +61,8 @@ export const update = async (newData: Data) => {
   });
 
   // 入力データの書き込み
-  await db.update(data)
-    .set(newData)
-    .where(
-      and(
-        eq(data.projectId, newData.projectId),
-        eq(data.columnGroupId, newData.columnGroupId),
-        eq(data.id, newData.id),
-      )
-    );
-  const updatedData = await get(newData);
-  if (updatedData == null) throw new Error(
-    `cannot find updated data ${newData.id}`
-  );
-  return updatedData;
+  await db.update(data).set(newData).where(whereIds(newData));
+  return await get(newData);
 };
 /**
  * 指定された引数を元に、dataを追加します
@@ -88,26 +75,13 @@ export const update = async (newData: Data) => {
  */
 export const add = async (newData: Omit<Data, 'id'>) => {
 
-  const relatedColumnGroup = await getColumnGroup({
-    projectId: newData.projectId,
-    id: newData.columnGroupId,
-  });
-  if (relatedColumnGroup == null) throw new Error(
-    `cannot find related columnGroup: ${newData.columnGroupId}`
+  const relatedColumns = await listColumns(newData);
+  if (relatedColumns.length === 0) throw new Error(
+    `cannot add data with no columns`
   );
 
-  Object.keys(newData.data).forEach(columnName => {
-    if (
-      !(columnName in relatedColumnGroup.columns.map(c => c.name))
-    ) {
-      throw new Error(
-        `column ${columnName} is not defined in columnGroup ${relatedColumnGroup.id}`
-      );
-    }
-  });
-
   const newDataWithCompletion = Object.fromEntries(
-    relatedColumnGroup.columns.map(column => {
+    relatedColumns.map(column => {
       const givenValue = newData.data[column.name];
       const v = givenValue === undefined
         ? null
@@ -127,23 +101,9 @@ export const add = async (newData: Omit<Data, 'id'>) => {
     `cannot get new data id`
   );
   const addedData = await get({ ...newData, id: newId });
-  if (addedData == null) throw new Error(
-    `cannot get new data ${newId}`
-  );
   return addedData;
 };
 
-export const remove = async (
-  { id, projectId, columnGroupId }
-  : Pick<Data, 'id' | 'projectId' | 'columnGroupId'>
-) => {
-  await db.delete(data).where(
-    and(
-      eq(data.projectId, projectId),
-      eq(data.columnGroupId, columnGroupId),
-      eq(data.id, id),
-    )
-  );  
-  return { id, projectId, columnGroupId };
-};
+export const remove = async (ids: Ids) =>
+await db.delete(data).where(whereIds(ids));  
 

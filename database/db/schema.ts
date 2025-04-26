@@ -52,15 +52,21 @@ export const projects = mysqlTable(
   },
 );
 
+const projectIdReference = 
+  varchar('project_id', { length: PROJECT_ID_LENGTH })
+    .notNull()
+    .references(() => projects.id, { 
+      onDelete: 'restrict', onUpdate: 'cascade',
+    });
+
 
 const COLUMN_GROUP_NAME_LENGTH = 127 as const;
-//export const COLUMN_GROUP_TYPES = [
-//  'condition', 
-//  'measurement',
-//] as const;
 
 /**
  * ユーザが自由に設定できる列グループです
+ *
+ * 複数の列の集まりで、1つの工程や測定に相当し、
+ * 関連するデータ(Data)は主に表として表示されます
  */
 export const columnGroups = mysqlTable('ColumnGroups', {
   id:
@@ -68,12 +74,7 @@ export const columnGroups = mysqlTable('ColumnGroups', {
       .notNull()
       .autoincrement()
       .primaryKey(),
-  projectId:
-    varchar('project_id', { length: PROJECT_ID_LENGTH })
-      .notNull()
-      .references(() => projects.id, { 
-        onDelete: 'restrict', onUpdate: 'cascade',
-      }),
+  projectId: projectIdReference,
   name:
     varchar('name', { length: COLUMN_GROUP_NAME_LENGTH })
       .notNull()
@@ -82,6 +83,65 @@ export const columnGroups = mysqlTable('ColumnGroups', {
   sort:
     int('sort', { unsigned: true })
 });
+
+const columnGroupIdReference = 
+  bigint('column_group_id', { mode: 'number', unsigned: true })
+    .notNull()
+    .references(() => columnGroups.id, {
+      onDelete: 'restrict', onUpdate: 'cascade' 
+    });
+
+export const MEASUREMENT_VISUAL_TYPES = [
+  'presence',
+  'statistics',
+  'full',
+] as const;
+
+/**
+ * ColumnGroup毎にどの測定をどう関連付けるか記録します
+ *
+ * あるColumnGroupに対して、
+ * - どの測定を関連付けるかmeasurementColumnGroupを指定
+ * - 表示方法（有/無、全部表示、統計データ...等々）
+ * を規定します
+ */
+export const columnGroupMeasurements = mysqlTable(
+  'ColumnGroupMeasurements',
+  {
+    id:
+      bigint('id', { mode: 'number', unsigned: true })
+        .notNull()
+        .autoincrement()
+        .primaryKey(),
+    projectId: projectIdReference,
+    /** condition と measurement を結びつける、condition側のcolumnGroupIdです */
+    columnGroupId: columnGroupIdReference,
+    /** condition と measurement を結びつける、measurement側のcolumnGroupIdです */
+    measurementColumnGroupId:
+      bigint('measurement_column_group_id', { mode: 'number', unsigned: true })
+      .notNull()
+      //.references(() => measurementColumnGroups.id, {
+      //  onDelete: 'restrict', onUpdate: 'cascade' 
+      //})
+      ,
+    visual:
+      varchar(
+        'visual', 
+        { length: 16, enum: MEASUREMENT_VISUAL_TYPES },
+      )
+      .notNull()
+      .default('presence'),
+  },
+  (table) => [
+    unique('cg_to_m_unique_key')
+      .on(table.columnGroupId, table.measurementColumnGroupId),
+    foreignKey({
+      name: 'cg_to_m_to_mcg_fk',
+      columns: [table.measurementColumnGroupId],
+      foreignColumns: [measurementColumnGroups.id],
+    }),
+  ],
+);
 
 const COLUMNS_NAME_LENGTH = 64 as const;
 export const COLUMNS_DATA_TYPES = [
@@ -103,18 +163,8 @@ export const columns = mysqlTable('Columns', {
       .notNull()
       .autoincrement()
       .primaryKey(),
-  columnGroupId:
-    bigint('column_group_id', { mode: 'number', unsigned: true })
-      .notNull()
-      .references(() => columnGroups.id, {
-        onDelete: 'restrict', onUpdate: 'cascade' 
-      }),
-  projectId:
-    varchar('project_id', { length: PROJECT_ID_LENGTH })
-      .notNull()
-      .references(() => projects.id, { 
-        onDelete: 'restrict', onUpdate: 'cascade',
-      }),
+  projectId: projectIdReference,
+  columnGroupId: columnGroupIdReference,
   name:
     varchar('name', { length: COLUMNS_NAME_LENGTH })
       .notNull()
@@ -177,18 +227,8 @@ export const data = mysqlTable(
         .notNull()
         .autoincrement()
         .primaryKey(),
-    columnGroupId:
-      bigint('column_group_id', { mode: 'number', unsigned: true })
-        .notNull()
-        .references(() => columnGroups.id, {
-          onDelete: 'cascade', onUpdate: 'cascade',
-        }),
-    projectId:
-      varchar('project_id', { length: PROJECT_ID_LENGTH })
-        .notNull()
-        .references(() => projects.id, { 
-          onDelete: 'restrict', onUpdate: 'cascade',
-        }),
+    projectId: projectIdReference,
+    columnGroupId: columnGroupIdReference,
     data:
       json('data').$type<JsonData>().notNull(),
 
@@ -210,18 +250,10 @@ const FLOW_NAME_LENGTH = 36;
 export type Grouping = 
   | { type: 'parent' }
   | { type: 'column'; columnName: string; }
-  | undefined;
 
 
-export type ColumnGroupWithGrouping = {
-  id: number;
-  grouping?: Grouping;
-}
+export const FlowStepModes = ['list', 'merge'] as const;
 
-export type FlowStep = {
-  columnGroupWithGroupings: ColumnGroupWithGrouping[];
-  mode: 'list' | 'merge';
-}
 
 /**
  * FlowはColumnGroupの繋がり・順番を規定します
@@ -234,20 +266,60 @@ export const flows = mysqlTable(
         .autoincrement()
         .notNull()
         .primaryKey(),
-    projectId:
-      varchar('project_id', { length: PROJECT_ID_LENGTH })
-        .notNull()
-        .references(() => projects.id, {
-          onDelete: 'cascade', onUpdate: 'cascade',
-        }),
+    projectId: projectIdReference,
     name:
       varchar('name', { length: FLOW_NAME_LENGTH })
         .notNull(),
-    flowSteps:
-      json('flow_steps')
+  }
+);
+
+/** Flowの1段階を表します */
+export const flowSteps = mysqlTable(
+  'FlowSteps',
+  {
+    id:
+      bigint('id', { mode: 'number', unsigned: true })
+        .autoincrement()
         .notNull()
-        .$type<FlowStep[]>()
-        .default([]),
+        .primaryKey(),
+    projectId: projectIdReference,
+    flowId:
+      bigint('flow_id', { mode: 'number', unsigned: true })
+        .notNull()
+        .references(() => flows.id, {
+          onUpdate: 'cascade', onDelete: 'cascade',
+        }),
+    mode:
+      varchar('mode', { length: 8, enum: FlowStepModes })
+        .notNull()
+        .default('list'),
+    sort:
+      int('sort', { unsigned: true }),
+  },
+);
+
+/** FlowStepに含まれるColumnGroupのid, 順番, グループ化方法を記録します */
+export const flowStepColumnGroups = mysqlTable(
+  'FlowStepColumnGroups',
+  {
+    id:
+      bigint('id', { mode: 'number', unsigned: true })
+        .autoincrement()
+        .notNull()
+        .primaryKey(),
+    projectId: projectIdReference,
+    flowStepId:
+      bigint('flow_step_id', { mode: 'number', unsigned: true })
+        .notNull()
+        .references(() => flowSteps.id, {
+          onDelete: 'cascade', onUpdate: 'cascade'
+        }),
+    columnGroupId: columnGroupIdReference,
+    grouping:
+      json('grouping')
+        .$type<Grouping|null>(),
+    sort:
+      int('sort', { unsigned: true }),
   }
 );
 
@@ -259,12 +331,7 @@ export const measurementColumnGroups = mysqlTable(
         .notNull()
         .autoincrement()
         .primaryKey(),
-    projectId:
-      varchar('project_id', { length: PROJECT_ID_LENGTH })
-        .notNull()
-        .references(() => projects.id, { 
-          onDelete: 'restrict', onUpdate: 'cascade',
-        }),
+    projectId: projectIdReference,
     name:
       varchar('name', { length: COLUMN_GROUP_NAME_LENGTH })
         .notNull()
@@ -275,6 +342,13 @@ export const measurementColumnGroups = mysqlTable(
   }
 );
 
+const measurementColumnGroupIdReference = 
+  bigint('column_group_id', { mode: 'number', unsigned: true })
+    .notNull()
+    .references(() => measurementColumnGroups.id, {
+      onDelete: 'restrict', onUpdate: 'cascade' 
+    });
+
 export const measurementColumns = mysqlTable(
   'MeasurementColumns',
   {
@@ -283,18 +357,8 @@ export const measurementColumns = mysqlTable(
         .notNull()
         .autoincrement()
         .primaryKey(),
-    columnGroupId:
-      bigint('column_group_id', { mode: 'number', unsigned: true })
-        .notNull()
-        .references(() => measurementColumnGroups.id, {
-          onDelete: 'restrict', onUpdate: 'cascade' 
-        }),
-    projectId:
-      varchar('project_id', { length: PROJECT_ID_LENGTH })
-        .notNull()
-        .references(() => projects.id, { 
-          onDelete: 'restrict', onUpdate: 'cascade',
-        }),
+    projectId: projectIdReference,
+    columnGroupId: measurementColumnGroupIdReference,
     name:
       varchar('name', { length: COLUMNS_NAME_LENGTH })
         .notNull()
@@ -326,18 +390,8 @@ export const measurements = mysqlTable(
         .autoincrement()
         .notNull()
         .primaryKey(),
-    columnGroupId:
-      bigint('column_group_id', { mode: 'number', unsigned: true })
-        .notNull()
-        .references(() => measurementColumnGroups.id, {
-          onDelete: 'cascade', onUpdate: 'cascade',
-        }),
-    projectId:
-      varchar('project_id', { length: PROJECT_ID_LENGTH })
-        .notNull()
-        .references(() => projects.id, {
-          onDelete: 'cascade', onUpdate: 'cascade',
-        }),
+    columnGroupId: measurementColumnGroupIdReference,
+    projectId: projectIdReference,
     data:
       json('data').$type<JsonData>().notNull(),
     dataId:
@@ -356,15 +410,32 @@ export const projectRelations =
 // 本当は flow 関連でもrelationsを使用したいが、
 // JSON型で記録しているためにちょっと無理
 
-export const columnGroupRelations =
-  relations(columnGroups, ({ one, many }) => ({
+export const columnGroupRelations = relations(
+  columnGroups, 
+  ({ one, many }) => ({
     project: one(projects, {
       fields: [columnGroups.projectId],
       references: [projects.id],
     }),
     columns: many(columns),
     data: many(data),
-  }));
+    measurements: many(columnGroupMeasurements), 
+  })
+);
+
+export const columnGroupMeasurementRelations = relations(
+  columnGroupMeasurements,
+  ({ one }) => ({
+    columnGroup: one(columnGroups, {
+      fields: [columnGroupMeasurements.columnGroupId],
+      references: [columnGroups.id],
+    }),
+    measurementColumnGroup: one(measurementColumnGroups, {
+      fields: [columnGroupMeasurements.measurementColumnGroupId],
+      references: [measurementColumnGroups.id],
+    }),
+  }),
+);
 
 export const columnRelations =
   relations(columns, ({ one }) => ({
@@ -388,14 +459,18 @@ export const dataRelations =
     measurements: many(measurements),
   }));
 
-export const measurementColumnGroupRelations =
-  relations(measurementColumnGroups, ({ one, many }) => ({
+export const measurementColumnGroupRelations = relations(
+  measurementColumnGroups, 
+  ({ one, many }) => ({
     project: one(projects, {
       fields: [measurementColumnGroups.projectId],
       references: [projects.id],
     }),
     columns: many(measurementColumns),
-  }));
+    data: many(measurements),
+    columnGroupToMeasurements: many(columnGroupMeasurements)
+  })
+);
 
 export const measurementColumnRelations =
   relations(measurementColumns, ({ one }) => ({
@@ -410,6 +485,10 @@ export const measurementRelations =
     data: one(data, {
       fields: [measurements.dataId],
       references: [data.id],
-    })
+    }),
+    columnGroup: one(measurementColumnGroups, {
+      fields: [measurements.columnGroupId],
+      references: [measurementColumnGroups.id],
+    }),
   }));
 

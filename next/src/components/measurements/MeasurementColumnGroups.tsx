@@ -2,7 +2,7 @@
 
 import clsx from 'clsx';
 
-import { useMeasurementColumnGroupsWithColumns } from '@/hooks/useMeasurementColumnGroupsWithColumns';
+import { useMeasurementColumnGroups } from '@/hooks/useMeasurementColumnGroups';
 
 import Skeleton from '@/components/common/Skeleton';
 import Button from '@/components/common/Button';
@@ -20,11 +20,14 @@ const MeasurementColumnGroups = ({
   className,
 }: MeasurementColumnGroupsProps) => {
   const {
-    data: measurementColumnGroupsWithColumns,
+    data: columnGroups,
+    isLoading,
     add,
-  } = useMeasurementColumnGroupsWithColumns({ projectId });
+    update,
+    remove,
+  } = useMeasurementColumnGroups({ projectId });
 
-  if (measurementColumnGroupsWithColumns == null) {
+  if (isLoading) {
     return <Skeleton />;
   }
 
@@ -33,16 +36,19 @@ const MeasurementColumnGroups = ({
       className={clsx(
         'px-2 pb-2 m-2',
         'flex flex-col gap-4',
+        'animate-fade-in',
         className,
       )}
     >
       <div className='text-xl font-bold'>
         測定列グループ
       </div>
-      {measurementColumnGroupsWithColumns.map(measurementColumnGroupWithColumns =>
+      {columnGroups.map(columnGroup =>
         <MeasurementColumnGroup 
-          key={measurementColumnGroupWithColumns.id}
-          initialValue={measurementColumnGroupWithColumns}
+          key={columnGroup.id}
+          columnGroup={columnGroup}
+          update={update}
+          remove={remove}
         />
       )}
       <div className='divider' />

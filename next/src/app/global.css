@@ -1,3 +1,13 @@
 @import "tailwindcss";
 @plugin "daisyui";
 @plugin "@tailwindcss/typography";
+
+@theme {
+  --animate-fade-in: fade-in 0.2s ease-in;
+
+  @keyframes fade-in {
+    0% { opacity: 0% }
+    100% { opacity: 100% }
+  }
+}
+

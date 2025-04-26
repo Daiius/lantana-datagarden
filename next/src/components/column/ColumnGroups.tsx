@@ -21,14 +21,15 @@ const ColumnGroups = ({
   className,
 }: ColumnGroupsProps) => {
 
-  const {
-    columnGroups,
-    addColumnGroup,
-  } = useColumnGroups({
-    projectId
-  });
+  const { 
+    data: columnGroups,
+    isLoading,
+    update,
+    add,
+    remove,
+  } = useColumnGroups({ projectId });
 
-  if (columnGroups == null) return (
+  if (isLoading) return (
     <Skeleton />
   );
 
@@ -37,6 +38,7 @@ const ColumnGroups = ({
       className={clsx(
         'px-2 pb-2 m-2',
         'flex flex-col gap-4',
+        'animate-fade-in',
         className,
       )}
     >
@@ -44,12 +46,17 @@ const ColumnGroups = ({
         列グループ
       </div>
       {columnGroups.map(c =>
-        <ColumnGroup key={c.id} columnGroup={c} />
+        <ColumnGroup 
+          key={c.id} 
+          columnGroup={c} 
+          update={update}
+          remove={remove}
+        />
       )}
       <div className='divider'></div>
       <Button 
         className='btn-success'
-        onClick={async () => await addColumnGroup({
+        onClick={async () => await add({
           name: '新しい列グループ',
           sort: null,
           projectId,

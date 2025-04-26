@@ -31,7 +31,7 @@ const FlowSelect = ({
   initialId,
   className,
 }: FlowSelectProps) => {
-  const { flows } = useFlows({ projectId });
+  const { data: flows } = useFlows({ projectId });
   const { 
     project,
     update,
