@@ -7,19 +7,24 @@ import type { ColumnGroup } from '@/types';
 import { useDebouncedCallback } from 'use-debounce';
 import { DebounceTime } from '@/hooks/common';
 
+/**
+ * 指定されたprojectに属するColumnGroup[]を取得します
+ * IMEを用いた入力欄バインド用のstateと、React Queryによるキャッシュを持ちます
+ *
+ * NOTE subscriptionは別コンポーネントで行います
+ */
 export const useColumnGroups = ({
   projectId
 }: {
   projectId: string;
 }) => {
 
+  const target = trpc.condition.columnGroup;
+
   const { 
     data: fetchedData,
     isLoading,
-  } = trpc.condition.columnGroup.list.useQuery(
-    { projectId },
-    //{ keepPreviousData: true },
-  );
+  } = target.list.useQuery({ projectId });
   const [data, setData] = useState<ColumnGroup[]>([]);
   useEffect(() => {
     if (fetchedData != null) {
@@ -27,8 +32,7 @@ export const useColumnGroups = ({
     }
   }, [fetchedData]);
 
-  const { mutateAsync: updateDb } =
-    trpc.condition.columnGroup.update.useMutation();
+  const { mutateAsync: updateDb } = target.update.useMutation();
   const debouncedUpdateDb = useDebouncedCallback(
     async (newData: ColumnGroup) => await updateDb(newData),
     DebounceTime,
@@ -37,28 +41,9 @@ export const useColumnGroups = ({
     setData(data.map(d => d.id === newData.id ? newData : d));
     await debouncedUpdateDb(newData);
   };
-  trpc.condition.columnGroup.onUpdate.useSubscription(
-    { projectId },
-    { onData: newData => setData(data.map(d => d.id === newData.id ? newData : d)) }
-  );
 
-  const { mutateAsync: add } =
-    trpc.condition.columnGroup.add.useMutation();
-  trpc.condition.columnGroup.onAdd.useSubscription(
-    { projectId },
-    {
-      onData: newData => setData([...data, newData]),
-    }
-  );
-
-  const { mutateAsync: remove } =
-    trpc.condition.columnGroup.remove.useMutation();
-  trpc.condition.columnGroup.onRemove.useSubscription(
-    { projectId },
-    {
-      onData: info => setData(data.filter(d => d.id !== info.id)),
-    }
-  );
+  const { mutateAsync: add } = target.add.useMutation();
+  const { mutateAsync: remove } = target.remove.useMutation();
 
   return {
     data,
