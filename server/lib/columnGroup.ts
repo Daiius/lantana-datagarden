@@ -2,63 +2,39 @@
 import { db } from 'database/db';
 import { 
   columnGroups,
-  columns,
-  data,
-  measurements,
 } from 'database/db/schema';
 import { eq, and, asc } from 'drizzle-orm';
-import * as schema from 'database/db/schema';
-import { MySql2Database } from 'drizzle-orm/mysql2';
+import { createSelectSchema } from 'drizzle-zod';
 
-type ColumnGroup = typeof columnGroups.$inferSelect;
+export type ColumnGroup = typeof columnGroups.$inferSelect;
 
-export const get = async (
-  { id, projectId }
-  : Pick<ColumnGroup, 'id' | 'projectId'>
-) =>
-  await db.query.columnGroups.findFirst({
-    where: and(
-      eq(columnGroups.id, id),
-      eq(columnGroups.projectId, projectId)
-    ),
+export const columnGroupSchema = createSelectSchema(columnGroups);
+
+export type Ids = Pick<ColumnGroup, 'projectId'|'id'>;
+export type ProjectId = Pick<ColumnGroup, 'projectId'>;
+
+const whereIds = (ids: Ids) => and(
+  eq(columnGroups.id, ids.id),
+  eq(columnGroups.projectId, ids.projectId)
+);
+
+const whereProjectId = (projectId: ProjectId) => 
+eq(columnGroups.projectId, projectId.projectId);
+
+export const get = async (ids: Ids) => {
+  const value = await db.query.columnGroups.findFirst({
+    where: whereIds(ids)
   });
+  if (value == null) throw new Error(
+    `cannot find columnGroup ${ids.id}`
+  );
+  return value;
+}
 
-export const getNested = async (
-  { id, projectId }: Pick<ColumnGroup, 'id' | 'projectId'>
-) =>
-  await db.query.columnGroups.findFirst({
-    where: and(
-      eq(columnGroups.projectId, projectId),
-      eq(columnGroups.id, id),
-    ),
-    with: {
-      columns: {
-        orderBy: [asc(columns.id)]
-      }
-    }
-  });
-
-
-
-export const list = async (
-  { projectId } : Pick<ColumnGroup, 'projectId'>
-) =>
+export const list = async (projectId : ProjectId) =>
   await db.query.columnGroups.findMany({
-    where: eq(columnGroups.projectId, projectId),
+    where: whereProjectId(projectId),
     orderBy: [asc(columnGroups.id)],
-  });
-
-export const listNested = async ({
-  projectId,
-}: Pick<ColumnGroup, 'projectId'>) =>
-  await db.query.columnGroups.findMany({
-    where: eq(columnGroups.projectId, projectId),
-    orderBy: [asc(columnGroups.id)],
-    with: {
-      columns: {
-        orderBy: [asc(columns.id)],
-      }
-    }
   });
 
 /**
@@ -71,14 +47,8 @@ export const listNested = async ({
 export const update = async (columnGroup: ColumnGroup) => {
   await db.update(columnGroups)
     .set(columnGroup)
-    .where(
-      and(
-        eq(columnGroups.id, columnGroup.id),
-        eq(columnGroups.projectId, columnGroup.projectId)
-      )
-    );
-  const newColumnGroup = await getNested(columnGroup);
-  return newColumnGroup;
+    .where(whereIds(columnGroup));
+  return await get(columnGroup);
 };
 
 export const add = async (columnGroup: Omit<ColumnGroup, 'id'>) => {
@@ -89,115 +59,14 @@ export const add = async (columnGroup: Omit<ColumnGroup, 'id'>) => {
   if (newId == null) throw new Error(
     `cannot find added columnGroup`
   );
-  const newColumnGroup = await getNested({ ...columnGroup, id: newId });
-  if (newColumnGroup == null) throw new Error(
-    `cannot get added columnGroup ${newId}`
-  );
-  return newColumnGroup;
+  return await get({ ...columnGroup, id: newId });
 }
 
-/**
- * TODO
- * on delete cascade で自動的に関連付けられている
- * columnGroups, columns, data エンティティは削除されるかもしれない
- * ので、この処理を丁寧に行う以下の処理は不要かも
+/** 
+ * 指定したColumnGroupを削除します 
+ * 関連付けられているColumn, Dataも全て削除されます
+ * TODO 多くのデータが消える過激な処理かもしれない
  */
-export const remove = async (
-  { id, projectId }: Pick<ColumnGroup, 'id'|'projectId'>
-) => {
-  await db.transaction(async tx => {
-    await tx.delete(data).where(
-      and(
-        eq(data.columnGroupId, id),
-        eq(data.projectId, projectId),
-      ),
-    );
-    await tx.delete(columns).where(
-      and(
-        eq(columns.columnGroupId, id),
-        eq(columns.projectId, projectId),
-      )
-    );
-    await tx.delete(columnGroups).where(
-      and(
-        eq(columnGroups.id, id),
-        eq(columnGroups.projectId, projectId),
-      )
-    );
-  });
-
-  return { id, projectId };
-};
-
-// NOTE MeasurementsとDataでColumnGroupを分けたので要変更
-const moveDataToMeasurement = async ({
-  tx,
-  projectId,
-  columnGroupId,
-}: {
-  tx: MySql2Database<typeof schema>;
-  projectId: string;
-  columnGroupId: number;
-}) => {
-  await tx.insert(measurements)
-    .select(
-      tx.select({
-        id: data.id,
-        columnGroupId: data.columnGroupId,
-        projectId: data.projectId,
-        data: data.data,
-        dataId: data.parentId, 
-      })
-      .from(data)
-      .where(
-        and(
-          eq(data.columnGroupId, columnGroupId),
-          eq(data.projectId, projectId),
-        )
-      ),
-    );
-  await tx.delete(data)
-    .where(
-      and(
-        eq(data.columnGroupId, columnGroupId),
-        eq(data.projectId, projectId),
-      )
-    );
-};
-
-// NOTE MeasurementsとDataでColumnGroupを分けたので要変更
-const moveMeasurementToData = async ({
-  tx,
-  projectId,
-  columnGroupId,
-}: {
-  tx: MySql2Database<typeof schema>;
-  projectId: string;
-  columnGroupId: number;
-}) => {
-  await tx.insert(data)
-    .select(
-      tx.select({
-        id: measurements.id,
-        columnGroupId: measurements.columnGroupId,
-        projectId: measurements.projectId,
-        data: measurements.data,
-        parentId: measurements.dataId, 
-      })
-      .from(measurements)
-      .where(
-        and(
-          eq(measurements.columnGroupId, columnGroupId),
-          eq(measurements.projectId, projectId),
-        )
-      ),
-    );
-  await tx.delete(measurements)
-    .where(
-      and(
-        eq(measurements.columnGroupId, columnGroupId),
-        eq(measurements.projectId, projectId),
-      )
-    );
-};
+export const remove = async (ids: Ids) =>
+await db.delete(columnGroups).where(whereIds(ids));
 

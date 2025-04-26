@@ -1,81 +1,73 @@
 import React from 'react';
 import clsx from 'clsx';
 
-import type {
-  ColumnGroup,
-  Column,
-} from '@/types';
+import type { ColumnGroup } from '@/types';
 
 import { IconTrash } from '@tabler/icons-react';
 
-import { useColumnGroup } from '@/hooks/useColumnGroup';
+import type { useColumnGroups } from '@/hooks/useColumnGroups';
 
 import Button from '@/components/common/Button';
 import Columns from '@/components/column/Columns';
-import DebouncedInput from '@/components/common/DebouncedInput';
+import Input from '@/components/common/Input';
 
-type ColumnGroupWithColumns = ColumnGroup & { columns: Column[] };
+import { Measurements } from '@/components/column/Measurements';
 
-type ColumnGroupProps = {
-  columnGroup: ColumnGroupWithColumns
 
-  className?: string;
-};
+type ColumnGroupProps = 
+  & { columnGroup: ColumnGroup }
+  & Pick<ReturnType<typeof useColumnGroups>, 'update'|'remove'>
+  & { className?: string; };
 
 const ColumnGroup = ({
-  columnGroup: initialColumnGroup,
+  columnGroup,
+  update,
+  remove,
   className,
-}: ColumnGroupProps) => {
-
-  const { id, projectId } = initialColumnGroup;
-  const {
-    columnGroup,
-    updateColumnGroup,
-    deleteColumnGroup,
-  } = useColumnGroup({
-    initialColumnGroup
-  });
-
-  return (
-    <div 
-      className={clsx(
-        'rounded-lg border border-base-100',
-        'p-4',
-        'bg-base-200',
-        className,
-      )} 
-    >
-      <div className='flex flex-row'>
-        <fieldset className='fieldset'>
-          <label className='fieldset-label'>
-            列グループ名:
-          </label>
-          <DebouncedInput
-            value={columnGroup.name}
-            debouncedOnChange={async newValue =>
-              await updateColumnGroup(
-                { ...columnGroup, name: newValue as string }
-              )
-            }
-          />
-        </fieldset>
-        <Button 
-          className='text-error ms-auto'
-          onClick={async () => await deleteColumnGroup(
-            { ...columnGroup }
-          )}
-        >
-          <IconTrash />
-        </Button>
-      </div>
-      <Columns 
-        projectId={projectId}
-        columnGroupId={id}
-        initialColumns={columnGroup.columns} 
-      />
+}: ColumnGroupProps) => (
+  <div 
+    className={clsx(
+      'rounded-lg border border-base-100',
+      'p-4',
+      'bg-base-200',
+      className,
+    )} 
+  >
+    <div className='flex flex-row'>
+      <fieldset className='fieldset'>
+        <label className='fieldset-label'>
+          列グループ名:
+        </label>
+        <Input
+          value={columnGroup.name}
+          onChange={async newValue =>
+            await update(
+              { ...columnGroup, name: newValue as string }
+            )
+          }
+        />
+      </fieldset>
+      <Button 
+        className='text-error ms-auto'
+        onClick={async () => await remove({ 
+          id: columnGroup.id,
+          projectId: columnGroup.projectId,
+        })}
+      >
+        <IconTrash />
+      </Button>
     </div>
-  );
-};
+    <Columns 
+      projectId={columnGroup.projectId}
+      columnGroupId={columnGroup.id}
+    />
+    <div className='divider'/>
+    <Measurements
+      projectId={columnGroup.projectId}
+      columnGroupId={columnGroup.id}
+    />
+  </div>
+);
 
 export default ColumnGroup;
 

@@ -4,10 +4,6 @@ import React from 'react';
 import clsx from 'clsx';
 
 
-import type {
-  Column as ColumnType
-} from '@/types';
-
 import Column from '@/components/column/Column';
 import Button from '@/components/common/Button';
 
@@ -16,7 +12,6 @@ import { useColumns } from '@/hooks/useColumns';
 type ColumnsProps = {
   projectId: string;
   columnGroupId: number;
-  initialColumns: ColumnType[]; 
 
   className?: string;
 };
@@ -24,15 +19,16 @@ type ColumnsProps = {
 const Columns = ({
   columnGroupId,
   projectId,
-  initialColumns,
+  //initialColumns,
   className,
 }: ColumnsProps) => {
 
   const {
-    columns,
-    addColumn,
+    data: columns,
+    add,
+    update,
+    remove,
   } = useColumns({
-    initialColumns,
     projectId,
     columnGroupId,
   });
@@ -46,22 +42,24 @@ const Columns = ({
         className,
       )}
     >
-      {columns?.map(c =>
-        <Column key={c.id} initialColumn={c} />
+      {columns?.map(column =>
+        <Column 
+          key={column.id} 
+          column={column} 
+          update={update}
+          remove={remove}
+        />
       )}
       <Button 
         className='btn-success'
-        onClick={async () => {
-          console.log('Adding column to column group, ', columnGroupId);
-          await addColumn({
-            name: '',
-            projectId,
-            columnGroupId,
-            isOptional: false,
-            type: 'string',
-            sort: null,
-          });
-        }}
+        onClick={async () => await add({
+          name: '',
+          projectId,
+          columnGroupId,
+          isOptional: false,
+          type: 'string',
+          sort: null,
+        })}
       >
         + 列の追加
       </Button>

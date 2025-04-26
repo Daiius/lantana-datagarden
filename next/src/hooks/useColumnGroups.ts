@@ -1,28 +1,56 @@
-import { trpc } from '@/providers/TrpcProvider';
+'use client' // for hooks
 
+import { useEffect, useState } from 'react';
+
+import { trpc } from '@/providers/TrpcProvider';
+import type { ColumnGroup } from '@/types';
+import { useDebouncedCallback } from 'use-debounce';
+import { DebounceTime } from '@/hooks/common';
+
+/**
+ * 指定されたprojectに属するColumnGroup[]を取得します
+ * IMEを用いた入力欄バインド用のstateと、React Queryによるキャッシュを持ちます
+ *
+ * NOTE subscriptionは別コンポーネントで行います
+ */
 export const useColumnGroups = ({
   projectId
 }: {
   projectId: string;
 }) => {
-  // column関連のトップレベルのデータ取得
-  // まとめてネストしたcolumnGroups, columns を取得する
-  const { data: columnGroups } = 
-    trpc.columnGroup.listNested.useQuery({ projectId });
-  const utils = trpc.useUtils();
-  // 数の変更や削除時に全読み込みしなおす
-  trpc.columnGroup.onUpdateList.useSubscription(
-    { projectId }, {
-      onData: data =>
-        utils.columnGroup.listNested.setData({ projectId }, data),
-      onError: err => console.error(err),
+
+  const target = trpc.condition.columnGroup;
+
+  const { 
+    data: fetchedData,
+    isLoading,
+  } = target.list.useQuery({ projectId });
+  const [data, setData] = useState<ColumnGroup[]>([]);
+  useEffect(() => {
+    if (fetchedData != null) {
+      setData(fetchedData);
     }
-  ); 
-  const { mutateAsync: addColumnGroup } = trpc.columnGroup.add.useMutation();
+  }, [fetchedData]);
+
+  const { mutateAsync: updateDb } = target.update.useMutation();
+  const debouncedUpdateDb = useDebouncedCallback(
+    async (newData: ColumnGroup) => await updateDb(newData),
+    DebounceTime,
+  );
+  const update = async (newData: ColumnGroup) => {
+    setData(data.map(d => d.id === newData.id ? newData : d));
+    await debouncedUpdateDb(newData);
+  };
+
+  const { mutateAsync: add } = target.add.useMutation();
+  const { mutateAsync: remove } = target.remove.useMutation();
 
   return {
-    columnGroups,
-    addColumnGroup,
+    data,
+    isLoading,
+    update,
+    add,
+    remove,
   };
 };
 

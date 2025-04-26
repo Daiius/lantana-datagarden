@@ -5,40 +5,31 @@ import { IconTrash } from '@tabler/icons-react';
 
 import { 
   MeasurementColumnGroup as MeasurementColumnGroupType,
-  MeasurementColumnGroupWithColumns,
 } from '@/types';
 
-import { useMeasurementColumnGroup } from '@/hooks/useMeasurementColumnGroup';
+import type { useMeasurementColumnGroups } from '@/hooks/useMeasurementColumnGroups';
 
 import Skeleton from '@/components/common/Skeleton';
 import Button from '@/components/common/Button';
-import DebouncedInput from '@/components/common/DebouncedInput';
+import Input from '@/components/common/Input';
 
 import MeasurementColumns from '@/components/measurements/MeasurementColumns';
 
-export type MeasurementColumnGroupProps<
-  T extends MeasurementColumnGroupType
-> = {
-  initialValue: T;
-  className?: string;
-}
+export type MeasurementColumnGroupProps = 
+  & Pick<ReturnType<typeof useMeasurementColumnGroups>, 'update'|'remove'>
+  & {
+      columnGroup: MeasurementColumnGroupType;
+      className?: string;
+    };
 
-const MeasurementColumnGroup = <
-  T extends MeasurementColumnGroupWithColumns,
->({
-  initialValue,
+const MeasurementColumnGroup = ({
+  columnGroup,
+  update,
+  remove,
   className,
-}: MeasurementColumnGroupProps<T>) => {
+}: MeasurementColumnGroupProps) => {
 
-  const { projectId, id } = initialValue;
- 
-  const { 
-    data, 
-    update,
-    remove, 
-  } = useMeasurementColumnGroup({ initialData: initialValue });
-
-  if (data == null) {
+  if (columnGroup == null) {
     return <Skeleton />
   }
 
@@ -56,11 +47,11 @@ const MeasurementColumnGroup = <
           <label className='fieldset-label'>
             列グループ名:
           </label>
-          <DebouncedInput
-            value={data.name}
-            debouncedOnChange={async newValue => {
+          <Input
+            value={columnGroup.name}
+            onChange={async newValue => {
               await update(
-                { ...data, name: newValue as string }
+                { ...columnGroup, name: newValue as string }
               );
             }}
           />
@@ -68,17 +59,16 @@ const MeasurementColumnGroup = <
         <Button 
           className='text-error ms-auto'
           onClick={async () => await remove({ 
-            projectId: data.projectId,
-            id: data.id,
+            projectId: columnGroup.projectId,
+            id: columnGroup.id,
           })}
         >
           <IconTrash />
         </Button>
       </div>
       <MeasurementColumns 
-        projectId={projectId}
-        columnGroupId={id}
-        initialValue={data.columns} 
+        projectId={columnGroup.projectId}
+        columnGroupId={columnGroup.id}
       />
     </div>
   );

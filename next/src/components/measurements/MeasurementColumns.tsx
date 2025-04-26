@@ -1,8 +1,5 @@
 import clsx from 'clsx';
 
-import type { 
-  MeasurementColumn as MeasurementColumnType 
-} from '@/types';
 
 import {
   useMeasurementColumns
@@ -11,34 +8,29 @@ import {
 import Button from '@/components/common/Button';
 import MeasurementColumn from '@/components/measurements/MeasurementColumn';
 
-type MeasurementColumnsProps<
-  T extends MeasurementColumnType
-> = {
+type MeasurementColumnsProps = {
   projectId: string;
   columnGroupId: number;
-  initialValue: T[];
 };
 
-const MeasurementColumns = <
-  T extends MeasurementColumnType
->({
+const MeasurementColumns = ({
   projectId,
   columnGroupId,
-  initialValue,
-}: MeasurementColumnsProps<T>) => {
+}: MeasurementColumnsProps) => {
 
-  const { data: columns, add, } = useMeasurementColumns({
+  const { data: columns, add, update, remove } = useMeasurementColumns({
     projectId,
     columnGroupId,
-    initialData: initialValue
   });
 
   return (
     <>
-      {columns.map(column => 
+      {columns?.map(column => 
         <MeasurementColumn
           key={column.id}
-          initialValue={column}
+          column={column}
+          update={update}
+          remove={remove}
         />
       )}
       <Button

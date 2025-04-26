@@ -1,49 +1,62 @@
+'use client' // for hooks
+
+import { useEffect, useState } from 'react';
 
 import { trpc } from '@/providers/TrpcProvider';
+import type { MeasurementColumnGroup } from '@/types';
+import { useDebouncedCallback } from 'use-debounce';
+import { DebounceTime } from '@/hooks/common';
 
-export type UseMeasurementColumNGroupsArgs = {
+export type UseMeasurementColumnGroupsArgs = {
   projectId: string;
 }
 
 /**
- * TODO なぜかtRPC型伝搬が出来ない
+ * 指定されたprojectに属するMeasurementColumnGroup[]を取得します
+ * IMEを用いた入力欄バインド用のstateと、React Queryによるキャッシュを持ちます
+ * 
+ * NOTE subscriptionは別コンポ―ネントで行います
  */
 export const useMeasurementColumnGroups = ({
   projectId
-}: UseMeasurementColumNGroupsArgs) => {
-  const utils = trpc.useUtils();
-  const { data: measurementColumnGroups } = 
-    trpc.measurement.columnGroup.list.useQuery({ projectId });
+}: UseMeasurementColumnGroupsArgs) => {
 
-  trpc.measurement.columnGroup.onAdd.useSubscription(
-    { projectId },
-    {
-      onData: data => utils.measurement.columnGroup.list.setData(
-        { projectId },
-        measurementColumnGroups == null
-        ? [data]
-        : [...measurementColumnGroups, data]
-      ),
+  const target = trpc.measurement.columnGroup;
+
+  const { 
+    data: fetchedData,
+    isLoading,
+  } = target.list.useQuery({ projectId });
+
+  // IMEを使用する入力欄のvalueにする際、
+  // React Queryキャッシュを直接設定するとおかしくなるのでstateを使う
+  const [data, setData] = useState<MeasurementColumnGroup[]>([]);
+  useEffect(() => {
+    if (fetchedData != null) {
+      setData(fetchedData);
     }
-  );
+  }, [fetchedData]);
 
-  trpc.measurement.columnGroup.onRemove.useSubscription(
-    { projectId },
-    {
-      onData: data => utils.measurement.columnGroup.list.setData(
-        { projectId },
-        measurementColumnGroups == null
-        ? []
-        : measurementColumnGroups.filter(mcg => mcg.id !== data.id)
-      )
-    }
+  const { mutateAsync: updateDb } = target.update.useMutation();
+  const debouncedUpdateDb = useDebouncedCallback(
+    async (newData: MeasurementColumnGroup) => await updateDb(newData),
+    DebounceTime,
   );
+  const update = async (newValue: MeasurementColumnGroup) => {
+    setData(data.map(d => d.id === newValue.id ? newValue: d));
+    await debouncedUpdateDb(newValue);
+  };
 
-  const { mutateAsync: addMeasurementColumnGroup } = trpc.measurement.columnGroup.add.useMutation();
+  const { mutateAsync: add } = target.add.useMutation();
+
+  const { mutateAsync: remove } = target.remove.useMutation();
 
   return {
-    measurementColumnGroups,
-    addMeasurementColumnGroup,
+    data,
+    isLoading,
+    update,
+    add,
+    remove,
   }
 };
 

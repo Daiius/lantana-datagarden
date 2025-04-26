@@ -37,6 +37,13 @@ validate 関数を拡張する必要がありそう
 区別して扱い、新規追加データが - で表示されるバグも防げた。
 
 
+## 開発速度の低下、親子関係のあるオブジェクトの扱い再考
+ネストされたオブジェクトを初期値用に取得して、
+個別に他のオブジェクトの更新を行う方法、だんだん収集が付かなくなってきた
+
+一度、カスケード状のロードを許容して作ってみる
+
+
 ## 測定データを扱えるようにする
 測定データは、
 - 一つの条件データに複数紐づけ可能なcolumnGroup
@@ -78,6 +85,83 @@ MeasurementColumnGroupとMeasurementColumnGroupも作るべき？
   その名前を後からしていする？
 - UI的には、内容非表示ならばモーダルで、
   一覧表示されていれば直接入力でいくか
+
+## アプリケーション設計の見直し、層を分ける？
+```mermaid
+graph TB
+
+    user((ユーザ))
+
+    subgraph condition[条件定義]
+        direction LR
+        cond_show(表示?)
+        cond_def(CRUD)
+        cond_link_meas(測定種類紐づけ)
+        cond_data(条件データCRUD)
+    end
+
+    subgraph measurement[測定定義]
+        direction LR
+        meas_show(表示)
+        meas_def(CRUD)
+        meas_bulk_add(一括追加)
+    end
+
+    subgraph flow[フロー]
+        direction LR
+        flow_show(表示)
+        flow_def(CRUD)
+        flow_link_meas_data(測定データ紐づけ)
+        flow_link_meas_type(測定種類紐づけ)
+    end
+
+    subgraph flowing_table[フロー表]
+        direction LR
+        flow_t_show(表示)
+        flow_t_add_cond(条件データ追加)
+        flow_t_add_meas(測定データ追加)
+        flow_t_link_meas(測定種類紐づけ)
+    end
+
+    user --> condition
+    user --> measurement
+    user --> flow
+    user --> flowing_table
+```
+
+## 測定データと条件データの関連付けテスト
+### 実現したい動作
+- columnGroup毎に、測定データの使用有無と表示方法を選択させる
+- tableに測定項目の欄が、指定した測定データについて、
+  指定した表示方法で追加される
+- 測定ID（元々は測定データの項目の一つだが、
+  一意にデータを特定する文字列）と関連付ける入力欄も付ける
+
+### 実装方法
+- columnGroupに測定関連の情報を持たせる
+  - columnGroupMeasurements...名前は悩むが......テーブルを作って、
+    columnGroupId毎にどのMeasurementColumnGroupが紐づけられるか記録?
+- columnGroupMeasurementsを元にrelationでネストしたデータを取得
+- tableの列を追加していく...ことで対応できるか？
+
+データベース検討...
+```mermaid
+erDiagram
+    ColumnGroup {
+        number id
+    }
+    ColumnGroupToMeasurements {
+        number id
+        number columnGroupId
+        number measurementColumnGroupId
+    }
+    MeasurementColumnGroup {
+        number id
+    }
+
+    ColumnGroup ||--o{ ColumnGroupToMeasurements : "a columnGroup have possibly multiple types of measurements"
+    ColumnGroupToMeasurements }o--|| MeasurementColumnGroup :"a columnGroupToMeasurements have a measurementColumnGroup<br>a measurementColumnGroup is referenced by some columnGroupToMeasurements"
+```
 
 WRITING...
 

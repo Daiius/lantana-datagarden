@@ -1,99 +1,59 @@
-'use client'
-
-import {
-  useMemo,
-} from 'react';
+'use client' // for hooks
 
 import clsx from 'clsx';
 
-import {
-  createColumnHelper,
-  useReactTable,
-  getCoreRowModel,
-  getSortedRowModel,
-} from '@tanstack/react-table';
 
+import { useMeasurements } from '@/hooks/useMeasurements';
+import { useMeasurementMutations } from '@/hooks/useMeasurementMutations';
+import { useMeasurementColumns } from '@/hooks/useMeasurementColumns';
 
-import type {
-  MeasurementColumn,
-  Measurement,
-} from '@/types';
-
-import TableHeader from '@/components/table/TableHeader';
-import MeasurementTableCell from '@/components/measurements/MeasurementTableCell';
-import MeasurementRow from '@/components/measurements/MeasurementRow';
+import Button from '@/components/common/Button';
+import { Table } from '@/components/measurements/Table';
+import Skeleton from '@/components/common/Skeleton';
 
 export type MeasurementTableProps = {
-  columns: MeasurementColumn[];
-  data: Measurement[];
-  add: (args: Omit<Measurement, 'id'>) => Promise<void>;
+  projectId: string;
+  columnGroupId: number;
 };
 
-const MeasurementTable = ({
-  columns,
-  data,
-  add,
+export const MeasurementTable = ({
+  projectId,
+  columnGroupId,
 }: MeasurementTableProps) => {
-  const columnHelper = createColumnHelper<Measurement>();
-
-  const tableColumns = useMemo(() => columns.map(column =>
-    columnHelper.accessor(d => d.data[column.name], {
-      id: column.name,
-      cell: ({ row, table }) =>
-        <MeasurementTableCell
-          column={column}
-          row={row}
-          table={table}
-        />
-    })
-  ), [columns]);
-
-  const table = useReactTable<Measurement>({
-    data,
-    columns: tableColumns,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getRowId: row => row.id.toString(),
+  const { data } = useMeasurements({ 
+    projectId, 
+    columnGroupId,
   });
+  const { data: columns } = useMeasurementColumns({ 
+    projectId, 
+    columnGroupId,
+  });
+  const { add } = useMeasurementMutations();
+
+  if (!data || !columns) {
+    return <Skeleton />;
+  }
 
   return (
-    <div className='w-fit'>
-      <table
-        className={clsx(
-          'border-collapse w-full',
-          'table table-sm table-zebra',
-        )}
-      >
-        <thead>
-          {table.getHeaderGroups().map(headerGroup =>
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map(header =>
-                <TableHeader key={header.id} header={header} />
-              )}
-              <th
-                className={clsx(
-                  'border border-gray-300 bg-gray-500/20',
-                  'text-center',
-                )}
-              >
-                ...
-              </th>
-            </tr>
-          )}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map(row =>
-            <MeasurementRow
-              key={row.id}
-              row={row}
-              columns={columns}
-            />
-          )}
-        </tbody>
-      </table>
-    </div>
+    <>
+    <Table
+      columns={columns}
+      data={data}
+    />
+    <Button 
+      className='btn-accent btn-block'
+      onClick={async () => await add({
+        projectId,
+        columnGroupId,
+        dataId: null,
+        data: Object.fromEntries(
+          columns.map(column => [column.name, null])
+        )
+      })}
+    >
+      データ追加
+    </Button>
+    </>
   );
 };
-
-export default MeasurementTable;
 

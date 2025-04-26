@@ -8,11 +8,15 @@ type Project = typeof projects.$inferSelect;
  * 指定したIDのprojectを取得します
  * TODO orderByを適切に指定できるよう、作成日時を追加したい
  */
-export const get = async ({ id }: Pick<Project, 'id'>) =>
-   await db.query.projects.findFirst({
+export const get = async ({ id }: Pick<Project, 'id'>) => {
+   const value = await db.query.projects.findFirst({
      where: eq(projects.id, id),
    });
-
+   if (value == null) throw new Error(
+     `cannot find project ${id}`
+   );
+   return value;
+}
 /**
  * プロジェクトのリストを取得します
  *  TODO ユーザが属するプロジェクトだけ返却する様に！
