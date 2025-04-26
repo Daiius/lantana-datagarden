@@ -82,7 +82,7 @@ export const flowRouter = router({
       filter: data => filter(data, input),
     })),
   onUpdate: publicProcedure
-    .input(idsSchema)
+    .input(projectIdSchema)
     .subscription(({ input }) => createSubscription({
       eventEmitter: ee,
       eventName: 'onUpdate',
