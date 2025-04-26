@@ -1,12 +1,4 @@
 
-import { 
-  columnGroups,
-} from 'database/db/schema';
-
-import { createSelectSchema } from 'drizzle-zod';
-
-import { z } from 'zod';
-
 import { router, publicProcedure } from '../trpc';
 
 import mitt from 'mitt';
@@ -16,21 +8,20 @@ import {
   update,
   add,
   remove,
+  columnGroupSchema,
+  ColumnGroup,
+  Ids,
+  ProjectId,
 } from '../lib/columnGroup';
 import { createSubscription } from '../lib/common';
 
-
-const selectSchema = createSelectSchema(columnGroups);
-const idsSchema = selectSchema.pick({
+const idsSchema = columnGroupSchema.pick({
   projectId: true,
   id: true,
 });
-const projectIdSchema = selectSchema.pick({
+const projectIdSchema = columnGroupSchema.pick({
   projectId: true,
 });
-type ProjectId = z.infer<typeof projectIdSchema>;
-
-type ColumnGroup = z.infer<typeof selectSchema>;
 
 type ColumnGroupEvents = {
   onAdd: ColumnGroup;
@@ -57,7 +48,7 @@ export const columnGroupRouter = router({
    * onUpdateイベントが発行されます
    */
   update: publicProcedure
-    .input(selectSchema)
+    .input(columnGroupSchema)
     .mutation(async ({ input }) => {
       const newColumnGroup = await update(input);
       ee.emit('onUpdate', newColumnGroup);
@@ -74,7 +65,7 @@ export const columnGroupRouter = router({
       })
     ),
   add: publicProcedure
-    .input(selectSchema.omit({ id: true }))
+    .input(columnGroupSchema.omit({ id: true }))
     .mutation(async ({ input }) => {
       const newColumnGroup = await add(input);
       ee.emit('onAdd', newColumnGroup);

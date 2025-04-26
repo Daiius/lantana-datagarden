@@ -85,7 +85,7 @@ export const columnRouter = router({
       filter: data => filter(data, input),
     })),
   onRemove: publicProcedure
-    .input(idsSchema)
+    .input(parentIdsSchema)
     .subscription(({ input }) => createSubscription({
       eventEmitter: ee,
       eventName: 'onRemove',
