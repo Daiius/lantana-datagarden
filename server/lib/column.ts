@@ -1,4 +1,4 @@
-import { eq, and, asc } from 'drizzle-orm';
+import { eq, and, asc, inArray } from 'drizzle-orm';
 import { createSelectSchema } from 'drizzle-zod';
 
 import { db } from 'database/db';
@@ -13,7 +13,15 @@ export type Column = typeof columns.$inferSelect;
 export const columnSchema = createSelectSchema(columns);
 
 export type Ids = Pick<Column, 'projectId'|'columnGroupId'|'id'>;
-export type ParentIds = Pick<Column, 'projectId'|'columnGroupId'>;
+export type ParentIds = {
+  projectId: Column['projectId'];
+  /** 
+   * フロントエンドのMergedTableにおいて
+   * 複数columnGroupIdに属するColumnsを一括取得する必要があり、
+   * idの配列も受け入れるようにしています
+   */
+  columnGroupId: Column['columnGroupId'] | Column['columnGroupId'][];
+}
 
 const whereIds = (ids: Ids) => and(
   eq(columns.id, ids.id),
@@ -23,8 +31,114 @@ const whereIds = (ids: Ids) => and(
 
 const whereParentIds = (parentIds: ParentIds) => and(
   eq(columns.projectId, parentIds.projectId),
-  eq(columns.columnGroupId, parentIds.columnGroupId),
+  Array.isArray(parentIds.columnGroupId) 
+    ? inArray(columns.columnGroupId, parentIds.columnGroupId)
+    : eq(columns.columnGroupId, parentIds.columnGroupId),
 );
+
+
+export const get = async (ids: Ids) => {
+  const value = await db.query.columns.findFirst({
+    where: whereIds(ids),
+  });
+  if (value == null) throw new Error(
+    `cannot find column ${ids.id}`
+  );
+  return value;
+}
+  
+export const list = async (parentIds: ParentIds) =>
+await db.query.columns.findMany({
+  where: whereParentIds(parentIds),
+  orderBy: [asc(columns.id)],
+});
+
+export const update = async (column: Column) => {
+
+  const lastData = await get(column);
+
+  if (lastData.name !== column.name) {
+    const oldName = lastData.name;
+    const newName = column.name;
+    await updateName({
+      id: column.id, 
+      projectId: column.projectId, 
+      columnGroupId: column.columnGroupId,
+      oldName,
+      newName,
+    });
+  }
+  
+  if (lastData.type !== column.type) {
+    const oldType = lastData.type;
+    const newType = column.type;
+    await updateType({
+      id: column.id,
+      projectId: column.projectId,
+      columnGroupId: column.columnGroupId,
+      name: column.name,
+      oldType,
+      newType,
+    });
+  }
+
+  return await get(column);
+}
+
+export const add = async (column: Omit<Column, 'id'>) => {
+  const newId = (
+    await db.insert(columns).values(column)
+      .$returningId()
+  )[0]?.id;
+  if (newId == null) throw new Error(
+    `cannot get inserted column id`
+  );
+  return await get({ ...column, id: newId });
+};
+
+/**
+ * Columnを削除します
+ *
+ * Columnに属しているデータも全て削除されます
+ * TODO 挙動について検討、この操作は破壊的で、元に戻すのが困難...
+ */
+export const remove = async (ids: Ids) => {
+  await db.transaction(async tx => {
+    const columnToDelete = await get(ids);
+    if (columnToDelete == null) throw new Error(
+      `cannot find column to delete, ${ids.id}`
+    );
+
+    // Columnsテーブルから列を削除します
+    await tx.delete(columns).where(whereIds(ids));
+    // TODO
+    // 注意！注意！注意！
+    // 更新対象のデータを全てメモリ中にロードして更新しなおす
+    const dataToUpdate = await tx.select().from(data).where(whereParentIds(ids));
+
+    const updatedData = dataToUpdate.map(d => ({
+      ...d,
+      data:
+        Object.entries(d.data)
+          .filter(([k, _]) => k !== columnToDelete.name)
+          .map(([k, v]) => ({ [k]: v }))
+          .reduce((acc, curr) => ({ ...acc, ...curr }), {}) as JsonData
+    }));
+
+    for (const d of updatedData) {
+      await tx.update(data)
+        .set(d)
+        .where(
+          and(
+            eq(data.id, d.id),
+            eq(data.columnGroupId, d.columnGroupId),
+            eq(data.projectId, d.projectId),
+          )
+        );
+    }
+  });
+};
+
 
 /** 列データのnameを変更します
  *
@@ -188,107 +302,3 @@ const updateType = async ({
     }
   });
 };
-
-/**
- * Columnを削除します
- *
- * Columnに属しているデータも全て削除されます
- * TODO 挙動について検討、この操作は破壊的で、元に戻すのが困難...
- */
-export const remove = async (ids: Ids) => {
-  await db.transaction(async tx => {
-    const columnToDelete = await get(ids);
-    if (columnToDelete == null) throw new Error(
-      `cannot find column to delete, ${ids.id}`
-    );
-
-    // Columnsテーブルから列を削除します
-    await tx.delete(columns).where(whereIds(ids));
-    // TODO
-    // 注意！注意！注意！
-    // 更新対象のデータを全てメモリ中にロードして更新しなおす
-    const dataToUpdate = await tx.select().from(data).where(whereParentIds(ids));
-
-    const updatedData = dataToUpdate.map(d => ({
-      ...d,
-      data:
-        Object.entries(d.data)
-          .filter(([k, _]) => k !== columnToDelete.name)
-          .map(([k, v]) => ({ [k]: v }))
-          .reduce((acc, curr) => ({ ...acc, ...curr }), {}) as JsonData
-    }));
-
-    for (const d of updatedData) {
-      await tx.update(data)
-        .set(d)
-        .where(
-          and(
-            eq(data.id, d.id),
-            eq(data.columnGroupId, d.columnGroupId),
-            eq(data.projectId, d.projectId),
-          )
-        );
-    }
-  });
-};
-
-export const get = async (ids: Ids) => {
-  const value = await db.query.columns.findFirst({
-    where: whereIds(ids),
-  });
-  if (value == null) throw new Error(
-    `cannot find column ${ids.id}`
-  );
-  return value;
-}
-  
-export const list = async (parentIds: ParentIds) =>
-await db.query.columns.findMany({
-  where: whereParentIds(parentIds),
-  orderBy: [asc(columns.id)],
-});
-
-export const update = async (column: Column) => {
-
-  const lastData = await get(column);
-
-  if (lastData.name !== column.name) {
-    const oldName = lastData.name;
-    const newName = column.name;
-    await updateName({
-      id: column.id, 
-      projectId: column.projectId, 
-      columnGroupId: column.columnGroupId,
-      oldName,
-      newName,
-    });
-  }
-  
-  if (lastData.type !== column.type) {
-    const oldType = lastData.type;
-    const newType = column.type;
-    await updateType({
-      id: column.id,
-      projectId: column.projectId,
-      columnGroupId: column.columnGroupId,
-      name: column.name,
-      oldType,
-      newType,
-    });
-  }
-
-  return await get(column);
-}
-
-export const add = async (column: Omit<Column, 'id'>) => {
-  const newId = (
-    await db.insert(columns).values(column)
-      .$returningId()
-  )[0]?.id;
-  if (newId == null) throw new Error(
-    `cannot get inserted column id`
-  );
-  return await get({ ...column, id: newId });
-};
-
-
