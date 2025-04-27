@@ -1,10 +1,11 @@
 
 import clsx from 'clsx';
 
-import { 
+import type { 
   ColumnGroup,
   Column,
   Grouping,
+  FlowStepColumnGroup,
   Data,
 } from '@/types';
 
@@ -24,8 +25,8 @@ type TableGroupProps = {
   dataList: Data[];
   add: (args: Omit<Data, 'id'>) => Promise<void>;
   followingColumnGroups: ColumnGroup[];
-  grouping: Grouping;
-  updateGrouping: (newGrouping: Grouping) => void;
+  grouping: FlowStepColumnGroup['grouping'];
+  updateGrouping: (newGrouping: Grouping | null) => void;
   updateLine: () => void;
   /**
    * 複数columnGroupがマージされたテーブルならtrue
@@ -55,7 +56,7 @@ const TableGroup = ({
     return <div className='skeleton w-full h-32' />
   };
 
-  const groupData = (input: Data[], grouping: Grouping): Data[][] => {
+  const groupData = (input: Data[], grouping: Grouping | null): Data[][] => {
     if (!grouping) return [input];
 
     const map = new Map<string | number | null | undefined, Data[]>();
