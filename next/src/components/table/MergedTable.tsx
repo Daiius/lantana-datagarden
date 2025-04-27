@@ -1,8 +1,9 @@
 //import clsx from 'clsx';
 
-import { useDataList } from '@/hooks/useDataList';
+import { useData } from '@/hooks/useData';
 import { useColumnGroups } from '@/hooks/useColumnGroups';
 import { useFlowStepColumnGroups } from '@/hooks/useFlowStepColumnGroups';
+import { useColumns } from '@/hooks/useColumns';
 
 import { FlowStepProps } from '@/components/table/FlowStep';
 import TableGroup from '@/components/table/TableGroup';
@@ -30,24 +31,31 @@ const MergedTable = ({
     data: columnGroups
   } = useColumnGroups({ projectId });
 
-  const relatedColumnGroups = flowStepColumnGroups.flatMap(flowStepColumnGroup =>
-    columnGroups.find(cg => cg.id === flowStepColumnGroup.columnGroupId)
-    ?? []
-  );
+  const {
+    data: columns
+  } = useColumns({ 
+    projectId, 
+    columnGroupId: flowStepColumnGroups.map(fscg => fscg.columnGroupId) 
+  });
+
+  const { data, add } = useData({
+    projectId, columnGroupId: flowStepColumnGroups.map(cg => cg.id)
+  });
+
+  const relatedColumnGroups = flowStepColumnGroups
+    .flatMap(flowStepColumnGroup =>
+      columnGroups.find(cg => cg.id === flowStepColumnGroup.columnGroupId)
+      ?? []
+    );
 
   const mergedTableGroupName = relatedColumnGroups
     .map(rcg => rcg.name)
     .join(' & ');
+
   const mergedColumns = Array.from( 
-    new Map(
-      relatedColumnGroups.flatMap(columnGroup =>
-        columnGroup.columns
-      ).map(column => [column.name, column])
-    ).values()
+    new Map(columns.map(column => [column.name, column]))
+    .values()
   );
-  const { dataList: mergedDataList, add } = useDataList({
-    projectId, columnGroupId: flowStep.columnGroups.map(cg => cg.id)
-  });
 
   return (
     <>
@@ -74,7 +82,7 @@ const MergedTable = ({
           await update({ ...flowStep, grouping: newGrouping });
         }}
         columns={mergedColumns}
-        dataList={mergedDataList}
+        dataList={data}
         followingColumnGroups={followingColumnGroups}
         updateLine={updateLine}
         isMerged
