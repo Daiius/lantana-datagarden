@@ -43,6 +43,8 @@ validate 関数を拡張する必要がありそう
 
 一度、カスケード状のロードを許容して作ってみる
 
+### リストで取得したオブジェクト...
+
 
 ## 測定データを扱えるようにする
 測定データは、
@@ -163,6 +165,81 @@ erDiagram
     ColumnGroupToMeasurements }o--|| MeasurementColumnGroup :"a columnGroupToMeasurements have a measurementColumnGroup<br>a measurementColumnGroup is referenced by some columnGroupToMeasurements"
 ```
 
+## カスケードデータ取得の方が上手くいきそう
+動的にデータを取得したい場合が多いので、
+カスケード状にfetchする様に変更している。
+
+単純な ColumnGroup, Column 等の編集は問題ないのだが、
+table系のコンポーネント表示に必要な情報の取得は上手くいっていない。
+整理しなおしたい。
+
+```mermaid
+flowchart TD
+
+    subgraph database
+        projects
+        columnGroups
+        columns
+        flows
+        flowSteps
+        flowStepColumnGroups
+        data
+    end
+
+    projects --> flows
+    projects --> columnGroups
+
+    flows --> flowSteps
+    flows -.order & place.-> columnGroups
+    flowSteps --> flowStepColumnGroups
+
+    columnGroups --> columns
+    columnGroups --> data
+
+    columns -.specify columns.-> data
+
+    subgraph views
+        Tables
+        FlowSteps
+        FlowStep
+        ListedTables
+        ListedTable
+        MergedTable
+        %%FlowStepColumnGroup
+        TableGroups
+        TableGroup
+        Table
+        TableRows
+        TableColumns
+        Lines
+    end
+
+    
+    Tables --> FlowSteps
+
+    FlowSteps --> FlowStep
+    FlowSteps -.useFlowSteps().-> flowSteps
+
+    FlowStep --> ListedTables
+    FlowStep --> MergedTable
+
+    ListedTables --> ListedTable
+    ListedTables -.useFlowStepColumnGroups().-> flowStepColumnGroups
+    ListedTable --> TableGroups
+    MergedTable --> TableGroups
+    MergedTable -.useFlowStepColumnGroups().-> flowStepColumnGroups
+
+    TableGroups --> TableGroup
+
+    TableGroup --> Table
+
+    Table --> TableRows
+    Table --> TableColumns
+
+    data -.places.-> Lines
+
+```
+
 WRITING...
 
 
@@ -234,57 +311,6 @@ data と flows が独立しているために柔軟な表示方法を取れる�
 現在の実装の問題点を明らかにしてくれている気がする。
 
 
-```mermaid
-flowchart TD
-
-    subgraph database
-        projects
-        flows
-        columnGroups
-        columns
-        flows
-        %%flowSteps
-        %%tableOptions
-        data
-    end
-
-    subgraph views
-        tableGroups
-        tableGroup
-        tables
-        tableRows
-        tableColumns
-        lines((lines))
-    end
-
-    projects --have--> columnGroups
-    projects --have--> flows
-
-    columnGroups --have--> columns
-
-    flows -.order & place.-> columnGroups
-
-    columnGroups --have--> data
-
-    columns -.specify columns.-> data
-
-    flows -.specify.-> tableGroups((tableGroups))
-    %%flows --have--> flowSteps
-    %%flowSteps --have--> tableOptions
-
-    %%flowSteps --specify--> tableGroup
-    %%tableOptions --specify--> tables
-
-    tableGroups --have--> tableGroup((tableGroup))
-    tableGroups --have--> lines
-
-    tableGroup --have--> tables((tables))
-
-    data -.places.-> lines
-
-    tables --have--> tableRows((tableRows))
-    tables --have--> tableColumns((tableColumns))
-```
 ## どうやってtableのグループ化を行うか
 単一のcolumnGroup in Step in Flowを、親や列の値でグループ化して
 表示したいのだが...
