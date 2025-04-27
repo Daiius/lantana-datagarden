@@ -3,7 +3,6 @@
 import type {
   ColumnGroup,
   FlowStepColumnGroup,
-  Grouping,
 } from '@/types';
 
 import TableGroup from '@/components/table/TableGroup';
