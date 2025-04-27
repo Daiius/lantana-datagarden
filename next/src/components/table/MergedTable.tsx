@@ -78,8 +78,9 @@ const MergedTable = ({
           //  事足りるかもしれませんが)
           // columnGroupWithGroupings全体のgroupingを新規の値に
           // 一括で更新します、挙動に少し注意が必要です
-          
-          await update({ ...flowStep, grouping: newGrouping });
+          for (const flowStepColumnGroup of flowStepColumnGroups) {
+            await update({ ...flowStepColumnGroup, grouping: newGrouping });
+          }
         }}
         columns={mergedColumns}
         dataList={data}
