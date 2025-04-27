@@ -1,4 +1,4 @@
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 import { createSelectSchema } from 'drizzle-zod';
 
 import { db } from 'database/db';
@@ -13,7 +13,10 @@ import { list as listColumns } from './column';
 export type Data = typeof data.$inferSelect;
 
 export type Ids = Pick<Data, 'projectId'|'columnGroupId'|'id'>;
-export type ParentIds = Pick<Data, 'projectId'|'columnGroupId'>;
+export type ParentIds = {
+  projectId: Data['projectId'];
+  columnGroupId: Data['columnGroupId'] | Data['columnGroupId'][];
+}
 
 export const dataSchema = createSelectSchema(data);
 
@@ -25,7 +28,9 @@ const whereIds = (ids: Ids) => and(
 
 const whereParentIds = (parentIds: ParentIds) => and(
   eq(data.projectId, parentIds.projectId),
-  eq(data.columnGroupId, parentIds.columnGroupId),
+  Array.isArray(parentIds.columnGroupId)
+  ? inArray(data.columnGroupId, parentIds.columnGroupId)
+  : eq(data.columnGroupId, parentIds.columnGroupId),
 );
 
 export const get = async (ids: Ids) => {

@@ -1,7 +1,9 @@
 
+import { z } from 'zod';
+import mitt from 'mitt';
+
 import { router, publicProcedure } from '../trpc';
 
-import mitt from 'mitt';
 import {
   get,
   list,
@@ -32,6 +34,11 @@ const idsSchema = dataSchema.pick({
 const parentIdsSchema = dataSchema.pick({
   projectId: true,
   columnGroupId: true,
+}).extend({
+  columnGroupId: z.union([
+    z.number(),
+    z.array(z.number()),
+  ]),
 });
 
 const filter = (data: ParentIds, input: ParentIds) => (
