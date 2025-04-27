@@ -6,7 +6,7 @@ import type {
 } from '@/types';
 
 import MergedTable from '@/components/table/MergedTable';
-import ListedTable from '@/components/table/ListedTable';
+import { ListedTables } from '@/components/table/ListedTables';
 
 export type FlowStepProps = {
   projectId: string;
@@ -30,7 +30,7 @@ const FlowStep = (props: FlowStepProps) => {
   );
 
   return (
-    <ListedTable {...props} />
+    <ListedTables {...props} />
   );
 };
 

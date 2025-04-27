@@ -1,6 +1,8 @@
 //import clsx from 'clsx';
 
 import { useDataList } from '@/hooks/useDataList';
+import { useColumnGroups } from '@/hooks/useColumnGroups';
+import { useFlowStepColumnGroups } from '@/hooks/useFlowStepColumnGroups';
 
 import { FlowStepProps } from '@/components/table/FlowStep';
 import TableGroup from '@/components/table/TableGroup';
@@ -15,16 +17,30 @@ const MergedTable = ({
   projectId,
   iflowStep,
   followingColumnGroups,
-  updateFlowStep,
+  //update,
   updateLine,
 }: MergedTableProps) => {
-  const mergedTableGroupName = 
-    flowStep.columnGroups.map(columnGroup =>
-      columnGroup.name
-    ).join(' & ');
+
+  const {
+    data: flowStepColumnGroups,
+    update,
+  } = useFlowStepColumnGroups(flowStep);
+
+  const {
+    data: columnGroups
+  } = useColumnGroups({ projectId });
+
+  const relatedColumnGroups = flowStepColumnGroups.flatMap(flowStepColumnGroup =>
+    columnGroups.find(cg => cg.id === flowStepColumnGroup.columnGroupId)
+    ?? []
+  );
+
+  const mergedTableGroupName = relatedColumnGroups
+    .map(rcg => rcg.name)
+    .join(' & ');
   const mergedColumns = Array.from( 
     new Map(
-      flowStep.columnGroups.flatMap(columnGroup =>
+      relatedColumnGroups.flatMap(columnGroup =>
         columnGroup.columns
       ).map(column => [column.name, column])
     ).values()
@@ -32,10 +48,6 @@ const MergedTable = ({
   const { dataList: mergedDataList, add } = useDataList({
     projectId, columnGroupId: flowStep.columnGroups.map(cg => cg.id)
   });
-
-  if (mergedDataList == null) return (
-    <div className='skeleton w-full h-32' />
-  );
 
   return (
     <>
@@ -49,7 +61,7 @@ const MergedTable = ({
           // 最初のcolumnGroupWithGroupingsに保存された
           // グループ化情報を、MergedTableのグループ化情報として
           // 利用します
-          flowStep.columnGroupWithGroupings[0]?.grouping
+          flowStepColumnGroups[0]?.grouping
         }
         // TODO MergedTableのgrouping処理については要件等
         updateGrouping={async newGrouping => {
@@ -58,13 +70,8 @@ const MergedTable = ({
           //  事足りるかもしれませんが)
           // columnGroupWithGroupings全体のgroupingを新規の値に
           // 一括で更新します、挙動に少し注意が必要です
-          await updateFlowStep({
-            ...flowStep,
-            columnGroupWithGroupings:
-              flowStep.columnGroupWithGroupings.map(cg => ({
-                ...cg, grouping: newGrouping,
-              })),
-          });
+          
+          await update({ ...flowStep, grouping: newGrouping });
         }}
         columns={mergedColumns}
         dataList={mergedDataList}
