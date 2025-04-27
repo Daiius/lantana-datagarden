@@ -1,7 +1,6 @@
 //import clsx from 'clsx';
 
 import type {
-  FlowStepWithData,
   FlowStep as FlowStepType,
   ColumnGroup,
 } from '@/types';
@@ -11,9 +10,14 @@ import ListedTable from '@/components/table/ListedTable';
 
 export type FlowStepProps = {
   projectId: string;
-  flowStep: FlowStepWithData;
+  flowStep: FlowStepType;
   iflowStep: number;
-  updateFlowStep: (newFlowStep: FlowStepType) => Promise<void>;
+  update: (newValue: FlowStepType) => Promise<void>;
+  /** 
+   * TODO データの渡し方再考、このままでは見通しが立たない
+   * flowingTableの子データ追加時、
+   * 自信より右側のColumnGroupだけ指定するためのprop
+   */
   followingColumnGroups: ColumnGroup[];
   updateLine: () => Promise<void>;
 

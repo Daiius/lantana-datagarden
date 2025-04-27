@@ -1,42 +1,41 @@
-//import clsx from 'clsx';
+'use client' // for hooks
 
-import { 
+import type {
   ColumnGroup,
-  ColumnGroupWithGrouping,
+  FlowStepColumnGroup,
+  Grouping,
 } from '@/types';
+
+import TableGroup from '@/components/table/TableGroup';
 
 import { useColumns } from '@/hooks/useColumns';
 import { useDataList } from '@/hooks/useDataList';
 
-import TableGroup from '@/components/table/TableGroup';
-import { FlowStepProps } from '@/components/table/FlowStep';
-
-
-type ListedTablePrivateProps = {
+type ListedTableProps = {
   projectId: string;
   columnGroup: ColumnGroup;
   iflowStep: number;
-  columnGroupWithGrouping: ColumnGroupWithGrouping;
+  flowStepColumnGroup: FlowStepColumnGroup;
   followingColumnGroups: ColumnGroup[];
-  updateColumnGroupWithGrouping: (newColumnGroupWithGrouping: ColumnGroupWithGrouping) => Promise<void>;
+  update: (newFlowStepColumnGroup: FlowStepColumnGroup) => Promise<void>;
   updateLine: () => Promise<void>;
 
   className?: string;
 };
 
-const ListedTablePrivate = ({
+export const ListedTable = ({
   projectId,
   columnGroup,
   iflowStep,
-  columnGroupWithGrouping,
+  flowStepColumnGroup,
   followingColumnGroups,
-  updateColumnGroupWithGrouping,
+  update,
   updateLine,
   className,
-}: ListedTablePrivateProps) => {
+}: ListedTableProps) => {
 
   const { id: columnGroupId } = columnGroup;
-  const { columns } = useColumns({ projectId, columnGroupId });
+  const { data: columns } = useColumns({ projectId, columnGroupId });
   const { dataList, add } = useDataList({ projectId, columnGroupId });
 
   if (columns == null || dataList == null) return (
@@ -53,15 +52,13 @@ const ListedTablePrivate = ({
         className={className}
         istep={iflowStep}
         projectId={projectId}
-        grouping={columnGroupWithGrouping.grouping}
+        grouping={flowStepColumnGroup.grouping}
         columns={columns}
         dataList={dataList}
         add={add}
-        updateGrouping={ async newGrouping => 
-          await updateColumnGroupWithGrouping({ 
-            ...columnGroupWithGrouping, grouping: newGrouping
-          })
-        }
+        updateGrouping={ async newGrouping => await update({ 
+          ...flowStepColumnGroup, grouping: newGrouping
+        })}
         followingColumnGroups={followingColumnGroups}
         updateLine={updateLine}
         isMerged={false}
@@ -69,51 +66,3 @@ const ListedTablePrivate = ({
     </>
   );
 };
-
-type ListedTableProps = 
-  FlowStepProps & {
-    className?: string;
-  };
-
-const ListedTable = ({
-  projectId,
-  flowStep,
-  iflowStep,
-  updateFlowStep,
-  followingColumnGroups,
-  updateLine,
-  className,
-}: ListedTableProps) => {
-  return (
-    <>
-      {flowStep.columnGroups.map((columnGroup, icolumnGroup) =>
-        <ListedTablePrivate
-          className={className}
-          key={`${columnGroup.id}-${icolumnGroup}`}
-          columnGroup={columnGroup}
-          projectId={projectId}
-          iflowStep={iflowStep}
-          updateColumnGroupWithGrouping={async newColumnGroupWithGrouping =>
-            await updateFlowStep({
-              ...flowStep,
-              columnGroupWithGroupings:
-                flowStep.columnGroupWithGroupings.map((cg, icg) =>
-                  icg === icolumnGroup
-                  ? newColumnGroupWithGrouping
-                  : cg
-                )
-            })
-          }
-          followingColumnGroups={followingColumnGroups}
-          columnGroupWithGrouping={
-            flowStep.columnGroupWithGroupings[icolumnGroup]!
-          }
-          updateLine={updateLine}
-        />
-      )}
-    </>
-  );
-};
-
-export default ListedTable;
-
