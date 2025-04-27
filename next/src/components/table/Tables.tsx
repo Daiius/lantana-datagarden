@@ -5,16 +5,14 @@ import clsx from 'clsx';
 
 import type { 
   Flow,
-  FlowWithData,
-  FlowStep as FlowStepType
 } from '@/types';
 
-import { useTables } from '@/hooks/useTables';
 import { useLines, Connection } from '@/hooks/useLines';
 
-import FlowStep from '@/components/table/FlowStep';
+import { FlowSteps } from '@/components/table/FlowSteps';
 
 import Line from '@/components/line/Line';
+import Skeleton from '@/components/common/Skeleton';
 
 export const calcFollowingColumnGroups = ({
   flowWithData,
@@ -42,7 +40,14 @@ type TablesProps = {
   className?: string;
 }
 
-const Tables = ({
+/**
+ * 指定されたフローによる表を表示します
+ *
+ * TableはDBと対応する要素はなく、
+ * Flow, FlowStep, FlowStepColumnGroup, ColumnGroup, Column, Data など
+ * 様々なデータを逐次取得して構成します
+ */
+export const Tables = ({
   projectId,
   flowId,
   className,
@@ -52,9 +57,6 @@ const Tables = ({
   const [connections, setConnections] = React.useState<Connection[]>([]);
   const [updateLineCount, setUpdateLineCount] = React.useState<number>(0);
 
-  const { flowWithData, invalidate, update } = useTables({
-    projectId, flowId
-  });
 
   // TODO データの追加・削除の度に
   // データの取得し直しをしているので効率が悪い
@@ -62,53 +64,21 @@ const Tables = ({
     setUpdateLineCount(prev => prev + 1);
     await invalidate();
   }
-  const allData = flowWithData
-    ?.flowSteps
-    .flatMap(flowStep => 
-      flowStep.columnGroups.flatMap(columnGroup => columnGroup.data)
-    ) ?? [];
 
+  // TODO 逐次データ取得だと、flowに関連する全データ列挙が難しい
+  const allData = [];
+
+  // TODO line再描画処理の実装が難しい
   React.useEffect(() => {
     if (!mounted) {
       setMounted(true);
-      console.log('first rendering...');
       return;
     }
-
-    console.log('second rendering...');
-
     setTimeout(() => {
       const { connections } = useLines({ data: allData, });
       setConnections(connections);
-      console.log('allData: ', allData);
-      console.log('connections: ', connections);
     }, 1_000);
-
   }, [flowWithData, mounted, updateLineCount]);
-
-
-  if (flowWithData == null) return (
-    <div className='skeleton h-32 w-full'/>
-  );
-
-  const handleUpdateSteps = async ({
-    newFlowStep,
-    iflowStep,
-  }: {
-    newFlowStep: FlowStepType;
-    iflowStep: number;
-  }) => {
-    await update({ 
-      ...flowWithData, 
-      flowSteps:
-        flowWithData.flowSteps.map((flowStep, iflowStep_) =>
-          iflowStep === iflowStep_
-          ? newFlowStep
-          : flowStep
-        ),
-    })
-  };
-
 
   return (
     <div
@@ -119,25 +89,10 @@ const Tables = ({
         className,
       )}
     >
-      {/* flowのstep毎に横向きに表示する部分 */}
-      {flowWithData.flowSteps.map((flowStep, iflowStep) =>
-        <div key={iflowStep} className='flex flex-col gap-8'>
-          {/* 同じstepに属するcolumnGroupを縦に重ねて表示する部分 */}
-          <FlowStep
-            flowStep={flowStep}
-            iflowStep={iflowStep}
-            projectId={projectId}
-            updateFlowStep={async (newFlowStep) => 
-              await handleUpdateSteps({ newFlowStep, iflowStep })
-            }
-            followingColumnGroups={calcFollowingColumnGroups({
-              flowWithData,
-              iflowStep,
-            })}
-            updateLine={updateLine}
-          />
-        </div>
-      )}
+      <FlowSteps
+        projectId={projectId}
+        flowId={flowId}
+      />
       {connections.map((c,ic) =>
         <Line key={ic} position={c} />
       )}
