@@ -12,7 +12,7 @@ export const useColumns = ({
   columnGroupId,
 }: {
   projectId: string;
-  columnGroupId: ColumnGroup['id'];
+  columnGroupId: ColumnGroup['id'] | ColumnGroup['id'][];
 }) => {
   const target = trpc.condition.column;
   const { 
