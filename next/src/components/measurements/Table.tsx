@@ -26,11 +26,13 @@ import MeasurementRow from '@/components/measurements/MeasurementRow';
 export type TableProps = {
   columns: MeasurementColumn[];
   data: Measurement[];
+  update: (newMeasurement: Measurement) => Promise<void>;
 };
 
 export const Table = ({
   columns,
   data,
+  update,
 }: TableProps) => {
   const columnHelper = createColumnHelper<Measurement>();
 
@@ -42,6 +44,7 @@ export const Table = ({
           column={column}
           row={row}
           table={table}
+          update={update}
         />
     })
   ), [columns]);

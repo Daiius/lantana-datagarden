@@ -28,11 +28,6 @@ export const FlowSteps = ({
             flowStep={flowStep}
             projectId={projectId}
             update={update}
-            followingColumnGroups={calcFollowingColumnGroups({
-              flowWithData,
-              iflowStep,
-            })}
-            updateLine={updateLine}
           />
         </div>
       )}

@@ -3,9 +3,6 @@
 import React from 'react';
 import clsx from 'clsx';
 
-
-import type { ColumnGroup } from '@/types';
-
 import {
   createColumnHelper,
   useReactTable,
@@ -25,9 +22,8 @@ import TableHeader from '@/components/table/TableHeader';
 type TableProps = {
   columns: Column[],
   data: Data[],
-  followingColumnGroups: ColumnGroup[],
   addData: (args: Omit<Data, 'id'>) => Promise<void>;
-  updateLine: () => void;
+  updateData: (newData: Data) => Promise<void>;
   className?: string;
 }
 
@@ -41,9 +37,8 @@ type TableProps = {
 const Table = ({
   data,
   addData,
+  updateData,
   columns,
-  followingColumnGroups,
-  updateLine,
   className,
 }: TableProps) => {
 
@@ -59,6 +54,7 @@ const Table = ({
             tanstackColumn={column}
             row={row}
             table={table}
+            update={updateData}
           />
       }),
     ) ?? [],
@@ -68,7 +64,6 @@ const Table = ({
   const [sorting, setSortingPrivate] = React.useState<SortingState>([]);
   const setSorting: typeof setSortingPrivate = (sort) => {
     setSortingPrivate(sort);
-    updateLine();
   };
 
 
@@ -113,7 +108,6 @@ const Table = ({
               key={row.original.id}
               columns={columns}
               row={row}
-              followingColumnGroups={followingColumnGroups}
               addData={addData}
             />
           )}

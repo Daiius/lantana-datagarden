@@ -45,7 +45,19 @@ export const useFlowStepColumnGroups = ({
   };
 
   const { mutateAsync: add } = target.add.useMutation();
+  target.onAdd.useSubscription(
+    { projectId, flowStepId },
+    {
+      onData: newData => setData([...data, newData]),
+    }
+  );
   const { mutateAsync: remove } = target.remove.useMutation();
+  target.onRemove.useSubscription(
+    { projectId, flowStepId },
+    {
+      onData: info => setData(data.filter(d => d.id !== info.id)),
+    }
+  );
 
   return {
     data,

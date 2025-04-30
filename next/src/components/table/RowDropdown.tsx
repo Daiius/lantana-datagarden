@@ -4,6 +4,7 @@ import React from 'react';
 import clsx from 'clsx';
 
 import type { ColumnGroup } from '@/types';
+import { useColumnGroups } from '@/hooks/useColumnGroups';
 
 import { IconTrash } from '@tabler/icons-react';
 
@@ -11,7 +12,6 @@ type RowDropdownProps = {
   projectId: string;
   dataId: number;
   columnGroupId: number;
-  followingColumnGroups: ColumnGroup[];
   removeData: () => Promise<void>;
   addData: (params: { columnGroupId: number }) => Promise<void>;
 
@@ -19,12 +19,13 @@ type RowDropdownProps = {
 }
 
 const RowDropdown = ({
-  followingColumnGroups,
+  projectId,
   removeData,
   addData,
   className,
 }: RowDropdownProps) => {
   const menuRef = React.useRef<HTMLUListElement>(null);
+  const { data: columnGroups } = useColumnGroups({ projectId });
   return (
     <div
       className={clsx('dropdown', className)}
@@ -42,12 +43,14 @@ const RowDropdown = ({
         className='dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm'
       >
         <li className='text-base-content/50'>データ追加...</li>
+        {/*
         {followingColumnGroups.length === 0 &&
           <li className='text-base-content/50'>
             Flowsで次ステップを追加して下さい...
           </li>
         }
-        {followingColumnGroups.map(columnGroup =>
+        */}
+        {columnGroups.map(columnGroup =>
           <li key={columnGroup.id}>
             <a
               onClick={async () => {

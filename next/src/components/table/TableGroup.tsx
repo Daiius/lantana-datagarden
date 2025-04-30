@@ -19,15 +19,13 @@ type TableGroupProps = {
    * flowStepのインデックス
    * 最初のflowStepかどうかで一部の表示/非表示を切り替えるため使用します
    */
-  istep: number;
   projectId: string;
   columns: Column[];
   dataList: Data[];
   add: (args: Omit<Data, 'id'>) => Promise<void>;
-  followingColumnGroups: ColumnGroup[];
+  update: (newData: Data) => Promise<void>;
   grouping: FlowStepColumnGroup['grouping'];
   updateGrouping: (newGrouping: Grouping | null) => void;
-  updateLine: () => void;
   /**
    * 複数columnGroupがマージされたテーブルならtrue
    * 「同じ親のデータ追加」ボタンはmergedの場合どのcolumnGroupに
@@ -39,15 +37,13 @@ type TableGroupProps = {
 }
 
 const TableGroup = ({
-  istep,
   projectId,
   columns,
   dataList,
   add,
-  followingColumnGroups,
+  update,
   grouping,
   updateGrouping,
-  updateLine,
   isMerged,
   className,
 }: TableGroupProps) => {
@@ -86,7 +82,8 @@ const TableGroup = ({
     && (
        // 最初のステップなら必ず表示す 
        // (恐らくルートデータなので...)      
-       istep === 0  
+       //istep === 0  
+       true
        // 親でグループ化されていたら
        // テーブル内で親が共通なので
        // データを追加出来る
@@ -131,9 +128,8 @@ const TableGroup = ({
             key={idata}
             columns={columns}
             data={data}
+            updateData={update}
             addData={add}
-            updateLine={updateLine}
-            followingColumnGroups={followingColumnGroups}
           />
           {isShowingAddDataButton
            && columns.length > 0
@@ -143,8 +139,7 @@ const TableGroup = ({
                 'btn-block btn-success',
                 // 最初でないステップのデータ追加ボタンは
                 // btn-soft スタイルにする
-                istep !== 0 
-                && isShowingAddDataButton 
+                isShowingAddDataButton 
                 && 'btn-soft'
               )}
               onClick={async () => 

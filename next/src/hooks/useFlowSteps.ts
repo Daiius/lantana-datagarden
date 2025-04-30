@@ -47,7 +47,19 @@ export const useFlowSteps = ({
   );
 
   const { mutateAsync: add } = target.add.useMutation();
+  target.onAdd.useSubscription(
+    { projectId, flowId },
+    {
+      onData: newData => setData([...data, newData]),
+    }
+  );
   const { mutateAsync: remove } = target.remove.useMutation();
+  target.onRemove.useSubscription(
+    { projectId, flowId },
+    {
+      onData: info => setData(data.filter(d => d.id !== info.id)),
+    }
+  );
 
   return {
     data,

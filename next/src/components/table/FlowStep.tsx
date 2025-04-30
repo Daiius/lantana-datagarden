@@ -3,6 +3,7 @@
 import type {
   FlowStep as FlowStepType,
   ColumnGroup,
+  Data,
 } from '@/types';
 
 import MergedTable from '@/components/table/MergedTable';
@@ -11,15 +12,7 @@ import { ListedTables } from '@/components/table/ListedTables';
 export type FlowStepProps = {
   projectId: string;
   flowStep: FlowStepType;
-  iflowStep: number;
   update: (newValue: FlowStepType) => Promise<void>;
-  /** 
-   * TODO データの渡し方再考、このままでは見通しが立たない
-   * flowingTableの子データ追加時、
-   * 自信より右側のColumnGroupだけ指定するためのprop
-   */
-  followingColumnGroups: ColumnGroup[];
-  updateLine: () => Promise<void>;
 
   className?: string;
 }

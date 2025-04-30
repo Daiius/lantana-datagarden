@@ -1,12 +1,16 @@
 'use client' // for hooks
 
 import { useState, useEffect } from 'react';
+import { useDebouncedCallback } from 'use-debounce';
 
 import { trpc } from '@/providers/TrpcProvider';
 
 import type { Data } from '@/types';
-import { useDebouncedCallback } from 'use-debounce';
 import { DebounceTime } from './common';
+
+import debug from 'debug';
+const log = debug('lantana-datagarden:log');
+const error = debug('lantana-datagarden:error');
 
 export type UseDataArgs = {
   projectId: Data['projectId'];
@@ -17,18 +21,28 @@ export const useData = ({
   projectId,
   columnGroupId,
 }: UseDataArgs) => {
+  const utils = trpc.useUtils();
+  const utilsTarget = utils.condition.data.list;
   const target = trpc.condition.data;
   const { 
     data: fetchedData, 
-    error, 
     isLoading,
   } = target.list.useQuery({ projectId, columnGroupId });
-  const [data, setData] = useState<Data[]>([]);
+  const [data, _setData] = useState<Data[]>([]);
   useEffect(() => {
     if (fetchedData) {
+      log('useData:useEffect', fetchedData);
       setData(fetchedData);
     }
   }, [fetchedData]);
+
+
+  /** trpcキャッシュとIME入力対応用stateを両方更新します */
+  const setData = (newData: Data[]) => {
+    log('useData:setData: %o', newData);
+    utilsTarget.setData({ projectId, columnGroupId }, newData);
+    _setData(newData);
+  };
 
   const { mutateAsync: updateDb } = target.update.useMutation();
   const debouncedUpdateDb = useDebouncedCallback(
@@ -36,14 +50,16 @@ export const useData = ({
     DebounceTime,
   );
   const update = async (newData: Data) => {
-    setData(data.map(d => d.id === newData.id ? newData : d));
+    log('useData:update: %o', newData);
+    setData(data.map(d => d.id === newData.id ? newData : d)
+    );
     await debouncedUpdateDb(newData);
   };
   target.onUpdate.useSubscription(
     { projectId, columnGroupId },
     {
       onData: newData => setData(data.map(d => d.id === newData.id ? newData : d)),
-      onError: err => console.error(err),
+      onError: err => error(err),
     }
   );
   const { mutateAsync: remove } = target.remove.useMutation();
@@ -51,7 +67,7 @@ export const useData = ({
     { projectId, columnGroupId },
     {
       onData: info => setData(data.filter(d => d.id !== info.id)),
-      onError: err => console.error(err),
+      onError: err => error(err),
     }
   );
 
@@ -60,7 +76,7 @@ export const useData = ({
     { projectId, columnGroupId },
     {
       onData: newData => setData([...data, newData]),
-      onError: err => console.error(err),
+      onError: err => error(err),
     }
   );
 
