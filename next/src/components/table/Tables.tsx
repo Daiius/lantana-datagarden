@@ -7,32 +7,11 @@ import type {
   Flow,
 } from '@/types';
 
-import { useLines, Connection } from '@/hooks/useLines';
 
 import { FlowSteps } from '@/components/table/FlowSteps';
 
-import Line from '@/components/line/Line';
-import Skeleton from '@/components/common/Skeleton';
-
-export const calcFollowingColumnGroups = ({
-  flowWithData,
-  iflowStep,
-}: {
-  flowWithData: FlowWithData,
-  iflowStep: number
-}) => Array.from(
-  new Map(
-    flowWithData
-      ?.flowSteps
-      .filter((_, iflowStep_) => iflowStep_ > iflowStep)
-      .flatMap(flowStep => 
-        flowStep.columnGroups
-      )
-      .map(cgs => [cgs.id, cgs])
-  )
-  .entries()
-  .map(([_,v]) => v)
-);
+import { LinesProvider } from '@/providers/LinesProvider';
+import { Lines } from '@/components/line/Lines';
 
 type TablesProps = {
   projectId: string;
@@ -53,33 +32,6 @@ export const Tables = ({
   className,
 }: TablesProps) => {
 
-  const [mounted, setMounted] = React.useState<boolean>(false);
-  const [connections, setConnections] = React.useState<Connection[]>([]);
-  const [updateLineCount, setUpdateLineCount] = React.useState<number>(0);
-
-
-  // TODO データの追加・削除の度に
-  // データの取得し直しをしているので効率が悪い
-  const updateLine = async () => {
-    setUpdateLineCount(prev => prev + 1);
-    await invalidate();
-  }
-
-  // TODO 逐次データ取得だと、flowに関連する全データ列挙が難しい
-  const allData = [];
-
-  // TODO line再描画処理の実装が難しい
-  React.useEffect(() => {
-    if (!mounted) {
-      setMounted(true);
-      return;
-    }
-    setTimeout(() => {
-      const { connections } = useLines({ data: allData, });
-      setConnections(connections);
-    }, 1_000);
-  }, [flowWithData, mounted, updateLineCount]);
-
   return (
     <div
       id='tables-container'
@@ -89,13 +41,13 @@ export const Tables = ({
         className,
       )}
     >
-      <FlowSteps
-        projectId={projectId}
-        flowId={flowId}
-      />
-      {connections.map((c,ic) =>
-        <Line key={ic} position={c} />
-      )}
+      <LinesProvider>
+        <FlowSteps
+          projectId={projectId}
+          flowId={flowId}
+        />
+        <Lines />
+      </LinesProvider>
     </div>
   );
 };

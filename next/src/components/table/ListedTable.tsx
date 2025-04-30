@@ -7,17 +7,15 @@ import type {
 
 import TableGroup from '@/components/table/TableGroup';
 
+import { useData } from '@/hooks/useData';
+
 import { useColumns } from '@/hooks/useColumns';
-import { useDataList } from '@/hooks/useDataList';
 
 type ListedTableProps = {
   projectId: string;
   columnGroup: ColumnGroup;
-  iflowStep: number;
   flowStepColumnGroup: FlowStepColumnGroup;
-  followingColumnGroups: ColumnGroup[];
   update: (newFlowStepColumnGroup: FlowStepColumnGroup) => Promise<void>;
-  updateLine: () => Promise<void>;
 
   className?: string;
 };
@@ -25,19 +23,16 @@ type ListedTableProps = {
 export const ListedTable = ({
   projectId,
   columnGroup,
-  iflowStep,
   flowStepColumnGroup,
-  followingColumnGroups,
   update,
-  updateLine,
   className,
 }: ListedTableProps) => {
 
   const { id: columnGroupId } = columnGroup;
   const { data: columns } = useColumns({ projectId, columnGroupId });
-  const { dataList, add } = useDataList({ projectId, columnGroupId });
+  const { data, add, update: updateData } = useData({ projectId, columnGroupId });
 
-  if (columns == null || dataList == null) return (
+  if (columns == null || data == null) return (
     <div className='skeleteon w-full h-32' />
   );
 
@@ -49,17 +44,15 @@ export const ListedTable = ({
       </div>
       <TableGroup
         className={className}
-        istep={iflowStep}
         projectId={projectId}
         grouping={flowStepColumnGroup.grouping}
         columns={columns}
-        dataList={dataList}
+        dataList={data}
         add={add}
+        update={updateData}
         updateGrouping={ async newGrouping => await update({ 
           ...flowStepColumnGroup, grouping: newGrouping
         })}
-        followingColumnGroups={followingColumnGroups}
-        updateLine={updateLine}
         isMerged={false}
       />
     </>

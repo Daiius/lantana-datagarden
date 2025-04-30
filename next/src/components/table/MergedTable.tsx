@@ -16,10 +16,6 @@ type MergedTableProps =
 const MergedTable = ({
   flowStep,
   projectId,
-  iflowStep,
-  followingColumnGroups,
-  //update,
-  updateLine,
 }: MergedTableProps) => {
 
   const {
@@ -38,7 +34,7 @@ const MergedTable = ({
     columnGroupId: flowStepColumnGroups.map(fscg => fscg.columnGroupId) 
   });
 
-  const { data, add } = useData({
+  const { data, add, update: updateData } = useData({
     projectId, columnGroupId: flowStepColumnGroups.map(cg => cg.id)
   });
 
@@ -63,13 +59,12 @@ const MergedTable = ({
         {mergedTableGroupName}
       </div>
       <TableGroup
-        istep={iflowStep}
         projectId={projectId}
         grouping={
           // 最初のcolumnGroupWithGroupingsに保存された
           // グループ化情報を、MergedTableのグループ化情報として
           // 利用します
-          flowStepColumnGroups[0]?.grouping
+          flowStepColumnGroups[0]?.grouping ?? null
         }
         // TODO MergedTableのgrouping処理については要件等
         updateGrouping={async newGrouping => {
@@ -84,10 +79,9 @@ const MergedTable = ({
         }}
         columns={mergedColumns}
         dataList={data}
-        followingColumnGroups={followingColumnGroups}
-        updateLine={updateLine}
         isMerged
         add={add}
+        update={updateData}
       />
     </>
   );

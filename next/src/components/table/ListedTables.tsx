@@ -27,10 +27,7 @@ export type ListedTablesProps =
 export const ListedTables = ({
   projectId,
   flowStep,
-  iflowStep,
   //update,
-  followingColumnGroups,
-  updateLine,
   className,
 }: ListedTablesProps) => {
   const {
@@ -54,10 +51,7 @@ export const ListedTables = ({
             flowStepColumnGroup={flowStepColumnGroup}
             columnGroup={columnGroup}
             projectId={projectId}
-            iflowStep={iflowStep}
             update={update}
-            followingColumnGroups={followingColumnGroups}
-            updateLine={updateLine}
           />
         );
       })}

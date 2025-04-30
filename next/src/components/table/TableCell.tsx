@@ -14,14 +14,14 @@ import {
 
 import type { Data, Column } from '@/types';
 
-import { useData } from '@/hooks/useData';
-import DebouncedInput from '@/components/common/DebouncedInput';
+import Input from '@/components/common/Input';
 
 type TableCellProps = {
   column: Column;
   tanstackColumn: TanstackColumn<Data>;
   row: TanstackRow<Data>;
   table: TanstackTable<Data>;
+  update: (newData: Data) => Promise<void>;
   className?: string;
 }
 
@@ -30,32 +30,24 @@ const TableCell = ({
   column,
   tanstackColumn,
   table,
+  update,
   className,
 }: TableCellProps) => {
-  const { id, projectId, columnGroupId } = row.original;
-  // 参照のみ
-  const { data, update } = useData({
-    id, projectId, columnGroupId,
-    useSubscription: false,
-  });
-  if (data == null) return <div>loading...</div>
-  if (!(column.name in data.data)) {
+  const { data } = row.original;
+  if (!(column.name in data)) {
     return <IconMinus className='size-3 ml-auto mr-auto'/>
   }
   return (
-    <DebouncedInput
+    <Input
       className={clsx('input-ghost', className)}
-      value={data.data[column.name]}
+      value={data[column.name]}
       validation={column.type !== 'string' ? 'number' : undefined}
-      debouncedOnChange={async newValue =>
-        update({ 
-          ...data,
-          data: {
-            ...data.data,
-            [column.name]: newValue
-          }
-        })
-      }
+      onChange={async newValue => {
+        await update({ 
+          ...row.original, data: { ...data, [column.name]: newValue }
+        });
+        console.log('newValue: %o', newValue);
+      }}
     />
   );
 };
