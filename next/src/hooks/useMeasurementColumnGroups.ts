@@ -43,7 +43,7 @@ export const useMeasurementColumnGroups = ({
     DebounceTime,
   );
   const update = async (newValue: MeasurementColumnGroup) => {
-    setData(data.map(d => d.id === newValue.id ? newValue: d));
+    setData(prev => prev.map(d => d.id === newValue.id ? newValue: d));
     await debouncedUpdateDb(newValue);
   };
 

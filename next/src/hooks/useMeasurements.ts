@@ -19,23 +19,17 @@ export const useMeasurements = ({
 }: UseMeasurementsArgs) => {
   
   const target = trpc.measurement.data;
-  const utils = trpc.useUtils();
-  const utilsTarget = utils.measurement.data.list;
 
   const {
     data: fetchedData,
     isLoading,
   } = target.list.useQuery({ projectId, columnGroupId });
-  const [data, _setData] = useState<Measurement[]>([]);
+  const [data, setData] = useState<Measurement[]>([]);
   useEffect(() => {
     if (fetchedData) {
-      _setData(fetchedData);
+      setData(fetchedData);
     }
   }, [fetchedData]);
-  const setData = (newData: Measurement[]) => {
-    utilsTarget.setData({ projectId, columnGroupId }, newData);
-    _setData(newData);
-  };
 
   const { mutateAsync: updateDb } = target.update.useMutation();
   const debouncedUpdateDb = useDebouncedCallback(
@@ -43,18 +37,18 @@ export const useMeasurements = ({
     DebounceTime,
   );
   const update = async (newData: Measurement) => {
-    setData(data.map(d => d.id === newData.id ? newData : d));
+    setData(prev => prev.map(d => d.id === newData.id ? newData : d));
     await debouncedUpdateDb(newData);
   };
 
   const { mutateAsync: add } = target.add.useMutation();
   target.onAdd.useSubscription({ projectId, columnGroupId }, {
-    onData: newData => setData([...data, newData]),
+    onData: newData => setData(prev => [...prev, newData]),
   });
 
-    const { mutateAsync: remove } = target.remove.useMutation();
+  const { mutateAsync: remove } = target.remove.useMutation();
   target.onRemove.useSubscription({ projectId, columnGroupId }, {
-    onData: info => setData(data?.filter(d => d.id !== info.id)),
+    onData: info => setData(prev => prev.filter(d => d.id !== info.id)),
   });
 
   return {
