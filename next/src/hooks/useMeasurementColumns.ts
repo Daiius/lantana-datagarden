@@ -29,7 +29,7 @@ export const useMeasurementColumns = ({
 
   useEffect(() => {
     if (fetchedData) {
-      setData(data);
+      setData(fetchedData);
     }
   }, [fetchedData]);
 
