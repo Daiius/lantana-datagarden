@@ -72,7 +72,7 @@ const FlowStep = ({
           className='text-error'
           onClick={() => removeFlowStep(flowStep)}
         >
-          カテゴリ削除 
+          ステップ削除 
           <IconTrash />
         </Button>
       }
