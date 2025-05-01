@@ -7,51 +7,38 @@ export type Measurement = typeof measurements.$inferSelect;
 
 export const measurementSchema = createSelectSchema(measurements);
 
-export const get = async ({
-  projectId,
-  columnGroupId,
-  id
-}: Pick<Measurement, 'id'|'columnGroupId'|'projectId'>) => {
+export type Ids = Pick<Measurement, 'projectId'|'columnGroupId'|'id'>;
+export type ParentIds = Pick<Measurement, 'projectId'|'columnGroupId'>;
+
+const whereIds = (ids: Ids) => and(
+  eq(measurements.projectId, ids.projectId),
+  eq(measurements.columnGroupId, ids.columnGroupId),
+  eq(measurements.id, ids.id),
+);
+
+const whereParentIds = (parentIds: ParentIds) => and(
+  eq(measurements.projectId, parentIds.projectId),
+  eq(measurements.columnGroupId, parentIds.columnGroupId),
+);
+
+export const get = async (ids: Ids) => {
   const value = await db.query.measurements.findFirst({
-    where:
-      and(
-        eq(measurements.projectId, projectId),
-        eq(measurements.columnGroupId, columnGroupId),
-        eq(measurements.id, id),
-      )
+    where: whereIds(ids)
   });
   if (value == null) throw new Error(
-    `cannot find measurement ${id}`
+    `cannot find measurement ${ids.id}`
   );
   return value;
 };
 
-export const list = async ({
-  projectId,
-  columnGroupId,
-}: Pick<Measurement, 'projectId'|'columnGroupId'>) =>
+export const list = async (parentIds: ParentIds) =>
 await db.query.measurements.findMany({
-  where:
-    and(
-      eq(measurements.projectId, projectId),
-      eq(measurements.columnGroupId, columnGroupId),
-    )
+  where: whereParentIds(parentIds)
 });
 
 export const update = async (params: Measurement) => {
-  await db.update(measurements).set(params).where(
-    and(
-      eq(measurements.projectId, params.projectId),
-      eq(measurements.columnGroupId, params.columnGroupId),
-      eq(measurements.id, params.id),
-    )
-  );
-  const newValue = await get({
-    projectId: params.projectId,
-    columnGroupId: params.columnGroupId,
-    id: params.id
-  });
-  return newValue;
+  await db.update(measurements).set(params).where(whereIds(params));
+  return await get(params);
 };
 
 export const add = async (params: Omit<Measurement, 'id'>) => {
@@ -62,24 +49,9 @@ export const add = async (params: Omit<Measurement, 'id'>) => {
   if (newId == null) throw new Error(
     `cannot get newId of measurement`
   );
-  const newValue = await get({
-    projectId: params.projectId,
-    columnGroupId: params.columnGroupId,
-    id: newId
-  });
-  return newValue;
+  return await get({ ...params, id: newId });
 };
 
-export const remove = async ({
-  projectId,
-  columnGroupId,
-  id,
-}: Pick<Measurement, 'id'|'columnGroupId'|'projectId'>) =>
-await db.delete(measurements).where(
-  and(
-    eq(measurements.projectId, projectId),
-    eq(measurements.columnGroupId, columnGroupId),
-    eq(measurements.id, id),
-  )
-);
+export const remove = async (ids: Ids) =>
+await db.delete(measurements).where(whereIds(ids));
 
