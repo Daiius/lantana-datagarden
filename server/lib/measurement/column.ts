@@ -38,7 +38,8 @@ export const get = async (ids: Ids) => {
 
 export const list = async (parentIds: ParentIds) =>
 await db.query.measurementColumns.findMany({
-  where: whereParentIds(parentIds)
+  where: whereParentIds(parentIds),
+  orderBy: [measurementColumns.sort, measurementColumns.id],
 });
 
 export const add = async (
