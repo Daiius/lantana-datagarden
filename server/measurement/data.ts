@@ -10,6 +10,8 @@ import {
   remove,
   Measurement,
   measurementSchema,
+  Ids,
+  ParentIds,
 } from '../lib/measurement/data';
 
 import { createSubscription } from '../lib/common';
@@ -17,103 +19,71 @@ import { createSubscription } from '../lib/common';
 type MeasurementEvents = {
   onUpdate: Measurement;
   onAdd: Measurement;
-  onRemove: Pick<Measurement, 'id'|'projectId'|'columnGroupId'>;
+  onRemove: Ids;
 }
 
 const ee = mitt<MeasurementEvents>();
 
+const idsSchema = measurementSchema.pick({
+  projectId: true,
+  columnGroupId: true,
+  id: true,
+});
+const parentIdsSchema = measurementSchema.pick({
+  projectId: true,
+  columnGroupId: true,
+});
+
+const filter = (data: ParentIds, input: ParentIds) => (
+     data.projectId === input.projectId
+  && data.columnGroupId === input.columnGroupId
+);
+
 export const dataRouter = router({
   get: publicProcedure
-    .input(
-      measurementSchema.pick({
-        id: true,
-        projectId: true,
-        columnGroupId: true,
-      })
-    )
+    .input(idsSchema)
     .query(async ({ input }) => await get(input)),
   list: publicProcedure
-    .input(
-      measurementSchema.pick({
-        projectId: true,
-        columnGroupId: true,
-      })
-    )
+    .input(parentIdsSchema)
     .query(async ({ input }) => await list(input)),
   update: publicProcedure
-    .input(
-      measurementSchema
-    )
+    .input(measurementSchema)
     .mutation(async ({ input }) => {
       const newValue = await update(input);
       ee.emit('onUpdate', newValue);
     }),
   onUpdate: publicProcedure
-    .input(
-      measurementSchema.pick({
-        projectId: true,
-        id: true,
-        columnGroupId: true,
-      })
-    )
+    .input(parentIdsSchema)
     .subscription(({ input }) => createSubscription({
       eventEmitter: ee,
       eventName: 'onUpdate',
-      filter: data => (
-           data.projectId === input.projectId
-        && data.columnGroupId === input.columnGroupId
-        && data.id === input.id
-      ),
+      filter: data => filter(data, input),
     })),
   add: publicProcedure
-    .input(
-      measurementSchema.omit({ id: true })
-    )
+    .input(measurementSchema.omit({ id: true }))
     .mutation(async ({ input }) => {
       const newValue = await add(input);
       ee.emit('onAdd', newValue);
     }),
   onAdd: publicProcedure
-    .input(
-      measurementSchema.pick({
-        projectId: true,
-        columnGroupId: true,
-      })
-    )
+    .input(parentIdsSchema)
     .subscription(({ input }) => createSubscription({
       eventEmitter: ee,
       eventName: 'onAdd',
-      filter: data => (
-           data.projectId === input.projectId
-        && data.columnGroupId === input.columnGroupId
-      ),
+      filter: data => filter(data, input),
     })),
   remove: publicProcedure
-    .input(
-      measurementSchema.pick({
-        projectId: true,
-        columnGroupId: true,
-        id: true,
-      })
-    )
+    .input(idsSchema)
     .mutation(async ({ input }) => {
       await remove(input);
       ee.emit('onRemove', input);
     }),
   onRemove: publicProcedure
-    .input(
-      measurementSchema.pick({
-        projectId: true,
-        columnGroupId: true,
-      })
-    )
+    .input(parentIdsSchema)
     .subscription(({ input }) => createSubscription({
       eventEmitter: ee,
       eventName: 'onRemove',
-      filter: data => (
-           data.projectId === input.projectId
-        && data.columnGroupId === input.columnGroupId
-      ),
+      filter: data => filter(data, input),
     })),
 });
 

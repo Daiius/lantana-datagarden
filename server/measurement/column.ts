@@ -1,5 +1,4 @@
 import { router, publicProcedure } from '../trpc';
-import { z } from 'zod';
 
 import mitt from 'mitt';
 
@@ -11,6 +10,8 @@ import {
   remove,
   MeasurementColumn,
   measurementColumnSchema,
+  ParentIds,
+  Ids,
 } from '../lib/measurement/column';
 
 import { createSubscription } from '../lib/common';
@@ -18,34 +19,32 @@ import { createSubscription } from '../lib/common';
 type MeasurementColumnEvents = {
   onUpdate: MeasurementColumn;
   onAdd: MeasurementColumn;
-  onRemove: Pick<MeasurementColumn, 'id'|'projectId'|'columnGroupId'>;
+  onRemove: Ids;
 };
+
+const idsSchema = measurementColumnSchema.pick({
+  projectId: true,
+  columnGroupId: true,
+  id: true,
+});
+const parentIdsSchema = measurementColumnSchema.pick({
+  projectId: true,
+  columnGroupId: true,
+});
+
+const filter = (data: ParentIds, input: ParentIds) => (
+     data.projectId === input.projectId
+  && data.columnGroupId === input.columnGroupId
+);
 
 const ee = mitt<MeasurementColumnEvents>();
 
 export const columnRouter = router({
   get: publicProcedure
-    .input(
-      z.object({
-        projectId: z.string(),
-        columnGroupId: z.number(),
-        id: z.number(),
-      })
-    )
-    .query(async ({ input }) => {
-      const value = await get(input);
-      if (value == null) throw new Error (
-        `cannot find column ${input.id}`
-      );
-      return value;
-    }),
+    .input(idsSchema)
+    .query(async ({ input }) => await get(input)),
   list: publicProcedure
-    .input(
-      z.object({
-        projectId: z.string(),
-        columnGroupId: z.number(),
-      })
-    )
+    .input(parentIdsSchema)
     .query(async ({ input }) => await list(input)),
   update: publicProcedure
     .input(measurementColumnSchema)
@@ -54,19 +53,11 @@ export const columnRouter = router({
       ee.emit('onUpdate', newValue);
     }),
   onUpdate: publicProcedure
-    .input(
-      z.object({
-        projectId: z.string(),
-        columnGroupId: z.number(),
-      })
-    )
+    .input(parentIdsSchema)
     .subscription(({ input }) => createSubscription({
       eventEmitter: ee,
       eventName: 'onUpdate',
-      filter: data => (
-           data.projectId === input.projectId
-        && data.columnGroupId === input.columnGroupId
-      ),
+      filter: data => filter(data, input),
     })),
   add: publicProcedure
     .input(measurementColumnSchema.omit({ id: true }))
@@ -75,46 +66,24 @@ export const columnRouter = router({
       ee.emit('onAdd', newValue);
     }),
   onAdd: publicProcedure
-    .input(
-      measurementColumnSchema.pick({
-        projectId: true,
-        columnGroupId: true,
-      })
-    )
+    .input(parentIdsSchema)
     .subscription(({ input }) => createSubscription({
       eventEmitter: ee,
       eventName: 'onAdd',
-      filter: data => (
-        data.projectId === input.projectId
-        && data.columnGroupId === input.columnGroupId
-      ),
+      filter: data => filter(data, input),
     })),
   remove: publicProcedure
-    .input(
-      measurementColumnSchema.pick({
-        projectId: true,
-        columnGroupId: true,
-        id: true,
-      })
-    )
+    .input(idsSchema)
     .mutation(async ({ input }) => {
       await remove(input);
       ee.emit('onRemove', input);
     }),
   onRemove: publicProcedure
-    .input(
-      measurementColumnSchema.pick({
-        projectId: true,
-        columnGroupId: true,
-      })
-    )
+    .input(parentIdsSchema)
     .subscription(({ input }) => createSubscription({
       eventEmitter: ee,
       eventName: 'onRemove',
-      filter: data => (
-           data.projectId === input.projectId
-        && data.columnGroupId === input.columnGroupId
-      ),
+      filter: data => filter(data, input),
     })),
 });
 
