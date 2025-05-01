@@ -38,7 +38,7 @@ export const useColumnGroups = ({
     DebounceTime,
   );
   const update = async (newData: ColumnGroup) => {
-    setData(data.map(d => d.id === newData.id ? newData : d));
+    setData(prev => prev.map(d => d.id === newData.id ? newData : d));
     await debouncedUpdateDb(newData);
   };
 

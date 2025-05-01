@@ -36,30 +36,23 @@ export const useFlowSteps = ({
     DebounceTime,
   );
   const update = async (newValue: FlowStep) => {
-    setData(data.map(d => d.id === newValue.id ? newValue: d));
+    setData(prev => prev.map(d => d.id === newValue.id ? newValue: d));
     await debouncedUpdateDb(newValue);
   };
-  target.onUpdate.useSubscription(
-    { projectId, flowId },
-    {
-      onData: newData => setData(data.map(d => d.id === newData.id ? newData : d)),
-    }
-  );
+  target.onUpdate.useSubscription({ projectId, flowId }, {
+    onData: newData => setData(prev => 
+      prev.map(d => d.id === newData.id ? newData : d)
+    ),
+  });
 
   const { mutateAsync: add } = target.add.useMutation();
-  target.onAdd.useSubscription(
-    { projectId, flowId },
-    {
-      onData: newData => setData([...data, newData]),
-    }
-  );
+  target.onAdd.useSubscription({ projectId, flowId }, {
+    onData: newData => setData(prev => [...prev, newData]),
+  });
   const { mutateAsync: remove } = target.remove.useMutation();
-  target.onRemove.useSubscription(
-    { projectId, flowId },
-    {
-      onData: info => setData(data.filter(d => d.id !== info.id)),
-    }
-  );
+  target.onRemove.useSubscription({ projectId, flowId }, {
+    onData: info => setData(prev => prev.filter(d => d.id !== info.id)),
+  });
 
   return {
     data,

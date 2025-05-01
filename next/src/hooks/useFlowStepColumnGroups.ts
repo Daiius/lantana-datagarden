@@ -40,24 +40,18 @@ export const useFlowStepColumnGroups = ({
     DebounceTime,
   );
   const update = async (newValue: FlowStepColumnGroup) => {
-    setData(data.map(d => d.id === newValue.id ? newValue : d));
+    setData(prev => prev.map(d => d.id === newValue.id ? newValue : d));
     await debouncedUpdateDb(newValue);
   };
 
   const { mutateAsync: add } = target.add.useMutation();
-  target.onAdd.useSubscription(
-    { projectId, flowStepId },
-    {
-      onData: newData => setData([...data, newData]),
-    }
-  );
+  target.onAdd.useSubscription({ projectId, flowStepId }, {
+    onData: newData => setData(prev => [...prev, newData]),
+  });
   const { mutateAsync: remove } = target.remove.useMutation();
-  target.onRemove.useSubscription(
-    { projectId, flowStepId },
-    {
-      onData: info => setData(data.filter(d => d.id !== info.id)),
-    }
-  );
+  target.onRemove.useSubscription({ projectId, flowStepId }, {
+    onData: info => setData(prev => prev.filter(d => d.id !== info.id)),
+  });
 
   return {
     data,
