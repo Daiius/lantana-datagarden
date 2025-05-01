@@ -18,7 +18,12 @@ const MeasurementColumns = ({
   columnGroupId,
 }: MeasurementColumnsProps) => {
 
-  const { data: columns, add, update, remove } = useMeasurementColumns({
+  const { 
+    data: columns, 
+    add,
+    update,
+    remove
+  } = useMeasurementColumns({
     projectId,
     columnGroupId,
   });
