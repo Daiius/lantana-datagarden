@@ -2,7 +2,6 @@
 import clsx from 'clsx';
 
 import type { 
-  ColumnGroup,
   Column,
   Grouping,
   FlowStepColumnGroup,
@@ -13,6 +12,7 @@ import Button from '@/components/common/Button';
 import TableGroupSelector from '@/components/table/TableGroupSelector';
 import Table from '@/components/table/Table';
 
+type DataIds = Pick<Data, 'projectId'|'columnGroupId'|'id'>;
 
 type TableGroupProps = {
   /**
@@ -24,6 +24,7 @@ type TableGroupProps = {
   dataList: Data[];
   add: (args: Omit<Data, 'id'>) => Promise<void>;
   update: (newData: Data) => Promise<void>;
+  remove: (dataIds: DataIds) => Promise<void>;
   grouping: FlowStepColumnGroup['grouping'];
   updateGrouping: (newGrouping: Grouping | null) => void;
   /**
@@ -42,6 +43,7 @@ const TableGroup = ({
   dataList,
   add,
   update,
+  remove,
   grouping,
   updateGrouping,
   isMerged,
@@ -130,6 +132,7 @@ const TableGroup = ({
             data={data}
             updateData={update}
             addData={add}
+            removeData={remove}
           />
           {isShowingAddDataButton
            && columns.length > 0

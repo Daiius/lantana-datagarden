@@ -30,7 +30,12 @@ export const ListedTable = ({
 
   const { id: columnGroupId } = columnGroup;
   const { data: columns } = useColumns({ projectId, columnGroupId });
-  const { data, add, update: updateData } = useData({ projectId, columnGroupId });
+  const {
+    data,
+    add,
+    update: updateData,
+    remove: removeData,
+  } = useData({ projectId, columnGroupId });
 
   if (columns == null || data == null) return (
     <div className='skeleteon w-full h-32' />
@@ -50,6 +55,7 @@ export const ListedTable = ({
         dataList={data}
         add={add}
         update={updateData}
+        remove={removeData}
         updateGrouping={ async newGrouping => await update({ 
           ...flowStepColumnGroup, grouping: newGrouping
         })}

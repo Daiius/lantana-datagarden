@@ -12,20 +12,25 @@ import {
 } from '@tanstack/react-table';
 
 
-import type { Data, Column } from '@/types';
+import type { 
+  Data, 
+  DataIds,
+  Column,
+} from '@/types';
 
 import Row from '@/components/table/Row';
 
 import TableCell from '@/components/table/TableCell';
 import TableHeader from '@/components/table/TableHeader';
 
-import { useLines, Relation } from '@/providers/LinesProvider';
+import { useLines } from '@/providers/LinesProvider';
 
 type TableProps = {
   columns: Column[],
   data: Data[],
   addData: (args: Omit<Data, 'id'>) => Promise<void>;
   updateData: (newData: Data) => Promise<void>;
+  removeData: (dataIds: DataIds) => Promise<void>;
   className?: string;
 }
 
@@ -37,6 +42,7 @@ const Table = ({
   data,
   addData,
   updateData,
+  removeData,
   columns,
   className,
 }: TableProps) => {
@@ -117,6 +123,7 @@ const Table = ({
               columns={columns}
               row={row}
               addData={addData}
+              removeData={removeData}
             />
           )}
         </tbody>
