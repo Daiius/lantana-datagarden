@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react';
+import { useRef } from 'react';
 import clsx from 'clsx';
 
 import type { 
@@ -32,8 +32,11 @@ export const Tables = ({
   className,
 }: TablesProps) => {
 
+  const refContainer = useRef<HTMLDivElement>(null);
+
   return (
     <div
+      ref={refContainer}
       id='tables-container'
       className={clsx(
         'flex flex-row gap-8',
@@ -46,7 +49,7 @@ export const Tables = ({
           projectId={projectId}
           flowId={flowId}
         />
-        <Lines />
+        <Lines container={refContainer}/>
       </LinesProvider>
     </div>
   );
