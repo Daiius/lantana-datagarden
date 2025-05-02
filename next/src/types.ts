@@ -25,7 +25,9 @@ export type ColumnGroup = typeof columnGroups.$inferSelect;
 export type ColumnGroupMeasurement = typeof columnGroupMeasurements.$inferSelect;
 
 export type Column      = typeof columns.$inferSelect;
+
 export type Data        = typeof data.$inferSelect;
+export type DataIds = Pick<Data, 'projectId'|'columnGroupId'|'id'>;
 
 // Measurements
 export type MeasurementColumnGroup = typeof measurementColumnGroups.$inferSelect;
