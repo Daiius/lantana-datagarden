@@ -1,5 +1,7 @@
 'use client' // for hooks
 
+import { log } from '@/debug';
+
 import { 
   useState,
   useContext,
@@ -26,6 +28,7 @@ export type LinesContextType = {
   //connetions: Connection[];
   register: (newRelations: Relation[]) => void;
   unregister: (relations: Relation[]) => void;
+  relations: Relation[];
   //clear: () => void;
 }
 
@@ -47,6 +50,9 @@ export type LinesProviderProps = {
   children: ReactNode;
 };
 
+const compareRelations = (a: Relation, b: Relation) =>
+a.id === b.id && a.parentId === b.parentId;
+
 /**
  * コンポーネント階層の一番下で描画される Data の親子関係を登録し、
  * それらの間に線を描画するために使用します
@@ -58,17 +64,24 @@ export const LinesProvider = ({
   const [relations, setRelations] = useState<Relation[]>([]);
   const [connections, setConnections] = useState<Connection[]>([]);
   const register = (newRelations: Relation[]) => {
-    console.log(`registerd ${newRelations.length} relations`);
+    log(`LinesProvider:registerd ${newRelations.length} relations`);
+    const relationsToAdd = newRelations
+      .filter(a => !relations.some(b => compareRelations(a, b)));
+    setRelations(prev => [...prev, ...relationsToAdd]);
   };
-  const unregister = (relations: Relation[]) => {
-    console.log(`unregistered ${relations.length} relations`);
+  const unregister = (oldRelations: Relation[]) => {
+    log(`LinesProvider:unregistered ${relations.length} relations`);
+    setRelations(prev => prev.filter(a => !oldRelations.some(b => compareRelations(a, b))));
   };
+
+  log('LinesProvider:relations: %o', relations);
 
   return (
     <LinesContext.Provider 
       value={{
         register,
         unregister,
+        relations,
       }}
     >
       {children}
