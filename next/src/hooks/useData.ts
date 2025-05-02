@@ -44,13 +44,10 @@ export const useData = ({
     );
     await debouncedUpdateDb(newData);
   };
-  target.onUpdate.useSubscription(
-    { projectId, columnGroupId },
-    {
-      onData: newData => setData(prev => prev.map(d => d.id === newData.id ? newData : d)),
-      onError: err => error(err),
-    }
-  );
+  target.onUpdate.useSubscription({ projectId, columnGroupId }, {
+    onData: newData => setData(prev => prev.map(d => d.id === newData.id ? newData : d)),
+    onError: err => error(err),
+  });
   const { mutateAsync: remove } = target.remove.useMutation();
   target.onRemove.useSubscription(
     { projectId, columnGroupId },
