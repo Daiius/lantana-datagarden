@@ -62,15 +62,16 @@ export const LinesProvider = ({
   children,
 }: LinesProviderProps) => {
   const [relations, setRelations] = useState<Relation[]>([]);
-  const [connections, setConnections] = useState<Connection[]>([]);
   const register = (newRelations: Relation[]) => {
-    log(`LinesProvider:registerd ${newRelations.length} relations`);
-    const relationsToAdd = newRelations
-      .filter(a => !relations.some(b => compareRelations(a, b)));
-    setRelations(prev => [...prev, ...relationsToAdd]);
+    log(`LinesProvider:registerd %o`, newRelations);
+    setRelations(prev => {
+      const relationsToAdd = newRelations
+        .filter(a => !prev.some(b => compareRelations(a, b)));
+      return [...prev, ...relationsToAdd]
+    });
   };
   const unregister = (oldRelations: Relation[]) => {
-    log(`LinesProvider:unregistered ${relations.length} relations`);
+    log(`LinesProvider:unregistered %o`, relations);
     setRelations(prev => prev.filter(a => !oldRelations.some(b => compareRelations(a, b))));
   };
 
