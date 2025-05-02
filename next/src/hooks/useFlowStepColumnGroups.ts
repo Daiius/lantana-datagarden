@@ -43,6 +43,9 @@ export const useFlowStepColumnGroups = ({
     setData(prev => prev.map(d => d.id === newValue.id ? newValue : d));
     await debouncedUpdateDb(newValue);
   };
+  target.onUpdate.useSubscription({ projectId, flowStepId }, {
+    onData: newData => setData(prev => prev.map(d => d.id === newData.id ? newData : d)),
+  });
 
   const { mutateAsync: add } = target.add.useMutation();
   target.onAdd.useSubscription({ projectId, flowStepId }, {
