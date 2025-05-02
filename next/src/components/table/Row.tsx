@@ -2,8 +2,8 @@ import clsx from 'clsx';
 
 import type {
   Data,
+  DataIds,
   Column,
-  ColumnGroup,
 } from '@/types';
 
 import {
@@ -18,11 +18,13 @@ type RowProps = {
   columns: Column[];
   row: TanstackRow<Data>;
   addData: (args: Omit<Data, 'id'>) => Promise<void>;
+  removeData: (dataIds: DataIds) => Promise<void>;
 }
 
 const Row = ({
   row,
   addData,
+  removeData,
 }: RowProps) => {
 
   const { id, projectId, columnGroupId } = row.original;
@@ -51,7 +53,7 @@ const Row = ({
           projectId={projectId}
           dataId={id}
           columnGroupId={columnGroupId}
-          removeData={async () => console.log('remove data not implemented')}
+          removeData={async () => await removeData(row.original)}
           addData={async params => await addData({
             ...params,
             parentId: row.original.id,
