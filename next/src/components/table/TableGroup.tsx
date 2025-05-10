@@ -3,6 +3,7 @@ import clsx from 'clsx';
 
 import type { 
   Column,
+  ColumnGroup,
   Grouping,
   FlowStepColumnGroup,
   Data,
@@ -27,6 +28,7 @@ type TableGroupProps = {
   remove: (dataIds: DataIds) => Promise<void>;
   grouping: FlowStepColumnGroup['grouping'];
   updateGrouping: (newGrouping: Grouping | null) => void;
+  followingColumnGroups: ColumnGroup[];
   /**
    * 複数columnGroupがマージされたテーブルならtrue
    * 「同じ親のデータ追加」ボタンはmergedの場合どのcolumnGroupに
@@ -46,6 +48,7 @@ const TableGroup = ({
   remove,
   grouping,
   updateGrouping,
+  followingColumnGroups,
   isMerged,
   className,
 }: TableGroupProps) => {
@@ -133,6 +136,7 @@ const TableGroup = ({
             updateData={update}
             addData={add}
             removeData={remove}
+            followingColumnGroups={followingColumnGroups}
           />
           {isShowingAddDataButton
            && columns.length > 0

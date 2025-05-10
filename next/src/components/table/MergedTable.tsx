@@ -16,6 +16,7 @@ type MergedTableProps =
 const MergedTable = ({
   flowStep,
   projectId,
+  followingColumnGroups,
 }: MergedTableProps) => {
 
   const {
@@ -34,7 +35,7 @@ const MergedTable = ({
     columnGroupId: flowStepColumnGroups.map(fscg => fscg.columnGroupId) 
   });
 
-  const { data, add, update: updateData } = useData({
+  const { data, add, remove, update: updateData } = useData({
     projectId, columnGroupId: flowStepColumnGroups.map(cg => cg.id)
   });
 
@@ -82,6 +83,8 @@ const MergedTable = ({
         isMerged
         add={add}
         update={updateData}
+        remove={remove}
+        followingColumnGroups={followingColumnGroups}
       />
     </>
   );
