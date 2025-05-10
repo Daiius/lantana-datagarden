@@ -1,7 +1,9 @@
 
+import { z } from 'zod';
+import mitt from 'mitt';
+
 import { router, publicProcedure } from '../trpc';
 
-import mitt from 'mitt';
 import {
   get,
   list,
@@ -13,7 +15,13 @@ import {
   Ids,
   ParentIds,
 } from '../lib/data';
-import { createSubscription } from '../lib/common';
+import { 
+  createSubscription,
+  createEventHandler,
+} from '../lib/common';
+import {
+  tableFollowingColumnGroupsEventEmitter
+} from '../events';
 
 type DataEvents = {
   onAdd: Data;
@@ -32,6 +40,11 @@ const idsSchema = dataSchema.pick({
 const parentIdsSchema = dataSchema.pick({
   projectId: true,
   columnGroupId: true,
+}).extend({
+  columnGroupId: z.union([
+    z.number(),
+    z.array(z.number()),
+  ]),
 });
 
 const filter = (data: ParentIds, input: ParentIds) => (
@@ -55,10 +68,10 @@ export const dataRouter = router({
   // 特定 id のデータが更新されたことを通知するイベント
   onUpdate: publicProcedure
     .input(parentIdsSchema)
-    .subscription(({ input }) => createSubscription({
-        eventEmitter: ee,
-        eventName: 'onUpdate',
-        filter: data => filter(data, input),
+    .subscription(({ input }) => createEventHandler({
+      ee,
+      eventName: 'onUpdate',
+      filter: data => filter(data, input),
     })),
   add: publicProcedure
     .input(dataSchema.omit({ id: true }))

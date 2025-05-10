@@ -406,9 +406,42 @@ export const projectRelations =
   relations(projects, ({ many }) => ({ 
     categories: many(columnGroups),
   }));
-// NOTE
-// 本当は flow 関連でもrelationsを使用したいが、
-// JSON型で記録しているためにちょっと無理
+
+export const flowRelations = relations(
+  flows,
+  ({ one, many }) => ({
+    project: one(projects, {
+        fields: [flows.projectId],
+        references: [projects.id],
+      }),
+    flowSteps: many(flowSteps),
+  }),
+);
+
+export const flowStepRelations = relations(
+  flowSteps,
+  ({ one, many }) => ({
+    flowStepColumnGroups: many(flowStepColumnGroups),
+    flow: one(flows, {
+      fields: [flowSteps.flowId],
+      references: [flows.id],
+    }),
+  }),
+);
+
+export const flowStepColumnGroupRelations = relations(
+  flowStepColumnGroups,
+  ({ one }) => ({
+    flowStep: one(flowSteps, {
+      fields: [flowStepColumnGroups.flowStepId],
+      references: [flowSteps.id],
+    }),
+    columnGroup: one(columnGroups, {
+      fields: [flowStepColumnGroups.columnGroupId],
+      references: [columnGroups.id],
+    }),
+  }),
+);
 
 export const columnGroupRelations = relations(
   columnGroups, 

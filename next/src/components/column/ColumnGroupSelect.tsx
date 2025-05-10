@@ -30,7 +30,7 @@ const ColumnGroupSelect = ({
     <Select
       className={clsx(className)}
       value={value}
-      onChange={newValue => newValue && onChange(newValue as number)}
+      onChange={newValue => newValue && onChange(Number(newValue))}
     >
       {columnGroups.map(columnGroup =>
         <option 

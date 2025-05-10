@@ -11,17 +11,17 @@ type RowDropdownProps = {
   projectId: string;
   dataId: number;
   columnGroupId: number;
-  followingColumnGroups: ColumnGroup[];
   removeData: () => Promise<void>;
   addData: (params: { columnGroupId: number }) => Promise<void>;
+  followingColumnGroups: ColumnGroup[];
 
   className?: string;
 }
 
 const RowDropdown = ({
-  followingColumnGroups,
   removeData,
   addData,
+  followingColumnGroups,
   className,
 }: RowDropdownProps) => {
   const menuRef = React.useRef<HTMLUListElement>(null);
@@ -42,11 +42,13 @@ const RowDropdown = ({
         className='dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm'
       >
         <li className='text-base-content/50'>データ追加...</li>
+        {/*
         {followingColumnGroups.length === 0 &&
           <li className='text-base-content/50'>
             Flowsで次ステップを追加して下さい...
           </li>
         }
+        */}
         {followingColumnGroups.map(columnGroup =>
           <li key={columnGroup.id}>
             <a

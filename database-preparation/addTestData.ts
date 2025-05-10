@@ -7,6 +7,8 @@ import {
   columns,
   data,
   flows,
+  flowSteps,
+  flowStepColumnGroups,
 } from 'database/db/schema';
 import { 
 //  v7 as uuidv7,
@@ -87,21 +89,39 @@ await db.insert(data).values([{
 await db.insert(flows).values({
   projectId: zeroId,
   name: 'テスト用フロー',
-  flowSteps: [
-    { 
-      columnGroupWithGroupings: [
-        { id: 1, grouping: undefined }
-      ], 
-      mode: 'list' 
-    }, 
-    { 
-      columnGroupWithGroupings: [
-        { id: 2, grouping: { type: 'parent' }}
-      ], 
-      mode: 'list' 
-    },
-  ],
 });
+
+await db.insert(flowSteps).values([
+  {
+    projectId: zeroId,
+    flowId: 1,
+    mode: 'list',
+    sort: null
+  },
+  {
+    projectId: zeroId,
+    flowId: 1,
+    mode: 'list',
+    sort: null,
+  }
+]);
+
+await db.insert(flowStepColumnGroups).values([
+  {
+    flowStepId: 1,
+    columnGroupId: 1,
+    projectId: zeroId,
+    grouping: null,
+    sort: null,
+  },
+  {
+    flowStepId: 2,
+    columnGroupId: 2,
+    projectId: zeroId,
+    grouping: null,
+    sort: null,
+  },
+]);
 
 
 await connection.end();

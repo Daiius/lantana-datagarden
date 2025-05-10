@@ -1,6 +1,9 @@
 //import clsx from 'clsx';
 
-import { useDataList } from '@/hooks/useDataList';
+import { useData } from '@/hooks/useData';
+import { useColumnGroups } from '@/hooks/useColumnGroups';
+import { useFlowStepColumnGroups } from '@/hooks/useFlowStepColumnGroups';
+import { useColumns } from '@/hooks/useColumns';
 
 import { FlowStepProps } from '@/components/table/FlowStep';
 import TableGroup from '@/components/table/TableGroup';
@@ -13,28 +16,42 @@ type MergedTableProps =
 const MergedTable = ({
   flowStep,
   projectId,
-  iflowStep,
   followingColumnGroups,
-  updateFlowStep,
-  updateLine,
 }: MergedTableProps) => {
-  const mergedTableGroupName = 
-    flowStep.columnGroups.map(columnGroup =>
-      columnGroup.name
-    ).join(' & ');
-  const mergedColumns = Array.from( 
-    new Map(
-      flowStep.columnGroups.flatMap(columnGroup =>
-        columnGroup.columns
-      ).map(column => [column.name, column])
-    ).values()
-  );
-  const { dataList: mergedDataList, add } = useDataList({
-    projectId, columnGroupId: flowStep.columnGroups.map(cg => cg.id)
+
+  const {
+    data: flowStepColumnGroups,
+    update,
+  } = useFlowStepColumnGroups(flowStep);
+
+  const {
+    data: columnGroups
+  } = useColumnGroups({ projectId });
+
+  const {
+    data: columns
+  } = useColumns({ 
+    projectId, 
+    columnGroupId: flowStepColumnGroups.map(fscg => fscg.columnGroupId) 
   });
 
-  if (mergedDataList == null) return (
-    <div className='skeleton w-full h-32' />
+  const { data, add, remove, update: updateData } = useData({
+    projectId, columnGroupId: flowStepColumnGroups.map(cg => cg.id)
+  });
+
+  const relatedColumnGroups = flowStepColumnGroups
+    .flatMap(flowStepColumnGroup =>
+      columnGroups.find(cg => cg.id === flowStepColumnGroup.columnGroupId)
+      ?? []
+    );
+
+  const mergedTableGroupName = relatedColumnGroups
+    .map(rcg => rcg.name)
+    .join(' & ');
+
+  const mergedColumns = Array.from( 
+    new Map(columns.map(column => [column.name, column]))
+    .values()
   );
 
   return (
@@ -43,13 +60,12 @@ const MergedTable = ({
         {mergedTableGroupName}
       </div>
       <TableGroup
-        istep={iflowStep}
         projectId={projectId}
         grouping={
           // 最初のcolumnGroupWithGroupingsに保存された
           // グループ化情報を、MergedTableのグループ化情報として
           // 利用します
-          flowStep.columnGroupWithGroupings[0]?.grouping
+          flowStepColumnGroups[0]?.grouping ?? null
         }
         // TODO MergedTableのgrouping処理については要件等
         updateGrouping={async newGrouping => {
@@ -58,20 +74,17 @@ const MergedTable = ({
           //  事足りるかもしれませんが)
           // columnGroupWithGroupings全体のgroupingを新規の値に
           // 一括で更新します、挙動に少し注意が必要です
-          await updateFlowStep({
-            ...flowStep,
-            columnGroupWithGroupings:
-              flowStep.columnGroupWithGroupings.map(cg => ({
-                ...cg, grouping: newGrouping,
-              })),
-          });
+          for (const flowStepColumnGroup of flowStepColumnGroups) {
+            await update({ ...flowStepColumnGroup, grouping: newGrouping });
+          }
         }}
         columns={mergedColumns}
-        dataList={mergedDataList}
-        followingColumnGroups={followingColumnGroups}
-        updateLine={updateLine}
+        dataList={data}
         isMerged
         add={add}
+        update={updateData}
+        remove={remove}
+        followingColumnGroups={followingColumnGroups}
       />
     </>
   );

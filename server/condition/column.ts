@@ -1,4 +1,6 @@
 
+import { z } from 'zod';
+
 import { router, publicProcedure } from '../trpc';
 
 import { 
@@ -31,6 +33,11 @@ const idsSchema = columnSchema.pick({
 const parentIdsSchema = columnSchema.pick({
   projectId: true,
   columnGroupId: true,
+}).extend({
+  columnGroupId: z.union([
+    z.number(),
+    z.array(z.number()),
+  ]),
 });
 
 const filter = (data: ParentIds, input: ParentIds) => (

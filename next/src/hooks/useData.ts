@@ -1,48 +1,75 @@
-'use client'
+'use client' // for hooks
+
+import { useState, useEffect } from 'react';
+import { useDebouncedCallback } from 'use-debounce';
 
 import { trpc } from '@/providers/TrpcProvider';
 
 import type { Data } from '@/types';
+import { DebounceTime } from './common';
 
-export type UseDataArgs =
-  Pick<Data, 'id'|'projectId'|'columnGroupId'>
-  & {
-    initialData?: Data;
-    useSubscription?: boolean;
-  };
+import { log, error } from '@/debug';
+
+
+export type UseDataArgs = {
+  projectId: Data['projectId'];
+  columnGroupId: Data['columnGroupId'] | Data['columnGroupId'][];
+};
 
 export const useData = ({
-  id,
   projectId,
   columnGroupId,
-  initialData,
-  useSubscription = true,
 }: UseDataArgs) => {
-  const utils = trpc.useUtils();
-  const { data, error, isLoading } = trpc.condition.data.get.useQuery(
-    { id, projectId, columnGroupId },
-    initialData == null
-    ? { enabled: true }
-    : { enabled: false, initialData }
+  const target = trpc.condition.data;
+  const { 
+    data: fetchedData, 
+    isLoading,
+  } = target.list.useQuery({ projectId, columnGroupId });
+  const [data, setData] = useState<Data[]>([]);
+  useEffect(() => {
+    if (fetchedData) {
+      log('useData:useEffect', fetchedData);
+      setData(fetchedData);
+    }
+  }, [fetchedData]);
+
+  const { mutateAsync: updateDb } = target.update.useMutation();
+  const debouncedUpdateDb = useDebouncedCallback(
+    async (newData: Data) => await updateDb(newData),
+    DebounceTime,
   );
-  if (useSubscription) {
-  trpc.condition.data.onUpdate.useSubscription(
-    { id, projectId, columnGroupId },
+  const update = async (newData: Data) => {
+    log('useData:update: %o', newData);
+    setData(prev => prev.map(d => d.id === newData.id ? newData : d)
+    );
+    await debouncedUpdateDb(newData);
+  };
+  target.onUpdate.useSubscription({ projectId, columnGroupId }, {
+    onData: newData => setData(prev => prev.map(d => d.id === newData.id ? newData : d)),
+    onError: err => error(err),
+  });
+  const { mutateAsync: remove } = target.remove.useMutation();
+  target.onRemove.useSubscription(
+    { projectId, columnGroupId },
     {
-      onData: data => utils.condition.data.get.setData(
-        { id, projectId, columnGroupId },
-        data
-      ),
-      onError: err => console.error(err),
+      onData: info => setData(prev => prev.filter(d => d.id !== info.id)),
+      onError: err => error(err),
     }
   );
-  }
-  const { mutateAsync: update } = trpc.condition.data.update.useMutation();
-  const { mutateAsync: remove } = trpc.condition.data.remove.useMutation();
+
+  const { mutateAsync: add } = target.add.useMutation();
+  target.onAdd.useSubscription(
+    { projectId, columnGroupId },
+    {
+      onData: newData => setData(prev => [...prev, newData]),
+      onError: err => error(err),
+    }
+  );
 
   return {
     data,
     update,
+    add,
     remove,
     isLoading,
     error,

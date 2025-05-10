@@ -1,10 +1,11 @@
 
 import clsx from 'clsx';
 
-import { 
-  ColumnGroup,
+import type { 
   Column,
+  ColumnGroup,
   Grouping,
+  FlowStepColumnGroup,
   Data,
 } from '@/types';
 
@@ -12,21 +13,22 @@ import Button from '@/components/common/Button';
 import TableGroupSelector from '@/components/table/TableGroupSelector';
 import Table from '@/components/table/Table';
 
+type DataIds = Pick<Data, 'projectId'|'columnGroupId'|'id'>;
 
 type TableGroupProps = {
   /**
    * flowStepのインデックス
    * 最初のflowStepかどうかで一部の表示/非表示を切り替えるため使用します
    */
-  istep: number;
   projectId: string;
   columns: Column[];
   dataList: Data[];
   add: (args: Omit<Data, 'id'>) => Promise<void>;
+  update: (newData: Data) => Promise<void>;
+  remove: (dataIds: DataIds) => Promise<void>;
+  grouping: FlowStepColumnGroup['grouping'];
+  updateGrouping: (newGrouping: Grouping | null) => void;
   followingColumnGroups: ColumnGroup[];
-  grouping: Grouping;
-  updateGrouping: (newGrouping: Grouping) => void;
-  updateLine: () => void;
   /**
    * 複数columnGroupがマージされたテーブルならtrue
    * 「同じ親のデータ追加」ボタンはmergedの場合どのcolumnGroupに
@@ -38,15 +40,15 @@ type TableGroupProps = {
 }
 
 const TableGroup = ({
-  istep,
   projectId,
   columns,
   dataList,
   add,
-  followingColumnGroups,
+  update,
+  remove,
   grouping,
   updateGrouping,
-  updateLine,
+  followingColumnGroups,
   isMerged,
   className,
 }: TableGroupProps) => {
@@ -55,7 +57,7 @@ const TableGroup = ({
     return <div className='skeleton w-full h-32' />
   };
 
-  const groupData = (input: Data[], grouping: Grouping): Data[][] => {
+  const groupData = (input: Data[], grouping: Grouping | null): Data[][] => {
     if (!grouping) return [input];
 
     const map = new Map<string | number | null | undefined, Data[]>();
@@ -85,7 +87,8 @@ const TableGroup = ({
     && (
        // 最初のステップなら必ず表示す 
        // (恐らくルートデータなので...)      
-       istep === 0  
+       //istep === 0  
+       true
        // 親でグループ化されていたら
        // テーブル内で親が共通なので
        // データを追加出来る
@@ -130,8 +133,9 @@ const TableGroup = ({
             key={idata}
             columns={columns}
             data={data}
+            updateData={update}
             addData={add}
-            updateLine={updateLine}
+            removeData={remove}
             followingColumnGroups={followingColumnGroups}
           />
           {isShowingAddDataButton
@@ -142,8 +146,7 @@ const TableGroup = ({
                 'btn-block btn-success',
                 // 最初でないステップのデータ追加ボタンは
                 // btn-soft スタイルにする
-                istep !== 0 
-                && isShowingAddDataButton 
+                isShowingAddDataButton 
                 && 'btn-soft'
               )}
               onClick={async () => 

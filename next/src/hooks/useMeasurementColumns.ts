@@ -17,28 +17,31 @@ export const useMeasurementColumns = ({
   projectId,
   columnGroupId,
 }: UseMeasurementColumnsArgs) => {
-  const { data } = trpc.measurement.column.list.useQuery(
+  const target = trpc.measurement.column;
+  const { 
+    data: fetchedData,
+    isLoading,
+  } = target.list.useQuery(
     { projectId, columnGroupId },
   );
   // NOTE IME対応には必要らしい、React Queryキャッシュと重複するのは嫌だが...
-  const [localData, setLocalData] = useState<MeasurementColumn[]>([]);
+  const [data, setData] = useState<MeasurementColumn[]>([]);
 
   useEffect(() => {
-    if (data != null) {
-      setLocalData(data);
+    if (fetchedData) {
+      setData(fetchedData);
     }
-  }, [data]);
+  }, [fetchedData]);
 
   // update with debounce
-  const { mutateAsync: updateDb } = 
-    trpc.measurement.column.update.useMutation();
+  const { mutateAsync: updateDb } = target.update.useMutation();
   const debouncedUpdateDb = useDebouncedCallback(
     async (newData: MeasurementColumn) => await updateDb(newData),
     DebounceTime,
   );
   const update = async (newData: MeasurementColumn) => {
-    setLocalData(
-      localData.map(d => d.id === newData.id ? newData : d)
+    setData(prev =>
+      prev.map(d => d.id === newData.id ? newData : d)
     );
     await debouncedUpdateDb(newData);
   }
@@ -49,43 +52,33 @@ export const useMeasurementColumns = ({
   // update, add, remove もこのふっくにまとめてしまう
 
   // add
-  const { mutateAsync: add } =
-    trpc.measurement.column.add.useMutation();
+  const { mutateAsync: add } = target.add.useMutation();
 
   // remove
-  const { mutateAsync: remove } =
-    trpc.measurement.column.remove.useMutation();
+  const { mutateAsync: remove } = target.remove.useMutation();
 
 
   // TODO 他ユーザからの更新と自分の更新を区別したい
   //      2回再描画されるのでは？
-  trpc.measurement.column.onAdd.useSubscription(
-    { projectId, columnGroupId },
-    {
-      onData: newData => setLocalData([...localData, newData]),
-    }
-  );
+  target.onAdd.useSubscription({ projectId, columnGroupId }, {
+    onData: newData => setData(prev => [...prev, newData]),
+  });
 
-  trpc.measurement.column.onRemove.useSubscription(
-    { projectId, columnGroupId },
-    {
-      onData: removalInfo => setLocalData(
-        localData.filter(d => d.id !== removalInfo.id)
-      ),
-    }
-  );
+  target.onRemove.useSubscription({ projectId, columnGroupId }, {
+    onData: removalInfo => setData(prev =>
+      prev.filter(d => d.id !== removalInfo.id)
+    ),
+  });
 
-  trpc.measurement.column.onUpdate.useSubscription(
-    { projectId, columnGroupId },
-    {
-      onData: newData => setLocalData(
-        localData.map(d => d.id === newData.id ? newData : d)
-      ),
-    }
-  );
+  target.onUpdate.useSubscription({ projectId, columnGroupId }, {
+    onData: newData => setData(prev =>
+      prev.map(d => d.id === newData.id ? newData : d)
+    ),
+  });
 
   return {
-    data: localData,
+    data,
+    isLoading,
     update,
     add,
     remove,
