@@ -10,10 +10,11 @@ export const useFlows = ({
 }: {
   projectId: string;
 }) => {
+  const target = trpc.flow.flow;
   const { 
     data: fetchedData,
     isLoading,
-  } = trpc.flow.flow.list.useQuery({ projectId });
+  } = target.list.useQuery({ projectId });
   const [data, setData] = useState<Flow[]>([]);
   useEffect(() => {
     if (fetchedData != null) {
@@ -21,41 +22,31 @@ export const useFlows = ({
     }
   }, [fetchedData]);
 
-  const { mutateAsync: updateDb } =
-    trpc.flow.flow.update.useMutation();
+  const { mutateAsync: updateDb } = target.update.useMutation();
   const debouncedUpdateDb = useDebouncedCallback(
     async (newData: Flow) => await updateDb(newData),
     DebounceTime,
   );
   const update = async (newData: Flow) => {
-    setData(data.map(d => d.id === newData.id ? newData : d));
+    setData(prev => prev.map(d => d.id === newData.id ? newData : d));
     await debouncedUpdateDb(newData);
   };
-  trpc.flow.flow.onUpdate.useSubscription(
-    { projectId },
-    {
-      onData: newData => setData(
-        data.map(d => d.id === newData.id ? newData : d)
-      ),
-    }
-  );
+  target.onUpdate.useSubscription({ projectId }, {
+    onData: newData => setData(prev => 
+      prev.map(d => d.id === newData.id ? newData : d)
+    ),
+  });
 
-  const { mutateAsync: add } = trpc.flow.flow.add.useMutation();
-  const { mutateAsync: remove } = trpc.flow.flow.remove.useMutation();
+  const { mutateAsync: add } = target.add.useMutation();
+  const { mutateAsync: remove } = target.remove.useMutation();
 
-  trpc.flow.flow.onAdd.useSubscription(
-    { projectId },
-    {
-      onData: newData => setData([ ...data, newData]),
-    }
-  );
+  target.onAdd.useSubscription({ projectId }, {
+    onData: newData => setData(prev => [ ...prev, newData]),
+  });
 
-  trpc.flow.flow.onRemove.useSubscription(
-    { projectId },
-    {
-      onData: newData => setData(data.filter(d => d.id !== newData.id)),
-    }
-  );
+  target.onRemove.useSubscription({ projectId }, {
+    onData: newData => setData(prev => prev.filter(d => d.id !== newData.id)),
+  });
 
   return {
     data, 

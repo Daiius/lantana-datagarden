@@ -2,6 +2,7 @@ import clsx from 'clsx';
 
 import type {
   Data,
+  DataIds,
   Column,
   ColumnGroup,
 } from '@/types';
@@ -12,40 +13,31 @@ import {
 } from '@tanstack/react-table';
 
 import RowDropdown from '@/components/table/RowDropdown';
-import { useData } from '@/hooks/useData';
+import { followingColumnGroupsRouter } from 'server/table/followingColumnGroups';
 
 
 type RowProps = {
   columns: Column[];
   row: TanstackRow<Data>;
-  followingColumnGroups: ColumnGroup[];
   addData: (args: Omit<Data, 'id'>) => Promise<void>;
+  removeData: (dataIds: DataIds) => Promise<void>;
+  followingColumnGroups: ColumnGroup[];
 }
 
 const Row = ({
   row,
-  followingColumnGroups,
   addData,
+  removeData,
+  followingColumnGroups,
 }: RowProps) => {
 
   const { id, projectId, columnGroupId } = row.original;
-  const {
-    data,
-    remove,
-  } = useData({ 
-    id, projectId, columnGroupId,
-    initialData: row.original 
-  });
-
-  if (data == null) return (
-    <div className='skeleton h-4 w-32'/>
-  );
 
   return (
     <tr 
       tabIndex={0}
-      id={`tr-${data.id}`}
-      className={clsx(`tr-${data.id}`)}
+      id={`tr-${id}`}
+      className={clsx(`tr-${id}`)}
     >
       {row.getVisibleCells().map(cell =>
         <td 
@@ -63,18 +55,16 @@ const Row = ({
       <td className='border border-gray-300' >
         <RowDropdown
           projectId={projectId}
-          dataId={row.original.id}
-          columnGroupId={row.original.columnGroupId}
-          followingColumnGroups={followingColumnGroups}
-          removeData={async () => await remove({
-            id: row.original.id, projectId, columnGroupId,
-          })}
+          dataId={id}
+          columnGroupId={columnGroupId}
+          removeData={async () => await removeData(row.original)}
           addData={async params => await addData({
             ...params,
             parentId: row.original.id,
             projectId, 
             data: {},
           })}
+          followingColumnGroups={followingColumnGroups}
         />
       </td>
     </tr>

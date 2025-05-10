@@ -12,30 +12,34 @@ export const measurementColumnSchema = createSelectSchema(
   measurementColumns
 );
 
-export const get = async ({
-  projectId,
-  columnGroupId,
-  id
-}: Pick<MeasurementColumn, 'id'|'projectId'|'columnGroupId'>) => 
-await db.query.measurementColumns.findFirst({
-  where:
-    and(
-      eq(measurementColumns.projectId, projectId),
-      eq(measurementColumns.columnGroupId, columnGroupId),
-      eq(measurementColumns.id, id),
-    )
-});
+export type Ids = Pick<MeasurementColumn, 'projectId'|'columnGroupId'|'id'>;
+export type ParentIds = Pick<MeasurementColumn, 'projectId'|'columnGroupId'>;
 
-export const list = async ({
-  projectId,
-  columnGroupId,
-}: Pick<MeasurementColumn, 'projectId'|'columnGroupId'>) =>
+const whereIds = (ids: Ids) => and(
+  eq(measurementColumns.projectId, ids.projectId),
+  eq(measurementColumns.columnGroupId, ids.columnGroupId),
+  eq(measurementColumns.id, ids.id),
+);
+
+const whereParentIds = (parentIds: ParentIds) => and(
+  eq(measurementColumns.projectId, parentIds.projectId),
+  eq(measurementColumns.columnGroupId, parentIds.columnGroupId),
+);
+
+export const get = async (ids: Ids) => {
+  const value = await db.query.measurementColumns.findFirst({
+    where: whereIds(ids)
+  });
+  if (value == null) throw new Error(
+    `cannot get measurement column ${ids.id}`
+  );
+  return value;
+}
+
+export const list = async (parentIds: ParentIds) =>
 await db.query.measurementColumns.findMany({
-  where:
-    and(
-      eq(measurementColumns.projectId, projectId),
-      eq(measurementColumns.columnGroupId, columnGroupId),
-    )
+  where: whereParentIds(parentIds),
+  orderBy: [measurementColumns.sort, measurementColumns.id],
 });
 
 export const add = async (
@@ -48,48 +52,14 @@ export const add = async (
   if (newId == null) throw new Error(
     `cannot get new id of measurementColumn`
   );
-  const newValue = await get({
-    id: newId,
-    projectId: params.projectId,
-    columnGroupId: params.columnGroupId,
-  });
-  if (newValue == null) throw new Error(
-    `cannot get new measurementColumn ${newId}`
-  );
-
-  return newValue;
+  return await get({ ...params, id: newId });
 };
 
 export const update = async (params: MeasurementColumn) => {
-  await db.update(measurementColumns).set(params).where(
-    and(
-      eq(measurementColumns.projectId, params.projectId),
-      eq(measurementColumns.columnGroupId, params.columnGroupId),
-      eq(measurementColumns.id, params.id),
-    )
-  );
-  const newValue = await get({
-    projectId: params.projectId,
-    columnGroupId: params.columnGroupId,
-    id: params.id,
-  });
-  if (newValue == null) throw new Error(
-    `cannot get updated measurementColumn ${params.id}`
-  );
-
-  return newValue;
+  await db.update(measurementColumns).set(params).where(whereIds(params));
+  return await get(params);
 };
 
-export const remove = async ({
-  projectId,
-  columnGroupId,
-  id,
-}: Pick<MeasurementColumn, 'projectId'|'columnGroupId'|'id'>) =>
-await db.delete(measurementColumns).where(
-  and(
-    eq(measurementColumns.projectId, projectId),
-    eq(measurementColumns.columnGroupId, columnGroupId),
-    eq(measurementColumns.id, id),
-  )
-);
+export const remove = async (ids: Ids) =>
+await db.delete(measurementColumns).where(whereIds(ids));
 

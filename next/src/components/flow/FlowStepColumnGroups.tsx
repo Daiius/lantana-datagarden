@@ -3,10 +3,9 @@
 import {
   useFlowStepColumnGroups
 } from '@/hooks/useFlowStepColumnGroups';
-
-import type {
-  useFlowSteps
-} from '@/hooks/useFlowSteps';
+import {
+  useColumnGroups
+} from '@/hooks/useColumnGroups';
 
 import {
   FlowStepColumnGroup
@@ -33,6 +32,12 @@ export const FlowStepColumnGroups = ({
     remove,
   } = useFlowStepColumnGroups({ projectId, flowId, id});
 
+  const {
+    data: columnGroups
+  } = useColumnGroups({ projectId });
+
+  const defaultColumnGroupId = columnGroups[0]?.id;
+
   return (
     <>
       {flowStepColumnGroups.map(flowStepColumnGroup =>
@@ -47,18 +52,20 @@ export const FlowStepColumnGroups = ({
         <div>カテゴリを追加して下さい...</div>
       }
       <div className='divider my-0'/>
-      <Button 
-        className='btn-success'
-        onClick={async () => await add({
-          projectId,
-          columnGroupId: defaultColumnGroupId,
-          flowStepId: id,
-          grouping: { type: 'parent' },
-          sort: null,
-        })}
-      > 
-        カテゴリ追加
-      </Button>
+      {defaultColumnGroupId != null &&
+        <Button 
+          className='btn-success'
+          onClick={async () => await add({
+            projectId,
+            columnGroupId: defaultColumnGroupId,
+            flowStepId: id,
+            grouping: { type: 'parent' },
+            sort: null,
+          })}
+        > 
+          カテゴリ追加
+        </Button>
+      }
     </>
   );
 };

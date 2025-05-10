@@ -1,5 +1,4 @@
 import { router, publicProcedure } from '../trpc';
-import { z } from 'zod';
 
 import mitt from 'mitt';
 
@@ -11,13 +10,15 @@ import {
   remove,
   measurementColumnGroupSchema,
   MeasurementColumnGroup,
+  Ids,
+  ProjectId,
 } from '../lib/measurement/columnGroup';
 
 import { createSubscription } from '../lib/common';
 
 type MeasurementColumnGroupEvents = {
   onAdd: MeasurementColumnGroup;
-  onRemove: { projectId: string, id: number };
+  onRemove: Ids;
   onUpdate: MeasurementColumnGroup;
 };
 
@@ -31,8 +32,6 @@ const idsSchema = measurementColumnGroupSchema.pick({
 const projectIdSchema = measurementColumnGroupSchema.pick({
   projectId: true,
 });
-
-type ProjectId = z.infer<typeof projectIdSchema>;
 
 const filter = (data: ProjectId, input: ProjectId) => (
   data.projectId === input.projectId

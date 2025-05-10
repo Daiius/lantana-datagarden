@@ -7,13 +7,13 @@ import type { Grouping } from '@/types';
 
 type TableGroupingCheckboxProps = {
   option: NonNullable<Grouping>;
-  selected: Grouping;
-  setSelected: (value: Grouping) => Promise<void>;
+  selected: Grouping | null;
+  setSelected: (value: Grouping | null) => Promise<void>;
 }
 
 const areGroupingsEqual = (
-  a: Grouping,
-  b: Grouping,
+  a: Grouping | null,
+  b: Grouping | null,
 ): boolean => {
   // 片方または両方がundefinedならfalse
   if (a == null || b == null) return false;
@@ -59,7 +59,7 @@ const TableGroupingCheckbox = ({
           checked={checked}
           onChange={async () => {
             checked
-            ? await setSelected(undefined)
+            ? await setSelected(null)
             : await setSelected(option)
           }}
         />
@@ -76,8 +76,8 @@ const TableGroupingCheckbox = ({
 
 type TableGroupSelectorProps = {
   columnNames: string[];
-  selected: Grouping;
-  setSelected: (selected: Grouping) => Promise<void>;
+  selected: Grouping | null;
+  setSelected: (selected: Grouping | null) => Promise<void>;
 
   className?: string;
 }

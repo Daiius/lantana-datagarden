@@ -4,7 +4,6 @@ import clsx from 'clsx';
 
 
 import { useMeasurements } from '@/hooks/useMeasurements';
-import { useMeasurementMutations } from '@/hooks/useMeasurementMutations';
 import { useMeasurementColumns } from '@/hooks/useMeasurementColumns';
 
 import Button from '@/components/common/Button';
@@ -20,7 +19,12 @@ export const MeasurementTable = ({
   projectId,
   columnGroupId,
 }: MeasurementTableProps) => {
-  const { data } = useMeasurements({ 
+  const { 
+    data,
+    update,
+    add,
+    remove,
+  } = useMeasurements({ 
     projectId, 
     columnGroupId,
   });
@@ -28,7 +32,6 @@ export const MeasurementTable = ({
     projectId, 
     columnGroupId,
   });
-  const { add } = useMeasurementMutations();
 
   if (!data || !columns) {
     return <Skeleton />;
@@ -39,6 +42,7 @@ export const MeasurementTable = ({
     <Table
       columns={columns}
       data={data}
+      update={update}
     />
     <Button 
       className='btn-accent btn-block'

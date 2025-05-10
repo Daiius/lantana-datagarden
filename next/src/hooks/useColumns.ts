@@ -12,7 +12,7 @@ export const useColumns = ({
   columnGroupId,
 }: {
   projectId: string;
-  columnGroupId: ColumnGroup['id'];
+  columnGroupId: ColumnGroup['id'] | ColumnGroup['id'][];
 }) => {
   const target = trpc.condition.column;
   const { 
@@ -32,17 +32,17 @@ export const useColumns = ({
     DebounceTime,
   );
   const update = async (newValue: Column) => {
-    setData(data.map(d => d.id === newValue.id ? newValue : d));
+    setData(prev => prev.map(d => d.id === newValue.id ? newValue : d));
     await debouncedUpddateDb(newValue);
   };
 
   const { mutateAsync: add } = target.add.useMutation();
   target.onAdd.useSubscription({ projectId, columnGroupId }, {
-    onData: newData => setData([...data, newData]),
+    onData: newData => setData(prev => [...prev, newData]),
   });
   const { mutateAsync: remove } = target.remove.useMutation();
   target.onRemove.useSubscription({ projectId, columnGroupId }, {
-    onData: newData => setData(data.filter(d => d.id !== newData.id))
+    onData: newData => setData(prev => prev.filter(d => d.id !== newData.id))
   });
 
   return {

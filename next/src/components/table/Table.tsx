@@ -1,10 +1,7 @@
 'use client'
 
-import React from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
-
-
-import type { ColumnGroup } from '@/types';
 
 import {
   createColumnHelper,
@@ -15,42 +12,48 @@ import {
 } from '@tanstack/react-table';
 
 
-import type { Data, Column } from '@/types';
+import type { 
+  Data, 
+  DataIds,
+  Column,
+  ColumnGroup,
+} from '@/types';
 
 import Row from '@/components/table/Row';
 
 import TableCell from '@/components/table/TableCell';
 import TableHeader from '@/components/table/TableHeader';
 
+import { useLines } from '@/providers/LinesProvider';
+
 type TableProps = {
   columns: Column[],
   data: Data[],
-  followingColumnGroups: ColumnGroup[],
   addData: (args: Omit<Data, 'id'>) => Promise<void>;
-  updateLine: () => void;
+  updateData: (newData: Data) => Promise<void>;
+  removeData: (dataIds: DataIds) => Promise<void>;
+  followingColumnGroups: ColumnGroup[];
   className?: string;
 }
 
 
 /**
  * ユーザの変更を部分的にリアルタイム反映するテーブル
- *
- * 個別のデータについては数が多くなると思われるので、
- * 更新があったことの通知のみとする
  */
 const Table = ({
   data,
   addData,
+  updateData,
+  removeData,
   columns,
   followingColumnGroups,
-  updateLine,
   className,
 }: TableProps) => {
 
   const columnHelper = createColumnHelper<Data>();
 
-  const tableColumns = React.useMemo(() => 
-    columns?.map(c =>
+  const tableColumns = useMemo(() => 
+    columns.map(c =>
       columnHelper.accessor(d => d.data[c.name], {
         id: c.name,
         cell: ({ row, column, table }) =>
@@ -59,16 +62,16 @@ const Table = ({
             tanstackColumn={column}
             row={row}
             table={table}
+            update={updateData}
           />
       }),
-    ) ?? [],
+    ),
     [columns]
   ); 
   
-  const [sorting, setSortingPrivate] = React.useState<SortingState>([]);
+  const [sorting, setSortingPrivate] = useState<SortingState>([]);
   const setSorting: typeof setSortingPrivate = (sort) => {
     setSortingPrivate(sort);
-    updateLine();
   };
 
 
@@ -80,6 +83,15 @@ const Table = ({
     state: { sorting },
     onSortingChange: setSorting,
   });
+
+  const { register, unregister } = useLines();
+  useEffect(() => {
+    const relations = data
+      .filter(d => d.parentId != null)
+      .map(d => ({ id: d.id, parentId: d.parentId ?? 0 }));
+    register(relations);
+    return () => unregister(relations);
+  }, [data]);
 
   return (
     <div className='w-fit'>
@@ -113,8 +125,9 @@ const Table = ({
               key={row.original.id}
               columns={columns}
               row={row}
-              followingColumnGroups={followingColumnGroups}
               addData={addData}
+              removeData={removeData}
+              followingColumnGroups={followingColumnGroups}
             />
           )}
         </tbody>

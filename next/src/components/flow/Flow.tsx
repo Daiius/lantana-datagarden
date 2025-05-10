@@ -11,6 +11,8 @@ import type { Flow } from '@/types';
 
 import type { useFlows } from '@/hooks/useFlows';
 
+import { FlowSteps } from '@/components/flow/FlowSteps';
+
 
 type FlowProps = 
   & { flow: Flow; }
@@ -53,6 +55,10 @@ const Flow = ({
       フローに含まれるカテゴリ：
     </label>
     {/* flowの順に横に並べる部分 */}
+    <FlowSteps
+      projectId={flow.projectId}
+      flowId={flow.id}
+    />
   </div>
 );
 

@@ -1,21 +1,18 @@
 //import clsx from 'clsx';
 
 import type {
-  FlowStepWithData,
   FlowStep as FlowStepType,
   ColumnGroup,
 } from '@/types';
 
 import MergedTable from '@/components/table/MergedTable';
-import ListedTable from '@/components/table/ListedTable';
+import { ListedTables } from '@/components/table/ListedTables';
 
 export type FlowStepProps = {
   projectId: string;
-  flowStep: FlowStepWithData;
-  iflowStep: number;
-  updateFlowStep: (newFlowStep: FlowStepType) => Promise<void>;
+  flowStep: FlowStepType;
+  update: (newValue: FlowStepType) => Promise<void>;
   followingColumnGroups: ColumnGroup[];
-  updateLine: () => Promise<void>;
 
   className?: string;
 }
@@ -26,7 +23,7 @@ const FlowStep = (props: FlowStepProps) => {
   );
 
   return (
-    <ListedTable {...props} />
+    <ListedTables {...props} />
   );
 };
 
