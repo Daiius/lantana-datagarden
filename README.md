@@ -22,6 +22,62 @@ Next.js Web アプリケーション
   - 複数人で編集している場合、変更内容を反映・通知して知らせる
   - 複雑な履歴機能や元に戻す機能はきびしいかも
 
+## followingColumnGroupsの取得方法再考
+ネストデータ取得をしていた際には、
+flowに関わるcolumnGroupを配列で取得してしまい、
+あるステップより後ろに存在するステップのcolumnGroupの一覧を
+容易に取得できていた。
+
+現在はカスケードフェッチ？しているため、これが難しい。
+どうするか考えたい
+- register, unregister Context 方式: 単純
+  - 表示されているcolumGroupを上位のContextに登録する
+
+relationsでその様な実装をしてみたが、ちょっと不安がある...
+いっそリアルタイム更新フックを増やしてしまった方が自然かも
+
+イベント関連以外の実装は難しくはない、joinしまくるとdataまで取得できる
+だが、Data関連の再描画時に自動的にLinesが再配置されるのは便利なのかも
+
+relationsの更新を検出する方法、かなりたいへんではないか？
+- flowに含まれるflowStepsが更新(onAdd, onRemove)
+- flowStepに含まれるflowStepColumnGroupsが更新(onAdd, onRemove)
+- columnGroupが更新(onAdd, onRemove)
+- dataが更新(onAdd, onRemove)
+
+
+これら全体に連動させる必要がある、こういった仕組みは用意していないので
+結構な設計変更が必要になる
+
+正直 Contextによるregister/unregister方式の方が簡単だが、
+followingColumnGroupsの計算ではそうはいかないかもしれないので？
+? ステップのインデックスを渡しておけばいけるのでは？
+
+でも、データの流れが上流から下流の一直線に出来るのは色々都合が良いはず
+
+......relationsは表示の都合で、followingColumnGroupsはデータの都合なので
+やり方が違っても良い気がする
+
+flowStepColumnGroupsの編集時にfollowingColumnGroupsのonUpdateを呼びたいが、
+flowIdを指定する必要がある
+
+この方法だと意外なエラーが出る場合がある
+- flowStepColumnGroupを削除
+- server起動時に登録したイベントハンドラが、削除されたflowStepColumnGroupの
+  flowIdを参照しようとする
+- 見つからないためflowIdが分からず、どのflowにイベント発行すればよいか分からない
+- イベントハンドラ内で例外を出すとサーバが落ちる
+
+対策の例
+- イベントハンドラ内では例外をきちんと扱う
+- 削除をタイムスタンプ方式のソフトデリートにして、削除済みデータにアクセスする
+- flowStepColumnGroupsにflowIdも持たせる
+
+WRITING...
+
+
+<details>
+<summary>以前のメモ</summary>
 ## オプショナルな値に対応させる
 Column設定で、空欄を認めるか設定出来る様にする
 
@@ -35,17 +91,6 @@ validate 関数を拡張する必要がありそう
 2025/04/12 一旦データベース側にisOptionalフィールドを増やした
 細かなロジック実装はこれからだが、これによりundefinedとnullを
 区別して扱い、新規追加データが - で表示されるバグも防げた。
-
-
-## 開発速度の低下、親子関係のあるオブジェクトの扱い再考
-ネストされたオブジェクトを初期値用に取得して、
-個別に他のオブジェクトの更新を行う方法、だんだん収集が付かなくなってきた
-
-一度、カスケード状のロードを許容して作ってみる
-
-### リストで取得したオブジェクト...
-
-
 ## 測定データを扱えるようにする
 測定データは、
 - 一つの条件データに複数紐づけ可能なcolumnGroup
@@ -164,7 +209,6 @@ erDiagram
     ColumnGroup ||--o{ ColumnGroupToMeasurements : "a columnGroup have possibly multiple types of measurements"
     ColumnGroupToMeasurements }o--|| MeasurementColumnGroup :"a columnGroupToMeasurements have a measurementColumnGroup<br>a measurementColumnGroup is referenced by some columnGroupToMeasurements"
 ```
-
 ## カスケードデータ取得の方が上手くいきそう
 動的にデータを取得したい場合が多いので、
 カスケード状にfetchする様に変更している。
@@ -239,12 +283,13 @@ flowchart TD
     data -.places.-> Lines
 
 ```
+## 開発速度の低下、親子関係のあるオブジェクトの扱い再考
+ネストされたオブジェクトを初期値用に取得して、
+個別に他のオブジェクトの更新を行う方法、だんだん収集が付かなくなってきた
 
-WRITING...
+一度、カスケード状のロードを許容して作ってみる
 
-
-<details>
-<summary>以前のメモ</summary>
+### リストで取得したオブジェクト...
 ## MergedTable と Grouping の処理...
 ListedTable では、columnGroupWithGroupings に対して
 それぞれに Grouping を設定する
