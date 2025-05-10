@@ -3,7 +3,6 @@
 import type {
   FlowStep as FlowStepType,
   ColumnGroup,
-  Data,
 } from '@/types';
 
 import MergedTable from '@/components/table/MergedTable';
@@ -13,6 +12,7 @@ export type FlowStepProps = {
   projectId: string;
   flowStep: FlowStepType;
   update: (newValue: FlowStepType) => Promise<void>;
+  followingColumnGroups: ColumnGroup[];
 
   className?: string;
 }

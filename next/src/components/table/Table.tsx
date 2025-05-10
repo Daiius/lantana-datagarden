@@ -16,6 +16,7 @@ import type {
   Data, 
   DataIds,
   Column,
+  ColumnGroup,
 } from '@/types';
 
 import Row from '@/components/table/Row';
@@ -31,6 +32,7 @@ type TableProps = {
   addData: (args: Omit<Data, 'id'>) => Promise<void>;
   updateData: (newData: Data) => Promise<void>;
   removeData: (dataIds: DataIds) => Promise<void>;
+  followingColumnGroups: ColumnGroup[];
   className?: string;
 }
 
@@ -44,6 +46,7 @@ const Table = ({
   updateData,
   removeData,
   columns,
+  followingColumnGroups,
   className,
 }: TableProps) => {
 
@@ -124,6 +127,7 @@ const Table = ({
               row={row}
               addData={addData}
               removeData={removeData}
+              followingColumnGroups={followingColumnGroups}
             />
           )}
         </tbody>

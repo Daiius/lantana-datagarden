@@ -28,6 +28,7 @@ export const ListedTables = ({
   projectId,
   flowStep,
   //update,
+  followingColumnGroups,
   className,
 }: ListedTablesProps) => {
   const {
@@ -52,6 +53,7 @@ export const ListedTables = ({
             columnGroup={columnGroup}
             projectId={projectId}
             update={update}
+            followingColumnGroups={followingColumnGroups}
           />
         );
       })}

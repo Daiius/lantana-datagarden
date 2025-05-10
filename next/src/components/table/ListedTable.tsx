@@ -16,6 +16,7 @@ type ListedTableProps = {
   columnGroup: ColumnGroup;
   flowStepColumnGroup: FlowStepColumnGroup;
   update: (newFlowStepColumnGroup: FlowStepColumnGroup) => Promise<void>;
+  followingColumnGroups: ColumnGroup[];
 
   className?: string;
 };
@@ -24,6 +25,7 @@ export const ListedTable = ({
   projectId,
   columnGroup,
   flowStepColumnGroup,
+  followingColumnGroups,
   update,
   className,
 }: ListedTableProps) => {
@@ -59,6 +61,7 @@ export const ListedTable = ({
         updateGrouping={ async newGrouping => await update({ 
           ...flowStepColumnGroup, grouping: newGrouping
         })}
+        followingColumnGroups={followingColumnGroups}
         isMerged={false}
       />
     </>

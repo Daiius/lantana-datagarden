@@ -4,6 +4,7 @@ import type {
   Data,
   DataIds,
   Column,
+  ColumnGroup,
 } from '@/types';
 
 import {
@@ -12,6 +13,7 @@ import {
 } from '@tanstack/react-table';
 
 import RowDropdown from '@/components/table/RowDropdown';
+import { followingColumnGroupsRouter } from 'server/table/followingColumnGroups';
 
 
 type RowProps = {
@@ -19,12 +21,14 @@ type RowProps = {
   row: TanstackRow<Data>;
   addData: (args: Omit<Data, 'id'>) => Promise<void>;
   removeData: (dataIds: DataIds) => Promise<void>;
+  followingColumnGroups: ColumnGroup[];
 }
 
 const Row = ({
   row,
   addData,
   removeData,
+  followingColumnGroups,
 }: RowProps) => {
 
   const { id, projectId, columnGroupId } = row.original;
@@ -60,6 +64,7 @@ const Row = ({
             projectId, 
             data: {},
           })}
+          followingColumnGroups={followingColumnGroups}
         />
       </td>
     </tr>

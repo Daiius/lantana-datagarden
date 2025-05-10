@@ -4,7 +4,6 @@ import React from 'react';
 import clsx from 'clsx';
 
 import type { ColumnGroup } from '@/types';
-import { useColumnGroups } from '@/hooks/useColumnGroups';
 
 import { IconTrash } from '@tabler/icons-react';
 
@@ -14,18 +13,18 @@ type RowDropdownProps = {
   columnGroupId: number;
   removeData: () => Promise<void>;
   addData: (params: { columnGroupId: number }) => Promise<void>;
+  followingColumnGroups: ColumnGroup[];
 
   className?: string;
 }
 
 const RowDropdown = ({
-  projectId,
   removeData,
   addData,
+  followingColumnGroups,
   className,
 }: RowDropdownProps) => {
   const menuRef = React.useRef<HTMLUListElement>(null);
-  const { data: columnGroups } = useColumnGroups({ projectId });
   return (
     <div
       className={clsx('dropdown', className)}
@@ -50,7 +49,7 @@ const RowDropdown = ({
           </li>
         }
         */}
-        {columnGroups.map(columnGroup =>
+        {followingColumnGroups.map(columnGroup =>
           <li key={columnGroup.id}>
             <a
               onClick={async () => {
