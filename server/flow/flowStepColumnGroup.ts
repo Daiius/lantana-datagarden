@@ -9,9 +9,15 @@ import {
   flowStepColumnGroupSchema,
   Ids,
   ParentIds,
+  getFlowId,
 } from '../lib/flowStepColumnGroup';
 import mitt from 'mitt';
-import { createSubscription } from '../lib/common';
+import {
+  createEventHandler,
+} from '../lib/common';
+import {
+  tableFollowingColumnGroupsEventEmitter
+} from '../events';
 
 type FlowStepColumnGroupEvents = {
   onUpdate: FlowStepColumnGroup;
@@ -36,6 +42,36 @@ const filter = (data: ParentIds, input: ParentIds) => (
   && data.flowStepId === input.flowStepId
 );
 
+/** flowStepColumnGroup の更新時、関連するfollowingColumnGroupsを更新します */
+const updateFollowingColumnGroups = async (data: Ids) => {
+  const flowId = await getFlowId(data);
+  if (flowId != null) {
+    tableFollowingColumnGroupsEventEmitter.emit(
+      'onUpdate', 
+      {
+        id: flowId,
+        projectId: data.projectId,
+      }
+    ); 
+  }
+};
+
+// followingColumnGroups更新処理の呼び出しを、
+// onUpdate, onAdd, onRemoveイベントハンドラと関連付けます
+// 一度登録するだけなのでee.offは省略
+ee.on(
+  'onUpdate',
+  args => updateFollowingColumnGroups(args),
+);
+ee.on(
+  'onAdd',
+  args => updateFollowingColumnGroups(args),
+);
+ee.on(
+  'onRemove',
+  args => updateFollowingColumnGroups(args),
+);
+
 export const flowStepColumnGroupRouter = router({
   get: publicProcedure
     .input(idsSchema)
@@ -51,8 +87,8 @@ export const flowStepColumnGroupRouter = router({
     }),
   onUpdate: publicProcedure
     .input(parentIdsSchema)
-    .subscription(({ input }) => createSubscription({
-      eventEmitter: ee,
+    .subscription(({ input }) => createEventHandler({
+      ee,
       eventName: 'onUpdate',
       filter: data => filter(data, input),
     })),
@@ -66,8 +102,8 @@ export const flowStepColumnGroupRouter = router({
     }),
   onAdd: publicProcedure
     .input(parentIdsSchema)
-    .subscription(({ input }) => createSubscription({
-      eventEmitter: ee,
+    .subscription(({ input }) => createEventHandler({
+      ee,
       eventName: 'onAdd',
       filter: data => filter(data, input),
     })),
@@ -79,8 +115,8 @@ export const flowStepColumnGroupRouter = router({
     }),
   onRemove: publicProcedure
     .input(parentIdsSchema)
-    .subscription(({ input }) => createSubscription({
-      eventEmitter: ee,
+    .subscription(({ input }) => createEventHandler({
+      ee,
       eventName: 'onRemove',
       filter: data => filter(data, input),
     })),
