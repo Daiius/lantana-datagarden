@@ -84,3 +84,13 @@ export const add = async (params: Omit<FlowStepColumnGroup, 'id'>) => {
 export const remove = async (ids: Ids) =>
 await db.delete(flowStepColumnGroups).where(whereIds(ids));
 
+export const getFlowId = async (ids: Ids) => {
+  const data = await db.query.flowStepColumnGroups.findFirst({
+    where: whereIds(ids),
+    with: {
+      flowStep: true,
+    }
+  });
+  return data?.flowStep.flowId;
+};
+

@@ -15,7 +15,13 @@ import {
   Ids,
   ParentIds,
 } from '../lib/data';
-import { createSubscription } from '../lib/common';
+import { 
+  createSubscription,
+  createEventHandler,
+} from '../lib/common';
+import {
+  tableFollowingColumnGroupsEventEmitter
+} from '../events';
 
 type DataEvents = {
   onAdd: Data;
@@ -62,10 +68,10 @@ export const dataRouter = router({
   // 特定 id のデータが更新されたことを通知するイベント
   onUpdate: publicProcedure
     .input(parentIdsSchema)
-    .subscription(({ input }) => createSubscription({
-        eventEmitter: ee,
-        eventName: 'onUpdate',
-        filter: data => filter(data, input),
+    .subscription(({ input }) => createEventHandler({
+      ee,
+      eventName: 'onUpdate',
+      filter: data => filter(data, input),
     })),
   add: publicProcedure
     .input(dataSchema.omit({ id: true }))

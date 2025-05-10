@@ -14,15 +14,26 @@ import type {
   Relation,
 } from './lib/table/relations';
 
-type OnUpdateEventArgs = {
+type OnUpdateTableRelationsEventArgs = {
   relations: Relation[];
   projectId: string;
   id: number;
 };
 
 export type TableRelationEvents = {
-  onUpdate: OnUpdateEventArgs;
+  onUpdate: OnUpdateTableRelationsEventArgs;
 }
 
 export const tableEventEmitter = mitt<TableRelationEvents>();
+
+export type OnUpdateTableFollowingColumnGroupsArgs = {
+  projectId: string;
+  id: number;
+}
+
+export type TableFollowingColumnGroupsEvents = {
+  onUpdate: OnUpdateTableFollowingColumnGroupsArgs;
+}
+
+export const tableFollowingColumnGroupsEventEmitter = mitt<TableFollowingColumnGroupsEvents>();
 

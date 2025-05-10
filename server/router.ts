@@ -17,7 +17,7 @@ export const appRouter = router({
   table: tableRouter,
   flow: flowRouter,
   measurement: measurementRouter,
-  condition: conditionRouter
+  condition: conditionRouter,
 });
 
 export type AppRouter = typeof appRouter;
