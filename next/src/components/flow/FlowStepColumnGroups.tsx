@@ -57,8 +57,9 @@ export const FlowStepColumnGroups = ({
           className='btn-success'
           onClick={async () => await add({
             projectId,
-            columnGroupId: defaultColumnGroupId,
+            flowId,
             flowStepId: id,
+            columnGroupId: defaultColumnGroupId,
             grouping: { type: 'parent' },
             sort: null,
           })}
