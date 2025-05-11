@@ -61,17 +61,9 @@ followingColumnGroupsの計算ではそうはいかないかもしれないの�
 flowStepColumnGroupsの編集時にfollowingColumnGroupsのonUpdateを呼びたいが、
 flowIdを指定する必要がある
 
-この方法だと意外なエラーが出る場合がある
-- flowStepColumnGroupを削除
-- server起動時に登録したイベントハンドラが、削除されたflowStepColumnGroupの
-  flowIdを参照しようとする
-- 見つからないためflowIdが分からず、どのflowにイベント発行すればよいか分からない
-- イベントハンドラ内で例外を出すとサーバが落ちる
-
-対策の例
-- イベントハンドラ内では例外をきちんと扱う
-- 削除をタイムスタンプ方式のソフトデリートにして、削除済みデータにアクセスする
-- flowStepColumnGroupsにflowIdも持たせる
+flowStepColumnGroupsにflowIdも持たせるのが最もスムーズで影響範囲が狭そう。
+これまで1世代以上前の親の情報は冗長なので子に持たせない事を考えていたが、
+こういう場合もあるというのは教育的かもしれない。
 
 WRITING...
 
