@@ -15,7 +15,7 @@ export type UseFlowStepColumnGroupsArgs =
 
 export const useFlowStepColumnGroups = ({
   projectId,
-  //flowId,
+  flowId,
   id: flowStepId,
 }: UseFlowStepColumnGroupsArgs) => {
   const target = trpc.flow.flowStepColumnGroup;
@@ -24,7 +24,7 @@ export const useFlowStepColumnGroups = ({
     isLoading,
   } = target.list.useQuery({
     projectId,
-    //flowId,
+    flowId,
     flowStepId
   });
   const [data, setData] = useState<FlowStepColumnGroup[]>([]);
@@ -43,16 +43,16 @@ export const useFlowStepColumnGroups = ({
     setData(prev => prev.map(d => d.id === newValue.id ? newValue : d));
     await debouncedUpdateDb(newValue);
   };
-  target.onUpdate.useSubscription({ projectId, flowStepId }, {
+  target.onUpdate.useSubscription({ projectId, flowId, flowStepId }, {
     onData: newData => setData(prev => prev.map(d => d.id === newData.id ? newData : d)),
   });
 
   const { mutateAsync: add } = target.add.useMutation();
-  target.onAdd.useSubscription({ projectId, flowStepId }, {
+  target.onAdd.useSubscription({ projectId, flowId, flowStepId }, {
     onData: newData => setData(prev => [...prev, newData]),
   });
   const { mutateAsync: remove } = target.remove.useMutation();
-  target.onRemove.useSubscription({ projectId, flowStepId }, {
+  target.onRemove.useSubscription({ projectId, flowId, flowStepId }, {
     onData: info => setData(prev => prev.filter(d => d.id !== info.id)),
   });
 

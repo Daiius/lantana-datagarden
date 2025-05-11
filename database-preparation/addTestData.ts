@@ -108,6 +108,7 @@ await db.insert(flowSteps).values([
 
 await db.insert(flowStepColumnGroups).values([
   {
+    flowId: 1,
     flowStepId: 1,
     columnGroupId: 1,
     projectId: zeroId,
@@ -115,6 +116,7 @@ await db.insert(flowStepColumnGroups).values([
     sort: null,
   },
   {
+    flowId: 1,
     flowStepId: 2,
     columnGroupId: 2,
     projectId: zeroId,
