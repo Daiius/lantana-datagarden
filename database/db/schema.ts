@@ -308,6 +308,12 @@ export const flowStepColumnGroups = mysqlTable(
         .notNull()
         .primaryKey(),
     projectId: projectIdReference,
+    flowId:
+      bigint('flow_id', { mode: 'number', unsigned: true })
+        .notNull()
+        .references(() => flows.id, {
+          onUpdate: 'cascade', onDelete: 'cascade',
+        }),
     flowStepId:
       bigint('flow_step_id', { mode: 'number', unsigned: true })
         .notNull()
