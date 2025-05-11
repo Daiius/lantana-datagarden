@@ -9,7 +9,6 @@ import {
   flowStepColumnGroupSchema,
   Ids,
   ParentIds,
-  getFlowId,
 } from '../lib/flowStepColumnGroup';
 import mitt from 'mitt';
 import {
@@ -29,11 +28,13 @@ const ee = mitt<FlowStepColumnGroupEvents>();
 const idsSchema = flowStepColumnGroupSchema.pick({
   projectId: true,
   flowStepId: true,
+  flowId: true,
   id: true,
 });
 
 const parentIdsSchema = flowStepColumnGroupSchema.pick({
   projectId: true,
+  flowId: true,
   flowStepId: true,
 });
 
@@ -44,16 +45,11 @@ const filter = (data: ParentIds, input: ParentIds) => (
 
 /** flowStepColumnGroup の更新時、関連するfollowingColumnGroupsを更新します */
 const updateFollowingColumnGroups = async (data: Ids) => {
-  const flowId = await getFlowId(data);
-  if (flowId != null) {
-    tableFollowingColumnGroupsEventEmitter.emit(
-      'onUpdate', 
-      {
-        id: flowId,
-        projectId: data.projectId,
-      }
-    ); 
-  }
+  tableFollowingColumnGroupsEventEmitter.emit(
+    'onUpdate', {
+    id: data.flowId,
+    projectId: data.projectId,
+  }); 
 };
 
 // followingColumnGroups更新処理の呼び出しを、
