@@ -20,6 +20,9 @@ export const useData = ({
   projectId,
   columnGroupId,
 }: UseDataArgs) => {
+
+  log(`useData(${projectId}, ${columnGroupId}) rendered`);
+
   const target = trpc.condition.data;
   const { 
     data: fetchedData, 
