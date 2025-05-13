@@ -11,6 +11,8 @@ import { useData } from '@/hooks/useData';
 
 import { useColumns } from '@/hooks/useColumns';
 
+import { log } from '@/debug';
+
 type ListedTableProps = {
   projectId: string;
   columnGroup: ColumnGroup;
@@ -29,6 +31,8 @@ export const ListedTable = ({
   update,
   className,
 }: ListedTableProps) => {
+
+  log('ListedTable: rendered');
 
   const { id: columnGroupId } = columnGroup;
   const { data: columns } = useColumns({ projectId, columnGroupId });
