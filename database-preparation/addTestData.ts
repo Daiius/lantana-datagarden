@@ -9,6 +9,9 @@ import {
   flows,
   flowSteps,
   flowStepColumnGroups,
+  measurementColumnGroups,
+  measurementColumns,
+  measurements,
 } from 'database/db/schema';
 import { 
 //  v7 as uuidv7,
@@ -125,6 +128,47 @@ await db.insert(flowStepColumnGroups).values([
   },
 ]);
 
+await db.insert(measurementColumnGroups).values(
+  {
+    projectId: zeroId,
+    sort: null,
+    name: '測定1'
+  },
+);
+await db.insert(measurementColumns).values([
+  {
+    projectId: zeroId,
+    columnGroupId: 1,
+    sort: null,
+    type: 'string',
+    name: '測定名',
+  },
+  {
+    projectId: zeroId,
+    columnGroupId: 1,
+    sort: null,
+    type: 'number',
+    name: '測定値',
+  },
+]);
+await db.insert(measurements).values([
+  {
+    projectId: zeroId,
+    columnGroupId: 1,
+    data: {
+      '測定名': '測定1',
+      '測定値': 10.0,
+    },
+  },
+  {
+    projectId: zeroId,
+    columnGroupId: 1,
+    data: {
+      '測定名': '測定2',
+      '測定値': 11.0,
+    },
+  },
+]);
 
 await connection.end();
 
