@@ -2,13 +2,16 @@
 
 //import clsx from 'clsx';
 
-import { MeasurementVisuals } from '@/types';
 
 import { useColumnGroupMeasurements } from '@/hooks/useColumnGroupMeasurements';
 import { useMeasurementColumnGroups } from '@/hooks/useMeasurementColumnGroups';
 import { AddMeasurementDropdown } from '@/components/column/AddMeasurementDropdown';
 import Skeleton from '../common/Skeleton';
 
+import { Measurement } from '@/components/column/Measurement';
+
+
+import { log } from '@/debug';
 
 export type  MeasurementsProps = {
   projectId: string;
@@ -24,14 +27,12 @@ export const Measurements = ({
     data: columnGroupMeasurements,
     update,
     add,
+    remove,
   } = useColumnGroupMeasurements({
     projectId, 
     columnGroupId,
   });
 
-  // NOTE 注意、必要なデータ以外も取得している
-  // columnGroupMeasurementに関連するmeasurementColumnGroup以外も取得している
-  // subscriptionも重複して行われる
   const {
     data: measurementColumnGroups
   } = useMeasurementColumnGroups({
@@ -46,40 +47,21 @@ export const Measurements = ({
         );
 
         if (measurementColumnGroup == null) {
-          return <Skeleton />
+
+          log(`cannot find MeasurementColumnGroup ${columnGroupMeasurement.measurementColumnGroupId} specified in ColumnGroupMeasurement ${columnGroupMeasurement.id}`);
+          return <Skeleton />;
         }
 
         return (
-          <div 
+          <Measurement 
             key={columnGroupMeasurement.id}
-            className='flex flex-row gap-4'
-          >
-            <div>
-              {measurementColumnGroup.name}
-            </div>
-            <fieldset className='fieldset flex flex-row gap-4'>
-              {MeasurementVisuals.map(mv =>
-                <div key={mv}>
-                  <input
-                    type='radio'
-                    className='radio'
-                    checked={columnGroupMeasurement.visual === mv}
-                    onChange={async () => await update({
-                      ...columnGroupMeasurement, visual: mv
-                    })}
-                  />
-                  <label className='fieldset-label'>
-                    {mv}
-                  </label>
-                </div>
-              )}
-            </fieldset>
-          </div>
+            columnGroupMeasurement={columnGroupMeasurement}
+            measurementColumnGroup={measurementColumnGroup}
+            update={update}
+            remove={remove}
+          />
         );
       })}
-      {/* TODO AddMeasurementDropdown内で、ここにあるのと重複するデータ取得 
-          それならばここからpropsで渡した方が良さそう
-      */}
       <AddMeasurementDropdown
         projectId={projectId}
         columnGroupId={columnGroupId}
