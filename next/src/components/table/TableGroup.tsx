@@ -3,6 +3,7 @@ import clsx from 'clsx';
 
 import type { 
   Column,
+  MeasurementColumn,
   ColumnGroup,
   Grouping,
   FlowStepColumnGroup,
@@ -22,6 +23,7 @@ type TableGroupProps = {
    */
   projectId: string;
   columns: Column[];
+  measurementColumns: MeasurementColumn[];
   dataList: Data[];
   add: (args: Omit<Data, 'id'>) => Promise<void>;
   update: (newData: Data) => Promise<void>;
@@ -42,6 +44,7 @@ type TableGroupProps = {
 const TableGroup = ({
   projectId,
   columns,
+  measurementColumns,
   dataList,
   add,
   update,
@@ -52,10 +55,6 @@ const TableGroup = ({
   isMerged,
   className,
 }: TableGroupProps) => {
-
-  if (columns == null || dataList == null) {
-    return <div className='skeleton w-full h-32' />
-  };
 
   const groupData = (input: Data[], grouping: Grouping | null): Data[][] => {
     if (!grouping) return [input];
@@ -132,6 +131,7 @@ const TableGroup = ({
             className={clsx(className)}
             key={idata}
             columns={columns}
+            measurementColumns={measurementColumns}
             data={data}
             updateData={update}
             addData={add}

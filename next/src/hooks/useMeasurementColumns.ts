@@ -10,7 +10,7 @@ import { DebounceTime } from '@/hooks/common';
 
 export type UseMeasurementColumnsArgs = {
   projectId: string;
-  columnGroupId: number;
+  columnGroupId: number | number[];
 };
 
 export const useMeasurementColumns = ({

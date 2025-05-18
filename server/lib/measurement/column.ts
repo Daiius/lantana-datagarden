@@ -2,7 +2,7 @@ import { db } from 'database/db';
 import {
   measurementColumns
 } from 'database/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 
 export type MeasurementColumn = 
   typeof measurementColumns.$inferSelect;
@@ -13,7 +13,10 @@ export const measurementColumnSchema = createSelectSchema(
 );
 
 export type Ids = Pick<MeasurementColumn, 'projectId'|'columnGroupId'|'id'>;
-export type ParentIds = Pick<MeasurementColumn, 'projectId'|'columnGroupId'>;
+export type ParentIds = {
+  projectId: MeasurementColumn['projectId'];
+  columnGroupId: MeasurementColumn['columnGroupId'] | MeasurementColumn['columnGroupId'][];
+}
 
 const whereIds = (ids: Ids) => and(
   eq(measurementColumns.projectId, ids.projectId),
@@ -23,7 +26,9 @@ const whereIds = (ids: Ids) => and(
 
 const whereParentIds = (parentIds: ParentIds) => and(
   eq(measurementColumns.projectId, parentIds.projectId),
-  eq(measurementColumns.columnGroupId, parentIds.columnGroupId),
+  Array.isArray(parentIds.columnGroupId)
+  ? inArray(measurementColumns.columnGroupId, parentIds.columnGroupId)
+  : eq(measurementColumns.columnGroupId, parentIds.columnGroupId),
 );
 
 export const get = async (ids: Ids) => {

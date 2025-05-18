@@ -15,6 +15,7 @@ import {
 } from '../lib/measurement/column';
 
 import { createSubscription } from '../lib/common';
+import { z } from 'zod';
 
 type MeasurementColumnEvents = {
   onUpdate: MeasurementColumn;
@@ -30,6 +31,11 @@ const idsSchema = measurementColumnSchema.pick({
 const parentIdsSchema = measurementColumnSchema.pick({
   projectId: true,
   columnGroupId: true,
+}).extend({
+  columnGroupId: z.union([
+    z.number(),
+    z.array(z.number()),
+  ]),
 });
 
 const filter = (data: ParentIds, input: ParentIds) => (

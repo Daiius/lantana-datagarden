@@ -16,6 +16,7 @@ import type {
   Data, 
   DataIds,
   Column,
+  MeasurementColumn,
   ColumnGroup,
 } from '@/types';
 
@@ -28,6 +29,7 @@ import { useLines } from '@/providers/LinesProvider';
 
 type TableProps = {
   columns: Column[],
+  measurementColumns: MeasurementColumn[],
   data: Data[],
   addData: (args: Omit<Data, 'id'>) => Promise<void>;
   updateData: (newData: Data) => Promise<void>;
@@ -46,6 +48,7 @@ const Table = ({
   updateData,
   removeData,
   columns,
+  measurementColumns,
   followingColumnGroups,
   className,
 }: TableProps) => {
